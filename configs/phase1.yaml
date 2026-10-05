@@ -1,0 +1,76 @@
+# Phase 1 parameters — v1.0, mirrors docs/PHASE_1_SPEC.md (FROZEN, ADR-0001).
+# Changing any value here requires an ADR.
+# T-CFG-01 checks that every `config:` key named in the spec exists here.
+
+history:
+  option_era_start: "2022-11-14"
+  underlying_start: "2022-11-14"   # OD-1
+
+session:
+  calendar: XNYS
+  timezone: America/New_York
+  ignore_post_close_options: true
+
+schedule:
+  cadence_minutes: 5
+  first: "09:45"
+  last_new_entry: "15:00"
+  early_close_last_entry_offset_min: 60
+
+trade:
+  forced_exit_time: "15:50"
+  early_close_forced_exit_offset_min: 10
+  max_holding_minutes: 90
+  allow_overnight: false             # OD-2
+  contracts: 1
+  max_open_positions: 1
+  max_entries_per_day: 3
+  breakeven_band: 0.02
+
+labels:
+  horizon_minutes: 90
+  direction:
+    deadband: 0.0005
+  magnitude:
+    thresholds: [0.0025, 0.0050]     # OD-10: first is primary
+  option:
+    target_pct: 0.30
+    stop_pct: 0.20
+  risk:
+    stop: 0.0015
+
+decision:
+  edge_margin: 0.03
+
+selection:
+  rule: atm_first_otm_no_fallback    # OD-3
+  rule_version: "1"
+
+costs:
+  commission_per_contract: 0.65
+  fees_per_contract: 0.05
+
+liquidity:
+  max_quote_age_s: 60
+  max_spread_abs: 0.05
+  max_spread_pct: 0.05
+  min_bid: 0.20
+  require_size: true
+
+fills:
+  latency_s: 5
+  moderate_alpha: 0.5                # OD-6
+  tick: 0.01
+
+pit:
+  bar_publication_lag_s: 0           # vendor-specific, set in M2
+  oi_available_time: "09:30"         # OD-7
+
+validation:
+  initial_train_months: 12
+  calibration_months: 2
+  test_months: 3
+  step_months: 3
+  embargo_sessions: 1
+  final_holdout_months: 6
+  bootstrap_reps: 2000
