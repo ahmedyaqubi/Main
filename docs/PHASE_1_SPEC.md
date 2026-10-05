@@ -1,6 +1,6 @@
 # PHASE 1 SPECIFICATION — QQQ 1DTE Research & Validation Engine
 
-**Status: FROZEN v1.0 (2026-10-05, ADR-0001 ACCEPTED).** Any change to a definition here
+**Status: FROZEN v1.1 (2026-10-05; ADR-0001, amended by ADR-0003).** Any change to a definition here
 requires a new ADR in `docs/decisions/`, approved by the owner (CLAUDE.md rule 7).
 
 Conventions:
@@ -31,9 +31,10 @@ Conventions:
 | 2021-04-23 → 2022-11-13 | Mon, Wed, Fri (Mon listed from 2021-04-23, Wed from 2021-04-27) | Fri→Mon, Tue→Wed, Thu→Fri only (3 of 5 weekdays) |
 | from 2022-11-14 | Mon–Fri (Tue listed from 2022-11-14, Thu from 2022-11-16) | every trading day |
 
-**Not yet verified (resolved in M2 from vendor data):** how many days before expiry Tue/Thu series are
-listed now. At launch they were listed one trading day before expiry. That matters because a series
-listed on day D has **no prior-day open interest** and may have thin early-session quotes.
+**Verified in M2 (informational, no definition change):** in the March 2025 sample, Mon–Thu
+expirations first appeared 10 sessions before expiry (Fridays earlier), so 1DTE contracts
+normally have prior-day open interest. At the 2022 launch, Tue/Thu series were listed one day
+ahead. M4 checks the lead time across the full history. See `reports/m2/sample_week.md` (C5).
 
 ### 1.2 Definition of 1DTE — ACCEPTED
 
@@ -50,7 +51,7 @@ listed on day D has **no prior-day open interest** and may have thin early-sessi
 
 | Use | Window | Rationale |
 |---|---|---|
-| Option-outcome labels (C), backtests, Stage 2 | **2022-11-14 → latest available** (~3.9 years, ~980 sessions) | the only period where every session has a 1DTE contract |
+| Option-outcome labels (C), backtests, Stage 2 | **2023-03-28 → latest available** (~3.5 years, ~885 sessions) — **amended by ADR-0003** (was 2022-11-14) | every session has a 1DTE contract from 2022-11-14; the start is bound by consolidated equity data at the chosen provider (ADR-0002/0003) |
 | Underlying-only labels (A, B, D), Stage 1 | same window by default; `config: history.underlying_start` may extend earlier | a longer history helps Stage 1, but structural change (0DTE era) is a risk. Owner decision (§12, OD-1). |
 | 2021-04 → 2022-11 partial-coverage period | **excluded** by default | only 3/5 weekdays; including it biases the sample by day of week |
 

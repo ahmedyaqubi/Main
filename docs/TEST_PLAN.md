@@ -15,7 +15,7 @@ come first**, because every later component depends on them.
 | T-TIME-05 `prediction_schedule` | a normal day yields exactly 64 timestamps 09:45…15:00; property: all on 5-min boundaries, all within RTH |
 | T-TIME-06 `bar_convention_start_vs_end` | a vendor bar labelled with its start time gets `available_at = start + 1m`; mixing up the convention fails |
 | T-TIME-07 `one_dte_resolution` | for D = Fri 2023-03-10 → Mon 03-13; D before Good Friday → following Mon, if listed; D where the D+1 expiration isn't in the chain → `NO_1DTE_EXPIRY` |
-| T-TIME-08 `pre_daily_era_excluded` | sessions before 2022-11-14 are excluded from option labels with a logged reason |
+| T-TIME-08 `pre_daily_era_excluded` | sessions before `history.option_era_start` (2023-03-28, ADR-0003) are excluded with a logged reason |
 
 ## T-LEAK — point-in-time / leakage (M3 core reader, M5 features, M6 labels)
 | ID | Proves |

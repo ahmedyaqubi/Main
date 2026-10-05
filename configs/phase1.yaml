@@ -3,8 +3,8 @@
 # T-CFG-01 checks that every `config:` key named in the spec exists here.
 
 history:
-  option_era_start: "2022-11-14"
-  underlying_start: "2022-11-14"   # OD-1
+  option_era_start: "2023-03-28"   # ADR-0003 (was 2022-11-14)
+  underlying_start: "2023-03-28"   # OD-1, ADR-0003
 
 session:
   calendar: XNYS

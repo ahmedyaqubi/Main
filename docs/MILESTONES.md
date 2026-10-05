@@ -5,7 +5,7 @@ Global criteria for every milestone: `uv run pytest`, `uv run ruff check .`, `uv
 in CI; tests for numerical code were written first; this file is updated with evidence.
 Test IDs refer to `docs/TEST_PLAN.md`; gate numbers refer to `PHASE_1_SPEC.md` §11.
 
-## M1 — Specification & architecture — IN PROGRESS (spec frozen; only the CI-on-GitHub criterion remains)
+## M1 — Specification & architecture — DONE (2026-10-05)
 Depends on: none
 Deliverables: docs/PHASE_1_SPEC.md, docs/ARCHITECTURE.md, docs/SCHEMA_DRAFT.md, docs/TEST_PLAN.md, docs/decisions/0001-*.md
 Acceptance:
@@ -13,18 +13,27 @@ Acceptance:
 - [x] "1DTE", holding period (intraday vs overnight), and option-selection rule frozen — spec §1.2, §2, §5; PHASE_1_SPEC v1.0 FROZEN, ADR-0001 ACCEPTED 2026-10-05
 - [x] Every Phase 1V gate has a numeric threshold — §11 (accepted, OD-5)
 - [x] Open decisions section lists anything still needing my input — §12 (OD-1…OD-12, all resolved in ADR-0001)
-- [ ] Repo skeleton, pyproject.toml, CI (pytest/ruff/mypy) passing on empty package — skeleton incl. `core/` (OD-11) done; pytest (15), ruff check/format, mypy --strict pass locally; **GitHub Actions run pending: no remote yet**
+- [x] Repo skeleton, pyproject.toml, CI (pytest/ruff/mypy) passing on empty package — GitHub Actions CI green on e53cfa1: https://github.com/ahmedyaqubi/Main/actions/runs/37287440694
 
-## M2 — Data requirements & provider evaluation — TODO
-Depends on: M1
-Deliverables: docs/DATA_REQUIREMENTS.md (matrix), docs/decisions/000X-options-data-provider.md
+## M2 — Data requirements & provider evaluation — DONE (2026-10-05; see open issue 1)
+Depends on: M1 (DONE)
+Deliverables: docs/DATA_REQUIREMENTS.md (matrix), docs/decisions/0002-options-data-provider.md (ACCEPTED: Databento), docs/decisions/0003-history-start-2023-03-28.md (ACCEPTED)
 Acceptance:
-- [ ] Matrix: every instrument × field × granularity × source × history start × point-in-time notes
-- [ ] QQQ expiration calendar history documented (when daily expirations began). M1 found Tue/Thu from 2022-11-14/16 and Mon/Wed from 2021-04-23/27; confirm against vendor chain data, including how far ahead short-term series are listed now
-- [ ] IBKR vs historical-provider split documented; candidate providers compared on coverage, granularity (NBBO vs trades), cost, licensing
-- [ ] Sample pull from the chosen provider validated end-to-end for one week
-- [ ] Vendor bar timestamp convention (start/end), OI publication timing, and quote granularity documented (these feed `pit.*` and `fills.latency_s`)
-- [ ] Intraday source for 2Y/10Y yields and DXY identified, or the feature is dropped with an ADR (daily FRED values are not available intraday)
+- [x] Matrix: every instrument × field × granularity × source × history start × point-in-time notes — DATA_REQUIREMENTS §1 (substitutions DXY→DX futures, 2Y/10Y→ZT/ZN futures, intraday VIX→VX futures, breadth dropped; feature ADR-0004 needed before M5)
+- [x] QQQ expiration calendar history documented — DATA_REQUIREMENTS §2 (exchange notices) + listing lead time from data: Mon–Thu expirations first listed 10 sessions ahead in Mar 2025 (`reports/m2/sample_week.md` C5)
+- [x] IBKR vs historical-provider split documented; candidate providers compared on coverage, granularity (NBBO vs trades), cost, licensing — DATA_REQUIREMENTS §3, ADR-0002 (free `metadata.get_cost` estimate: ≈ $34 Databento vs ≈ $280 ThetaData sprint)
+- [x] Sample pull from the chosen provider validated end-to-end for one week — `scripts/m2_fetch_sample.py` (cost-capped), `scripts/m2_sample_check.py`, report `reports/m2/sample_week.md`; check logic tested in `tests/test_m2_checks.py` (17 tests incl. hypothesis equivalence test). Week 2025-03-10→14 for 1-min options NBBO, definitions, OI, QQQ bars/BBO; tick-level (`cmbp-1`) all 5 days: full strike band on 03-10, D+1 ATM ± 5 on 03-11→14 (see open issue 1)
+- [x] Vendor bar timestamp convention, OI publication timing, and quote granularity documented — bars labelled at **start** (C2); `cbbo-1m` stamped at interval **end**, 0/42,900 contract-minutes over 5 sessions leak the next minute (C3); OI arrives 06:30:00–06:30:02 ET, none after the open (C7); 1-min NBBO for every contract-minute in RTH
+- [x] Intraday source for 2Y/10Y yields and DXY identified — ZT/ZN (`GLBX.MDP3`) and DX (`IFUS.IMPACT`) futures via Databento
+Sample results (all in `reports/m2/sample_week.md`): C1 UTC timestamps, DST correct (13:30 UTC open); C2 390/390 RTH bars every session; C4 1DTE expiry present every session; C6 0 crossed/zero/missing quotes in ATM ± 5, median spread $0.02–0.03, 98.4–99.8% pass §4.9 gates; C8 100% identical (42,900 contract-minutes).
+Open issues:
+1. **Tick sample scope (owner decision, option A).** `cmbp-1` for 2025-03-10 covers the full strike band (424 contracts, 6.45 GB compressed). For 2025-03-11→14 it covers only the 22 D+1 ATM ± 5 contracts that C3/C8 compare (`--tick-atm-only`, $2.12), because a full-band pull ran at ~0.5 MB/s and was stopped twice. Two interrupted full-band 03-11 requests may have been billed: check usage in the Databento portal. See "Later" for the full pull.
+2. **Storage planning for M3:** full-history tick NBBO is infeasible locally (~6.5 GB/day); the research store uses `cbbo-1m` (~4 MB/day compressed).
+3. Symbol resolution returned nothing for 2023-12-28 during cost estimation, while the full chain is available that day. Investigate in M4 DQ.
+4. NQ/ES roll rule (Databento `c.0` semantics) still to verify before using futures features.
+5. Databento licence terms for stored historical data not yet reviewed (before M3).
+6. Python on this machine needs certifi's CA bundle (Windows store has an expired chain certificate); scripts set `SSL_CERT_FILE`.
+7. Runtime deps added in M2: tzdata, python-dotenv, certifi, databento, exchange-calendars, numpy; dev: pandas-stubs.
 
 ## M3 — Ingestion & storage — TODO
 Depends on: M2 (provider chosen), M1 (schema approved)
@@ -179,6 +188,7 @@ Acceptance:
 - [ ] No controls that place or route orders
 
 ## Later (out-of-scope ideas parked here)
+- **Full strike-band tick NBBO for the M2 sample week (owner note, 2026-10-05).** Re-pull `cmbp-1` for 2025-03-11→14 over the full band (D+1/D+2 expiries, 424 contracts/day): priced at $11.20, ~75 GB uncompressed / ~25 GB on disk. Run `uv run python scripts/m2_fetch_sample.py --days <day> --download` one day per run (each day can exceed 1 h at slow transfer rates), or use Databento's batch API. Useful if later work (fill modelling in M12, quote-age/latency studies) needs tick data beyond ATM ± 5.
 - Overnight-hold variant of 1DTE (if OD-2 = intraday-only), with gap/theta/assignment labels
 - Extending Stage 1 history before 2022-11 (OD-1 option b)
 - Size/spread-dependent fill-probability model fit on paper data
