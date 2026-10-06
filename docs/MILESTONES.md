@@ -51,14 +51,27 @@ Notes:
 - `alembic.ini` sets `path_separator = os` (the repo path contains a space).
 - Incident: the first M3 push (e8c2000) failed before any job ran because `ci.yml` had an unquoted `: ` in a step name (invalid YAML). Fixed in df84181; T-CI-01 now parses every workflow file in the local test suite.
 
-## M4 — Data-quality validation — TODO
-Depends on: M3
+## M4 — Data-quality validation — DONE (2026-10-06, pending CI on the commit)
+Depends on: M3 (DONE)
+Deliverables: docs/DATA_QUALITY.md (check catalogue), src/qqq1dte/validation/, scripts/m4_fetch_history.py, scripts/m4_run_dq.py, reports/dq/, ADR-0005, ADR-0006
 Acceptance:
-- [ ] Every Phase 1D check implemented as a named check with severity; T-DQ-01…09 pass
-- [ ] Conservation: raw = cleaned + rejected, for every dataset (T-DQ-08)
-- [ ] DQ report (days, bars expected/received, missing %, duplicates, invalid quotes, timestamp errors, coverage by instrument/date, chain coverage) generated for the full ingested history and committed under `reports/dq/`
-- [ ] Gates 1–2 evaluated on the full history with numbers; any failure is documented and blocks M5
-- [ ] Liquidity gate defaults (§4.9) checked against the empirical spread distribution of ATM 1DTE contracts; changes go through an ADR
+- [x] Every Phase 1D check implemented as a named check with severity; T-DQ-01…09 pass — `validation/rules.py` (catalogue, `DQ_RULES_VERSION` 2), `validation/records.py`, `validation/sessions.py`; `tests/test_dq_records.py`, `tests/test_dq_sessions.py` (T-DQ-02 revised per owner decision 2). Not in M4 scope, documented in DATA_QUALITY.md: OI-change checks (OI deferred to M5), "required features available" (M5)
+- [x] Conservation: raw = cleaned + rejected, for every dataset (T-DQ-08) — held for all three datasets on the full history (`reports/dq/full_history.md`: 460,268 bars, 621,899 QQQ quotes, 83,470,947 option quotes)
+- [x] DQ report generated for the full ingested history — `reports/dq/full_history.md` (datasets, rejections/flags by check, bars expected/received/missing, chain coverage, coverage by month, CRITICAL events, exclusions, catalogue)
+- [x] Gates 1–2 evaluated on the full history with numbers — `reports/dq/gates.md`: **gate 1 PASS** (882 research sessions, 0 below 98% bar coverage, worst 99.23%; 879/882 = 99.66% sessions with a valid frozen-rule chain at ≥ 95% of timestamps); **gate 2 PASS** (0 open CRITICAL after ADR-0006; ATM invalid-quote rate 1,919/7,543,994 = 0.025%)
+- [x] Liquidity gate defaults (§4.9) checked against the empirical spread distribution — `reports/dq/liquidity_spreads.md`: frozen-rule quotes 112,336; spread median $0.02, p99 $0.04–0.11 by year; 99.58% pass all gates; min-bid and size gates never bind. **No change, so no ADR.**
+Findings / decisions (all with tests written first):
+- Vendor leaves the OPRA multiplier undefined → ADR-0005 standard-contract evidence (root, strike grid or documented OCC adjustment, symbol/expiry consistency).
+- OCC #53847: QQQ strikes reduced by $0.21584 on 2023-12-27 (M2 had wrongly called 2023-12-28 an anomaly). Adjusted strikes are accepted via `dq.strike_adjustments`; 88 supplemental files ($0.16) completed the chain for 46 affected sessions.
+- `NO_EVENT_TS` (undefined ts_event on carried-forward interval records) and `ZERO_QUOTE` (0/0 = no market) are flagged, not rejected.
+- ADR-0006: 2023-12-27 excluded (`history.excluded_sessions`); 3 sessions with intraday crossed-quote windows kept, CRITICAL closed (`dq.resolved_critical`).
+- Catalogue: `config_hash` is provenance, not content, for registered datasets (test added).
+Spend: underlying $0.47, options history $12.63, adjusted supplement $0.16, 2023-12-28 diagnostic $0.01 → **$13.27**.
+Open issues (carried forward):
+1. **M11:** the selection rule must treat a rejected latest record as "no valid quote" (never fall back to an older quote), as chain coverage does (`sessions._latest_records`).
+2. **M11 / spec:** when adjusted and standard strikes are both listed for an expiry, spec §5 treats them equally. Whether to prefer standard-grid strikes is an open spec question (ADR-0005 notes).
+3. The `MULTIPLIER_UNKNOWN` flag is on every option row, so the report's "flagged" count for options equals all rows. Cosmetic; can be excluded from that count.
+4. NQ/ES roll rule and OI (`statistics`) download: before M5 features.
 
 ## M5 — Point-in-time feature engine — TODO
 Depends on: M4

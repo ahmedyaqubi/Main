@@ -125,3 +125,16 @@ def test_time_08_research_window_start_from_config() -> None:
     assert CFG.history.option_era_start == date(2023, 3, 28)
     assert not CAL.in_research_window(date(2023, 3, 27))
     assert CAL.in_research_window(date(2023, 3, 28))
+
+
+def test_time_08_adr_excluded_session_not_in_research_window() -> None:
+    """ADR-0006: 2023-12-27 (OCC adjustment ex-date, vendor lists superseded series) is
+    excluded with a logged reason; neighbours stay in."""
+    excluded = {e.date: e for e in CFG.history.excluded_sessions}
+    assert excluded[date(2023, 12, 27)].adr == "ADR-0006"
+    assert not CAL.in_research_window(date(2023, 12, 27))
+    assert CAL.in_research_window(date(2023, 12, 26))
+    assert CAL.in_research_window(date(2023, 12, 28))
+    assert date(2023, 12, 27) not in CAL.research_sessions(date(2023, 12, 20), date(2024, 1, 5))
+    assert CAL.exclusion_reason(date(2023, 12, 27)) is not None
+    assert CAL.exclusion_reason(date(2023, 12, 28)) is None

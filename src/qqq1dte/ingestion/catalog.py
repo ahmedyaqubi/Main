@@ -26,8 +26,9 @@ class DatasetVersion:
     parent_ids: list[str] = field(default_factory=list)
 
 
-# Fields that define the dataset's content. code_commit and created_at are provenance of the
-# first registration and may legitimately differ on a re-run.
+# Fields that define the dataset's content. code_commit, config_hash and created_at are
+# provenance of the first registration and may legitimately differ on a re-run (derived datasets
+# put the config hash inside their dataset_id, so a config change gives a new id).
 _CONTENT_FIELDS = (
     "kind",
     "source",
@@ -35,7 +36,6 @@ _CONTENT_FIELDS = (
     "coverage_end",
     "row_count",
     "storage_uri",
-    "config_hash",
 )
 
 

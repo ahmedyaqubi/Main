@@ -233,3 +233,11 @@ def test_json_columns_roundtrip(migrated_engine: Engine) -> None:
             text("SELECT raw_scores FROM predictions WHERE prediction_id = :p"), {"p": pid}
         ).scalar_one()
     assert json.loads(json.dumps(got)) == {"C_call": 0.5}
+
+
+def test_record_dataset_config_hash_is_provenance_not_content(migrated_engine: Engine) -> None:
+    """A raw dataset's identity is its files; re-registering it under a later config is the same
+    dataset (first registration kept), not a conflict. Cleaned datasets carry the config hash
+    inside their dataset_id instead."""
+    assert record_dataset(migrated_engine, _dv(config_hash="h1")) is True
+    assert record_dataset(migrated_engine, _dv(config_hash="h2")) is False

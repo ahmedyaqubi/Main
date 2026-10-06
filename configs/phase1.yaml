@@ -5,6 +5,11 @@
 history:
   option_era_start: "2023-03-28"   # ADR-0003 (was 2022-11-14)
   underlying_start: "2023-03-28"   # OD-1, ADR-0003
+  # Sessions removed from all research use, each with its ADR (logged, never silent).
+  excluded_sessions:
+    - date: "2023-12-27"
+      adr: "ADR-0006"
+      reason: "OCC #53847 ex-date: vendor lists superseded pre-adjustment series quoted 0/0 all day"
 
 session:
   calendar: XNYS
@@ -74,3 +79,25 @@ validation:
   embargo_sessions: 1
   final_holdout_months: 6
   bootstrap_reps: 2000
+
+# Data quality (M4, docs/DATA_QUALITY.md). Gate thresholds mirror spec §11 gates 1-2.
+dq:
+  max_event_recv_skew_s: 1          # ts_event may not exceed ts_recv by more than this
+  strike_increment: 0.5             # QQQ standard strikes are multiples of $0.50
+  min_bar_coverage: 0.98            # gate 1: per instrument-session RTH bar coverage
+  min_chain_timestamp_share: 0.95   # gate 1: share of prediction timestamps with a valid chain
+  min_chain_session_share: 0.95     # gate 1: share of sessions meeting the line above
+  max_invalid_quote_rate: 0.02      # gate 2: rejected share, D+1 ATM ± 5, RTH
+  atm_half_width: 5                 # strikes either side of ATM for the gate-2 population
+  option_root: "QQQ"                # standard series root; adjusted deliverables get new roots
+  # Documented OCC strike adjustments (ADR-0005). An off-grid strike is a valid standard
+  # contract only if it matches one of these on/after its ex-date.
+  # CRITICAL DQ events closed by an ADR (session kept; affected timestamps have no valid quote).
+  resolved_critical:
+    - {check: CHAIN_COVERAGE_LOW, session: "2024-02-06", adr: "ADR-0006"}
+    - {check: CHAIN_COVERAGE_LOW, session: "2025-10-22", adr: "ADR-0006"}
+    - {check: CHAIN_COVERAGE_LOW, session: "2026-03-10", adr: "ADR-0006"}
+  strike_adjustments:
+    - ex_date: "2023-12-27"
+      reduction: 0.21584            # strikes reduced by this, rounded to the penny
+      memo: "OCC Information Memo #53847 (QQQ special cash dividend)"

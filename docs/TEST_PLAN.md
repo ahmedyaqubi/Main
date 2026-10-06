@@ -38,7 +38,7 @@ come first**, because every later component depends on them.
 | ID | Proves |
 |---|---|
 | T-DQ-01 `bid_gt_ask_rejected` | a crossed quote is rejected with reason `BID_GT_ASK` and a `data_quality_events` row |
-| T-DQ-02 `nonpositive_prices` | bid ≤ 0 / ask ≤ 0 / NaN are each rejected with their own reason |
+| T-DQ-02 `nonpositive_prices` | **revised M4 (owner decision 2):** negative bid / non-positive ask are rejected (`NONPOSITIVE_PRICE`); a missing side or zero bid is a real market state and is **flagged and kept** (`NO_BID`, `NO_ASK`, `EMPTY_BOOK`, `ZERO_BID`), so the point-in-time reader never falls back to an older two-sided quote |
 | T-DQ-03 `duplicates` | exact and same-key duplicates are detected and counted, never silently deduped |
 | T-DQ-04 `missing_bars` | a session with 3 missing bars reports 387/390 and emits MISSING_BAR events at the right timestamps |
 | T-DQ-05 `outside_rth` | out-of-session records are flagged correctly, including early-close days |

@@ -23,9 +23,16 @@ class _Section(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
+class ExcludedSession(_Section):
+    date: date
+    adr: str
+    reason: str
+
+
 class History(_Section):
     option_era_start: date
     underlying_start: date
+    excluded_sessions: list[ExcludedSession]
 
 
 class Session(_Section):
@@ -120,6 +127,31 @@ class Validation(_Section):
     bootstrap_reps: int
 
 
+class ResolvedCritical(_Section):
+    check: str
+    session: date
+    adr: str
+
+
+class StrikeAdjustment(_Section):
+    ex_date: date
+    reduction: float
+    memo: str
+
+
+class DataQuality(_Section):
+    max_event_recv_skew_s: int
+    strike_increment: float
+    min_bar_coverage: float
+    min_chain_timestamp_share: float
+    min_chain_session_share: float
+    max_invalid_quote_rate: float
+    atm_half_width: int
+    option_root: str
+    resolved_critical: list[ResolvedCritical]
+    strike_adjustments: list[StrikeAdjustment]
+
+
 class Phase1Config(_Section):
     history: History
     session: Session
@@ -133,6 +165,7 @@ class Phase1Config(_Section):
     fills: Fills
     pit: Pit
     validation: Validation
+    dq: DataQuality
 
 
 def load_config(path: Path | None = None) -> Phase1Config:

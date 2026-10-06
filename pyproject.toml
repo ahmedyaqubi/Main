@@ -54,8 +54,13 @@ src = ["src", "tests", "scripts"]
 select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "DTZ", "PL", "RUF"]
 # DTZ: forbid naive datetimes — all timestamps must be tz-aware (spec: UTC storage).
 
+[tool.ruff.lint.pylint]
+# DQ/session functions take the cleaned/rejected frames, calendar, config and sessions.
+max-args = 8
+max-positional-args = 8
+
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["PLR2004"]
+"tests/**" = ["PLR2004", "PLR0913"]
 
 [tool.mypy]
 python_version = "3.12"

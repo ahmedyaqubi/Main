@@ -1,6 +1,6 @@
 # PHASE 1 SPECIFICATION — QQQ 1DTE Research & Validation Engine
 
-**Status: FROZEN v1.1 (2026-10-05; ADR-0001, amended by ADR-0003).** Any change to a definition here
+**Status: FROZEN v1.2 (2026-10-06; ADR-0001, amended by ADR-0003 and ADR-0005).** Any change to a definition here
 requires a new ADR in `docs/decisions/`, approved by the owner (CLAUDE.md rule 7).
 
 Conventions:
@@ -21,7 +21,7 @@ Conventions:
 |---|---|
 | Underlying | QQQ (Invesco QQQ Trust), US-listed ETF. Reference price = consolidated 1-minute bars (trades), see §1.3. |
 | Options | Standard QQQ equity options. **American-style, physically settled.** Root `QQQ`. Strike increments: use what the point-in-time chain lists (do not assume $1). |
-| Contract multiplier | 100 (verify per contract from chain metadata; reject the contract if it is not 100, e.g. adjusted series after a corporate action). |
+| Contract multiplier | 100. **Amended by ADR-0005:** the vendor does not publish the multiplier, so standardness is established from the OCC root (`QQQ`), the strike grid (or a documented OCC strike adjustment, e.g. memo #53847 on 2023-12-27), and symbol/expiration consistency; a *known* multiplier other than 100 is still rejected. |
 
 ### 1.1 Expiration history (verified 2026-10-05, sources in §13)
 

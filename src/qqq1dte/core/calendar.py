@@ -49,9 +49,19 @@ class TradingCalendar:
         open_, close = self.open_close(d)
         return (close - open_) < timedelta(minutes=REGULAR_CLOSE_MINUTES)
 
+    def exclusion_reason(self, d: date) -> str | None:
+        """ADR-backed exclusion (history.excluded_sessions), or None."""
+        for e in self.cfg.history.excluded_sessions:
+            if e.date == d:
+                return f"{e.adr}: {e.reason}"
+        return None
+
     def in_research_window(self, d: date) -> bool:
-        """Spec §1.3 / ADR-0003: sessions before history.option_era_start are excluded."""
-        return d >= self.cfg.history.option_era_start
+        """Spec §1.3 / ADR-0003: on/after history.option_era_start and not ADR-excluded."""
+        return d >= self.cfg.history.option_era_start and self.exclusion_reason(d) is None
+
+    def research_sessions(self, start: date, end: date) -> list[date]:
+        return [d for d in self.sessions(start, end) if self.in_research_window(d)]
 
     # schedule ------------------------------------------------------------------------
     def last_new_entry(self, d: date) -> datetime:
