@@ -51,7 +51,7 @@ Notes:
 - `alembic.ini` sets `path_separator = os` (the repo path contains a space).
 - Incident: the first M3 push (e8c2000) failed before any job ran because `ci.yml` had an unquoted `: ` in a step name (invalid YAML). Fixed in df84181; T-CI-01 now parses every workflow file in the local test suite.
 
-## M4 — Data-quality validation — DONE (2026-10-06, pending CI on the commit)
+## M4 — Data-quality validation — DONE (2026-10-06; CI green on fec9bd4: https://github.com/ahmedyaqubi/Main/actions/runs/37523570060)
 Depends on: M3 (DONE)
 Deliverables: docs/DATA_QUALITY.md (check catalogue), src/qqq1dte/validation/, scripts/m4_fetch_history.py, scripts/m4_run_dq.py, reports/dq/, ADR-0005, ADR-0006
 Acceptance:
