@@ -35,11 +35,11 @@ Open issues:
 6. Python on this machine needs certifi's CA bundle (Windows store has an expired chain certificate); scripts set `SSL_CERT_FILE`.
 7. Runtime deps added in M2: tzdata, python-dotenv, certifi, databento, exchange-calendars, numpy; dev: pandas-stubs.
 
-## M3 — Ingestion & storage — IN PROGRESS (all criteria met locally; awaiting CI run)
+## M3 — Ingestion & storage — DONE (2026-10-06)
 Depends on: M2 (DONE, provider chosen), M1 (DONE); schema v1.0 approved 2026-10-05 (`docs/SCHEMA.md`)
 Acceptance:
 - [x] `core/` calendar, clock, config loader, `AsOfReader` implemented; T-TIME-01…08, T-LEAK-01/02, T-CFG-01/02 pass — `src/qqq1dte/core/`, `tests/test_core_time.py`, `tests/test_core_pit.py`, `tests/test_skeleton.py`
-- [ ] Alembic migrations create every Postgres table in SCHEMA (as approved); upgrade → downgrade → upgrade works on an empty DB in CI (service container) — `migrations/versions/0001_initial_schema.py`; `tests/test_db_schema.py` 13/13 pass on local PostgreSQL 16.15 with `REQUIRE_DB=1` (2026-10-06), including `test_upgrade_downgrade_upgrade` and every constraint/trigger test; main `qqq1dte` DB at revision `0001`. **CI run pending** (service container + `REQUIRE_DB=1` configured)
+- [x] Alembic migrations create every Postgres table in SCHEMA (as approved); upgrade → downgrade → upgrade works on an empty DB in CI (service container) — `migrations/versions/0001_initial_schema.py`; `tests/test_db_schema.py` 13/13 pass on local PostgreSQL 16.15 with `REQUIRE_DB=1` (2026-10-06), including `test_upgrade_downgrade_upgrade` and every constraint/trigger test; main `qqq1dte` DB at revision `0001`. CI green with Postgres service container and `REQUIRE_DB=1` on df84181: https://github.com/ahmedyaqubi/Main/actions/runs/37437683279
 - [x] Raw Parquet writers store vendor data unchanged, with `source`, `raw_file_id`, `ingested_at`; re-ingesting the same file is idempotent (same `dataset_id`) — `src/qqq1dte/ingestion/databento_raw.py`, `tests/test_ingestion_raw.py` (7 tests on synthetic DBN files)
 - [x] `dataset_versions` row written for every dataset; content hash reproducible — `src/qqq1dte/ingestion/catalog.py`; `test_record_dataset_is_idempotent`, `test_record_dataset_same_id_different_content_raises`; 5 sample datasets registered in local `qqq1dte`, a second registration wrote 0 rows, and the dataset_ids equal those computed in the earlier no-DB run (`reports/m3/ingest_sample.md`)
 - [x] The one-week sample from M2 ingested end to end for QQQ underlying + QQQ options — `scripts/m3_ingest_sample.py`, `reports/m3/ingest_sample.md` (40 files → 40 Parquet files, 5 datasets; second pass changed nothing)
@@ -49,6 +49,7 @@ Notes:
 - New deps: polars, pyarrow, sqlalchemy, alembic, psycopg[binary], pydantic.
 - Local setup: PostgreSQL 16 service, role `qqq1dte` (no superuser, no CREATEDB), databases `qqq1dte` and `qqq1dte_test`; URLs in `.env` only.
 - `alembic.ini` sets `path_separator = os` (the repo path contains a space).
+- Incident: the first M3 push (e8c2000) failed before any job ran because `ci.yml` had an unquoted `: ` in a step name (invalid YAML). Fixed in df84181; T-CI-01 now parses every workflow file in the local test suite.
 
 ## M4 — Data-quality validation — TODO
 Depends on: M3
