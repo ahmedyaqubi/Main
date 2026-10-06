@@ -39,5 +39,5 @@ jobs:
         run: uv run ruff format --check .
       - name: Mypy
         run: uv run mypy src
-      - name: Pytest (database tests required: REQUIRE_DB=1 turns a skip into a failure)
+      - name: "Pytest (database tests required: REQUIRE_DB=1 turns a skip into a failure)"
         run: uv run pytest -rs

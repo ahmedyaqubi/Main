@@ -102,3 +102,14 @@ def test_safe_02_no_market_data_tracked_in_git() -> None:
         if f.endswith(DATA_SUFFIXES) or (f.startswith("data/") and f != "data/.gitkeep")
     ]
     assert not offenders, f"market data files tracked in git: {offenders}"
+
+
+def test_ci_01_workflow_files_are_valid_yaml() -> None:
+    """A YAML error makes GitHub skip every job silently (M3 incident, run 37437543872)."""
+    workflows = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+    assert workflows
+    for wf in workflows:
+        doc = yaml.safe_load(wf.read_text(encoding="utf-8"))
+        assert isinstance(doc, dict) and "jobs" in doc, wf.name
+        for job in doc["jobs"].values():
+            assert all(isinstance(step, dict) for step in job["steps"]), wf.name
