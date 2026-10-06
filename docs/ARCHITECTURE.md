@@ -96,7 +96,7 @@ future data.
   feature_snapshots (also catalogued in Postgres), labels. Every dataset version is immutable
   and identified by a content hash (`dataset_id`).
 - **PostgreSQL**: metadata, catalogue, DQ events, predictions, candidates, trades, models,
-  calibrations, runs, regimes, audit logs. See `SCHEMA_DRAFT.md`.
+  calibrations, runs, regimes, audit logs. See `SCHEMA.md`.
 
 ## 6. Versioning tuple (attached to every prediction)
 

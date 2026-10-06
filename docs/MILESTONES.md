@@ -7,7 +7,7 @@ Test IDs refer to `docs/TEST_PLAN.md`; gate numbers refer to `PHASE_1_SPEC.md` �
 
 ## M1 — Specification & architecture — DONE (2026-10-05)
 Depends on: none
-Deliverables: docs/PHASE_1_SPEC.md, docs/ARCHITECTURE.md, docs/SCHEMA_DRAFT.md, docs/TEST_PLAN.md, docs/decisions/0001-*.md
+Deliverables: docs/PHASE_1_SPEC.md, docs/ARCHITECTURE.md, docs/SCHEMA.md, docs/TEST_PLAN.md, docs/decisions/0001-*.md
 Acceptance:
 - [x] Every item in MASTER_PROMPT Phase 1A defined with a concrete value or a config key + default — PHASE_1_SPEC §1–§6, configs/phase1.yaml; T-CFG-01
 - [x] "1DTE", holding period (intraday vs overnight), and option-selection rule frozen — spec §1.2, §2, §5; PHASE_1_SPEC v1.0 FROZEN, ADR-0001 ACCEPTED 2026-10-05
@@ -35,15 +35,20 @@ Open issues:
 6. Python on this machine needs certifi's CA bundle (Windows store has an expired chain certificate); scripts set `SSL_CERT_FILE`.
 7. Runtime deps added in M2: tzdata, python-dotenv, certifi, databento, exchange-calendars, numpy; dev: pandas-stubs.
 
-## M3 — Ingestion & storage — TODO
-Depends on: M2 (provider chosen), M1 (schema approved)
+## M3 — Ingestion & storage — IN PROGRESS (all criteria met locally; awaiting CI run)
+Depends on: M2 (DONE, provider chosen), M1 (DONE); schema v1.0 approved 2026-10-05 (`docs/SCHEMA.md`)
 Acceptance:
-- [ ] `core/` calendar, clock, config loader, `AsOfReader` implemented; T-TIME-01…08, T-LEAK-01/02, T-CFG-01/02 pass
-- [ ] Alembic migrations create every Postgres table in SCHEMA_DRAFT (as approved); upgrade → downgrade → upgrade works on an empty DB in CI (service container)
-- [ ] Raw Parquet writers store vendor data unchanged, with `source`, `raw_file_id`, `ingested_at`; re-ingesting the same file is idempotent (same `dataset_id`)
-- [ ] `dataset_versions` row written for every dataset; content hash reproducible
-- [ ] The one-week sample from M2 ingested end to end for QQQ underlying + QQQ options
-- [ ] No vendor code path can place orders (T-SAFE-01)
+- [x] `core/` calendar, clock, config loader, `AsOfReader` implemented; T-TIME-01…08, T-LEAK-01/02, T-CFG-01/02 pass — `src/qqq1dte/core/`, `tests/test_core_time.py`, `tests/test_core_pit.py`, `tests/test_skeleton.py`
+- [ ] Alembic migrations create every Postgres table in SCHEMA (as approved); upgrade → downgrade → upgrade works on an empty DB in CI (service container) — `migrations/versions/0001_initial_schema.py`; `tests/test_db_schema.py` 13/13 pass on local PostgreSQL 16.15 with `REQUIRE_DB=1` (2026-10-06), including `test_upgrade_downgrade_upgrade` and every constraint/trigger test; main `qqq1dte` DB at revision `0001`. **CI run pending** (service container + `REQUIRE_DB=1` configured)
+- [x] Raw Parquet writers store vendor data unchanged, with `source`, `raw_file_id`, `ingested_at`; re-ingesting the same file is idempotent (same `dataset_id`) — `src/qqq1dte/ingestion/databento_raw.py`, `tests/test_ingestion_raw.py` (7 tests on synthetic DBN files)
+- [x] `dataset_versions` row written for every dataset; content hash reproducible — `src/qqq1dte/ingestion/catalog.py`; `test_record_dataset_is_idempotent`, `test_record_dataset_same_id_different_content_raises`; 5 sample datasets registered in local `qqq1dte`, a second registration wrote 0 rows, and the dataset_ids equal those computed in the earlier no-DB run (`reports/m3/ingest_sample.md`)
+- [x] The one-week sample from M2 ingested end to end for QQQ underlying + QQQ options — `scripts/m3_ingest_sample.py`, `reports/m3/ingest_sample.md` (40 files → 40 Parquet files, 5 datasets; second pass changed nothing)
+- [x] No vendor code path can place orders (T-SAFE-01); market data never tracked in git (T-SAFE-02, new)
+Notes:
+- Schema implementation choices (trigger-based append-only journal, `trade_candidates.latency_s`) documented in `docs/SCHEMA.md` §B notes.
+- New deps: polars, pyarrow, sqlalchemy, alembic, psycopg[binary], pydantic.
+- Local setup: PostgreSQL 16 service, role `qqq1dte` (no superuser, no CREATEDB), databases `qqq1dte` and `qqq1dte_test`; URLs in `.env` only.
+- `alembic.ini` sets `path_separator = os` (the repo path contains a space).
 
 ## M4 — Data-quality validation — TODO
 Depends on: M3

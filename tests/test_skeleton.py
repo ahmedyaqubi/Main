@@ -80,3 +80,25 @@ def test_cfg_01_spec_keys_exist_and_match() -> None:
             assert actual == expected, f"{key}: spec says {expected!r}, config has {actual!r}"
         checked += 1
     assert checked >= 20, f"only {checked} spec config references found; parser broken?"
+
+
+DATA_SUFFIXES = (".dbn", ".zst", ".parquet", ".dbn.zst", ".feather", ".arrow", ".csv.gz")
+
+
+def test_safe_02_no_market_data_tracked_in_git() -> None:
+    """The repo may be public and vendor licences forbid redistribution (M2 ADR-0002 notes)."""
+    import shutil  # noqa: PLC0415
+    import subprocess  # noqa: PLC0415
+
+    git = shutil.which("git")
+    if git is None or not (ROOT / ".git").exists():
+        pytest.skip("not a git checkout")
+    tracked = subprocess.run(
+        [git, "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True
+    ).stdout.splitlines()
+    offenders = [
+        f
+        for f in tracked
+        if f.endswith(DATA_SUFFIXES) or (f.startswith("data/") and f != "data/.gitkeep")
+    ]
+    assert not offenders, f"market data files tracked in git: {offenders}"

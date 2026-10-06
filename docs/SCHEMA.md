@@ -1,6 +1,7 @@
-# Database / Dataset Schema — DRAFT for review (not migrations)
+# Database / Dataset Schema
 
-**Status: DRAFT v0.1 (Milestone 1).** Alembic migrations are written in M3, after approval.
+**Status: v1.0, approved by the owner 2026-10-05 (M3).** Implemented by the Alembic migrations in
+`migrations/`. Changes after this point need an ADR.
 
 Conventions: every timestamp is `TIMESTAMPTZ` stored in UTC. `*_ts` is an event time and
 `available_at` is when the information became knowable. `ingested_at` is wall-clock load time.
@@ -9,42 +10,39 @@ Every row carries provenance (`source`, `dataset_id` or `run_id`). Journal table
 
 ## A. Parquet datasets (large), with Postgres catalogue
 
-Partitioning: `/<dataset>/<instrument>/<yyyy>/<mm>/<dd>.parquet`. Each dataset version is
-immutable and catalogued in `dataset_versions`.
+Every dataset version is immutable and catalogued in `dataset_versions`.
 
-### 1. raw_market_data (Parquet)
-| column | type | note |
-|---|---|---|
-| source | str | vendor id |
-| vendor_symbol | str | as delivered |
-| instrument | str | normalised (QQQ, NQ, ES, VIX, …) |
-| bar_start_ts, bar_end_ts | timestamp[UTC] | vendor convention recorded in `bar_ts_convention` |
-| bar_ts_convention | str | `start` / `end`, so the start-vs-end label bug can't happen silently |
-| open, high, low, close | float64 | as delivered, unadjusted |
-| volume | int64 | |
-| vwap, trade_count | float64/int64 | nullable |
-| ingested_at | timestamp[UTC] | |
-| raw_file_id | str | hash of the delivered file |
+### 1–2. Raw layer: raw_market_data / raw_options_data (v1.0, Databento)
+The raw layer stores vendor data **unchanged**, in two forms:
 
-### 2. raw_options_data (Parquet)
-| column | type | note |
-|---|---|---|
-| source, raw_file_id, ingested_at | | provenance |
-| quote_ts | timestamp[UTC] | vendor/exchange timestamp |
-| underlying | str | QQQ |
-| occ_symbol | str | OCC 21-char symbol |
-| expiration | date | |
-| strike | decimal(10,3) | |
-| right | char(1) | C/P |
-| bid, ask, last | float64 | nullable last |
-| bid_size, ask_size | int32 | nullable |
-| volume | int64 | nullable, cumulative-day vs interval recorded in `volume_kind` |
-| open_interest, oi_as_of_date | int64, date | nullable; the as-of date is mandatory when OI is present |
-| vendor_iv, vendor_delta, vendor_gamma, vendor_theta, vendor_vega | float64 | stored, not used as features by default (OD-7) |
-| vendor_greeks_ts | timestamp[UTC] | nullable |
-| underlying_price_vendor | float64 | nullable |
-| quote_condition | str | nullable |
-| multiplier | int16 | |
+1. **Original files**: `data/raw/files/<raw_file_id>.dbn.zst`, byte-identical to the
+   download, where `raw_file_id` = SHA-256 of the file bytes. Never modified or deleted.
+2. **Decoded Parquet**: `data/raw/parquet/<vendor_dataset>/<schema>/date=<YYYY-MM-DD>/<raw_file_id>.parquet`,
+   one file per original file. Every DBN record field is kept as delivered:
+   - timestamps (`ts_recv`, `ts_event`, …) as **uint64 ns since epoch, UTC**, the vendor's type (no conversion);
+   - prices (`price`, `bid_px_00`, `open`, …) as **int64 fixed-point, 1e-9 units**, with the
+     vendor's undefined sentinel (`INT64_MAX`) kept, not turned into null;
+   - all other fields with the decoder's native types (single-character fields such as
+     `side`/`action` as 1-char strings; the DBN framing field `length` is not stored);
+   - `symbol` (vendor raw symbol mapped by the decoder) added for readability.
+
+   Plus provenance columns: `source` (`databento`), `vendor_dataset` (e.g. `OPRA.PILLAR`),
+   `schema` (e.g. `cbbo-1m`), `raw_file_id`, `ingested_at` (UTC wall clock).
+
+`raw_market_data` = equity/futures datasets (`EQUS.MINI`, `GLBX.MDP3`, …).
+`raw_options_data` = `OPRA.PILLAR` schemas. Columns differ by schema, so each
+(vendor_dataset, schema) pair is its own Parquet dataset. The partition `date` is the UTC date
+of the file's requested start (DBN metadata).
+
+Conventions learned in M2 (applied in the cleaned layer, M4, not here): `ohlcv-*` bars are
+stamped at bar **start** (`available_at = ts_event + interval`); `cbbo-*`/`bbo-*` `ts_recv` is
+the interval **end** (`available_at = ts_recv`); OI arrives in `statistics` (stat_type 9) at
+~06:30 ET. Databento supplies no IV/Greeks; those are computed in-house (OD-7).
+
+**`dataset_id`** = SHA-256 of canonical JSON `{kind, vendor_dataset, schema, raw_file_ids
+(sorted), raw_format_version}`. It does **not** include `ingested_at` or the code commit
+(recorded separately in `dataset_versions`), so re-ingesting identical files yields the same
+`dataset_id` and writes no duplicate rows.
 
 ### 3. cleaned_market_data (Parquet)
 raw columns + `available_at`, `session_date` (ET), `is_rth`, `is_early_close`, `dq_status`
@@ -259,11 +257,19 @@ CREATE TABLE simulated_trades (
 );
 ```
 
-**Note on `trade_candidates.quote_ts`:** the rule `quote_ts <= prediction_ts + latency`
-crosses tables, so a CHECK constraint can't express it. It will be enforced by a
-`BEFORE INSERT` trigger (M3) plus an application assertion, and covered by T-SEL-03.
+**Implementation notes (migration `0001`, M3):**
+- `trade_candidates` has `latency_s INT NOT NULL`. A `BEFORE INSERT` trigger rejects any candidate
+  whose `quote_ts` is later than its prediction's `prediction_ts + latency_s` (spec §5 point-in-time
+  rule, which spans two tables, so a CHECK can't express it).
+- Append-only journal: triggers on `predictions`, `trade_candidates`, `simulated_trades` reject every
+  UPDATE, DELETE and TRUNCATE, for every role including the owner. This replaces the draft's
+  "writer role without UPDATE/DELETE rights": creating roles needs `CREATEROLE`, which the
+  project user does not have, and triggers also bind the owner.
+- Named constraints `features_not_after_prediction` and `trade_requires_calibration` on `predictions`;
+  extra sanity CHECKs on date ranges (`coverage_start <= coverage_end`, `train_start <= train_end`)
+  and a non-empty `approved_by` for promotions.
 
-## C. Open schema questions
-- One `predictions` row per timestamp with JSONB for multiple targets (as drafted), or one row per (timestamp, target)? The draft keeps one decision per timestamp.
-- Should feature_snapshots be wide Parquet per feature_version (faster) rather than long (simpler PIT checks)? Proposed: long canonical + wide materialised view.
-- Partition `predictions` by month once paper mode starts.
+## C. Schema decisions (resolved 2026-10-05)
+- `predictions`: **one row per timestamp** with JSONB scores per target, so there is exactly one decision per timestamp.
+- `feature_snapshots`: **long canonical** Parquet plus a wide materialised table per `feature_version`.
+- Partitioning `predictions` by month is deferred to M20 (paper mode).
