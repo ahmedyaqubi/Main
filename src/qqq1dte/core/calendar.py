@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 from datetime import date, datetime, timedelta
 
 import exchange_calendars as xcals
@@ -59,6 +60,16 @@ class TradingCalendar:
     def in_research_window(self, d: date) -> bool:
         """Spec §1.3 / ADR-0003: on/after history.option_era_start and not ADR-excluded."""
         return d >= self.cfg.history.option_era_start and self.exclusion_reason(d) is None
+
+    def final_holdout_start(self, last_session: date) -> date:
+        """Spec §8: sessions strictly after this date (the last session minus
+        validation.final_holdout_months calendar months, day clamped to month end) are the final
+        holdout. It is locked until M19: nothing may be tuned or chosen by looking at it."""
+        months = self.cfg.validation.final_holdout_months
+        y, m = divmod(last_session.year * 12 + last_session.month - 1 - months, 12)
+        m += 1
+        last_day = calendar.monthrange(y, m)[1]
+        return date(y, m, min(last_session.day, last_day))
 
     def research_sessions(self, start: date, end: date) -> list[date]:
         return [d for d in self.sessions(start, end) if self.in_research_window(d)]

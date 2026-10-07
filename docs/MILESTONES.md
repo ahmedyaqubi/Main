@@ -93,13 +93,22 @@ Open issues:
 4. Holiday macro releases (Good Friday NFP 2023-04-07, 2026-04-03) never fire `macro_event_today`. Documented in FEATURES.md.
 5. T-LEAK-05 takes ~100 s (1,000 examples) and is part of every CI run.
 
-## M6 — Label generation — TODO
-Depends on: M4 (and the M1 freeze of label definitions)
+## M6 — Label generation — DONE (2026-10-07, pending CI on the commit)
+Depends on: M4 (DONE)
+Owner decisions (2026-10-07): Q1 adjusted and standard strikes treated alike in §5; Q2 no contract or a failed §4.9 gate → C = INVALID (excluded from training); Q3 path gaps: missing bid = 0, rejected records skipped and flagged, > 5 min without a usable quote or no fresh exit quote → UNRESOLVED_DATA; Q4 1-minute path resolution accepted (intra-minute touches unseen).
 Acceptance:
-- [ ] Labels A/B/C/D (both sides, all configured variants) per spec §3; T-LBL-01…07 pass
-- [ ] C labels use the frozen selection rule (§5); its pure function is implemented here and reused by M11
-- [ ] Class balance, ambiguous-bar rate, INVALID rate, and UNRESOLVED rate reported per label and per year
-- [ ] D-label stop default (0.15%) checked against the empirical option bracket; any change needs an ADR
+- [x] Labels A/B/C/D (both sides, all configured variants) per spec §3; T-LBL-01…07 pass — `src/qqq1dte/labels/` (underlying.py, option.py, common.py); `tests/test_labels_underlying.py` (T-LBL-01/02/04/05/06/07 + risk-label and window-boundary tests), `tests/test_labels_option.py` (T-LBL-03 target/stop on the bid, time-exit classes, breakeven, no-bid-as-zero, path gaps, unresolved, illiquid → INVALID, entry at T_e only, invariance to data after T_end, schema regression)
+- [x] C labels use the frozen selection rule (§5); its pure function is implemented here and reused by M11 — `src/qqq1dte/execution_sim/selection.py` (`select_contract`, `choose_contract`, `liquidity_failures`); `tests/test_selection.py` (T-SEL-01…05 incl. a 300-example property test, every §4.9 gate)
+- [x] Class balance, ambiguous-bar rate, INVALID rate, and UNRESOLVED rate reported per label and per year — `reports/labels/summary.md` (**final holdout excluded**; 80,640 rows after 2026-04-02 locked)
+- [x] D-label stop default (0.15%) checked against the empirical option bracket; any change needs an ADR — `reports/labels/d_stop_check.md` (pre-holdout only): the option −20% stop ↔ median QQQ move −0.20% / +0.18%; +30% target ↔ +0.31% / −0.30%. **ADR-0007 (owner, 2026-10-07):** D stop 0.19%, D target 0.30% (own `labels.risk.target` key), labels → **L2**. Tests `test_risk_defaults_are_adr_0007`, `test_risk_target_is_independent_of_magnitude_threshold`
+Evidence / results:
+- **L2** (current): 882 sessions × 64 timestamps × 10 label ids/variants = 561,600 rows (`data/labels/L2/`, catalogue `0aeb046d…`); C trade details (entry/exit/MFE/MAE/net P&L) in `data/labels/L2_option/`. L1 (`9b35b8aa…`) superseded by ADR-0007.
+- Pre-holdout: C_call WIN 25.3% / C_put WIN 27.9% of resolved (LOSS ≈ 47–51%); INVALID ≈ 0.5% (mostly SPREAD_TOO_WIDE); UNRESOLVED_DATA 0.05%. A/B/D INVALID 1.27%, all from the 52 missing QQQ bars (one missing bar invalidates every window containing it). D (L2) UNRESOLVED 26–28% (17% under L1's tighter bracket); stop-first share of resolved 65.6% calls / 62.7% puts.
+- New shared helper `TradingCalendar.final_holdout_start` (tested). M10 must use it.
+Notes / open issues:
+1. Transparency: before the holdout filter was added, full-history label stats (incl. the holdout) were printed once during development. No definition was chosen from them; the pre-holdout figures are essentially identical.
+2. Selection tests (T-SEL) were written together with `selection.py` rather than strictly red-first. They all pass and cover every rule; labels and the holdout helper were done red-first.
+3. Path resolution is 1 minute (Q4). The M2 tick week could quantify missed intra-minute touches later ("Later").
 
 ## M7 — Baseline model (Model 0) — TODO
 Depends on: M5, M6, M10 splitter (T-WF-01/02 can be built first within M7 if M10 is not yet done)

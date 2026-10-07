@@ -138,3 +138,15 @@ def test_time_08_adr_excluded_session_not_in_research_window() -> None:
     assert date(2023, 12, 27) not in CAL.research_sessions(date(2023, 12, 20), date(2024, 1, 5))
     assert CAL.exclusion_reason(date(2023, 12, 27)) is not None
     assert CAL.exclusion_reason(date(2023, 12, 28)) is None
+
+
+def test_final_holdout_start_is_months_before_last_session() -> None:
+    """Spec §8: the last validation.final_holdout_months calendar months are the holdout.
+    Holdout = sessions strictly after (last session - N months); shared by reports and M10."""
+    start = CAL.final_holdout_start(date(2026, 10, 2))
+    assert start == date(2026, 4, 2)  # sessions on/before this date are pre-holdout
+    sessions = CAL.research_sessions(date(2026, 3, 30), date(2026, 4, 8))
+    holdout = [d for d in sessions if d > start]
+    assert holdout[0] == date(2026, 4, 6)  # 2026-04-03 is Good Friday
+    # month-end arithmetic clamps to the month's last day
+    assert CAL.final_holdout_start(date(2026, 8, 31)) == date(2026, 2, 28)

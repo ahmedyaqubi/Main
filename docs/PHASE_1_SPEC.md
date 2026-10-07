@@ -1,6 +1,6 @@
 # PHASE 1 SPECIFICATION — QQQ 1DTE Research & Validation Engine
 
-**Status: FROZEN v1.2 (2026-10-06; ADR-0001, amended by ADR-0003 and ADR-0005).** Any change to a definition here
+**Status: FROZEN v1.3 (2026-10-07; ADR-0001, amended by ADR-0003, ADR-0005 and ADR-0007).** Any change to a definition here
 requires a new ADR in `docs/decisions/`, approved by the owner (CLAUDE.md rule 7).
 
 Conventions:
@@ -88,7 +88,7 @@ complements of each other. Both can be 0 (that region is where NO_TRADE should c
 | **A_up / A_dn** Direction | Will QQQ be higher (lower) than `P_T·(1±d)` at `T_end`? | `A_up = 1 if close(T_end) > P_T·(1+d)` ; `A_dn = 1 if close(T_end) < P_T·(1−d)` | `labels.direction.deadband = 0.0005` (5 bp) ACCEPTED: a tiny drift shouldn't count as a direction call |
 | **B_up / B_dn** Magnitude | Will QQQ touch +m% (−m%) at any time in W? | `B_up = 1 if max(high in W) >= P_T·(1+m)` | `labels.magnitude.thresholds = [0.0025, 0.0050]`. **Primary 0.25%** ACCEPTED: 0.50% in ≤90 min is rare and would give few positives. The 0.50% variant is kept but counts toward multiple testing. |
 | **C_call / C_put** Option outcome | Will the contract chosen by §5 reach +30% before −20%? | Simulated with the **conservative** fill (§6): entry at ask, path checked against **bid**. WIN if `bid >= 1.30·entry_fill` first; LOSS if `bid <= 0.80·entry_fill` first; otherwise TIME_EXIT at `T_end` | `labels.option.target_pct = 0.30`, `labels.option.stop_pct = 0.20` (from MASTER_PROMPT) |
-| **D_call / D_put** Risk (underlying) | Will the underlying stop be touched before the underlying target? | CALL side: `D_call = 1` if low ≤ `P_T·(1−s)` before high ≥ `P_T·(1+m)`. Neither touched → `UNRESOLVED` (kept as a separate class, never coerced) | `labels.risk.stop = 0.0015`, target = primary m. ACCEPTED: roughly matches the −20%/+30% option bracket for an ATM 1DTE contract (to be checked empirically in M6) |
+| **D_call / D_put** Risk (underlying) | Will the underlying stop be touched before the underlying target? | CALL side: `D_call = 1` if low ≤ `P_T·(1−s)` before high ≥ `P_T·(1+t)`. Neither touched → `UNRESOLVED` (kept as a separate class, never coerced) | `labels.risk.stop = 0.0019`, `labels.risk.target = 0.003`. **Amended by ADR-0007** (was 0.0015 / primary m): set to mirror the −20%/+30% option bracket, using M6 pre-holdout evidence |
 
 Rules shared by all labels:
 - **Same-bar ambiguity:** if one bar (or one quote interval) breaches both stop and target, **stop is assumed first** (conservative). These rows get flagged `AMBIGUOUS_BAR` and counted.

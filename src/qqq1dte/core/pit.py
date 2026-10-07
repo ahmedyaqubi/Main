@@ -67,3 +67,26 @@ class AsOfReader:
         if df.is_empty():
             return df
         return df.filter(pl.col(AVAILABLE_AT) == df[AVAILABLE_AT].max())
+
+
+class ForwardWindowReader:
+    """Data strictly after `start` and up to `end`: (start, end] on available_at.
+
+    The only object that exposes information after a prediction time. Only `labels/` may
+    construct it. features/regimes/execution_sim cannot import labels (import-linter, T-LEAK-10).
+    """
+
+    def __init__(self, tables: Mapping[str, pl.DataFrame], start: datetime, end: datetime) -> None:
+        self._start, self._end = ensure_utc(start), ensure_utc(end)
+        if self._end < self._start:
+            raise ValueError(f"end {self._end} before start {self._start}")
+        for name, df in tables.items():
+            if AVAILABLE_AT not in df.columns:
+                raise ValueError(f"table {name!r} has no {AVAILABLE_AT!r} column")
+        col = pl.col(AVAILABLE_AT)
+        self._tables = {
+            n: df.filter((col > self._start) & (col <= self._end)) for n, df in tables.items()
+        }
+
+    def get(self, name: str) -> pl.DataFrame:
+        return self._tables[name]

@@ -58,7 +58,7 @@ come first**, because every later component depends on them.
 | T-LBL-06 `missing_bar_invalid` | a gap inside W → INVALID with reason, not interpolated |
 | T-LBL-07 `up_down_not_complements` | a flat path gives both B_up = 0 and B_dn = 0 |
 
-## T-SEL — option selection (M11)
+## T-SEL — option selection (implemented in M6 with the selection function; reused by M11)
 | ID | Proves |
 |---|---|
 | T-SEL-01 `atm_first_otm` | S = 512.40 with strikes {511, 512, 513} → call 513, put 512 |

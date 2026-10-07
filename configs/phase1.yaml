@@ -33,6 +33,7 @@ trade:
   breakeven_band: 0.02
 
 labels:
+  version: "L2"                     # L2: D stop/target per ADR-0007 (L1 superseded)
   horizon_minutes: 90
   direction:
     deadband: 0.0005
@@ -41,8 +42,10 @@ labels:
   option:
     target_pct: 0.30
     stop_pct: 0.20
+    max_path_gap_minutes: 5          # M6 Q3: longer quote gaps -> UNRESOLVED_DATA
   risk:
-    stop: 0.0015
+    stop: 0.0019                     # ADR-0007 (was 0.0015)
+    target: 0.0030                   # ADR-0007 (was the primary magnitude threshold, 0.0025)
 
 decision:
   edge_margin: 0.03

@@ -70,13 +70,16 @@ class Magnitude(_Section):
 class OptionLabel(_Section):
     target_pct: float
     stop_pct: float
+    max_path_gap_minutes: int
 
 
 class Risk(_Section):
     stop: float
+    target: float
 
 
 class Labels(_Section):
+    version: str
     horizon_minutes: int
     direction: Direction
     magnitude: Magnitude
