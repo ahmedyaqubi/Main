@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import uuid
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
@@ -84,3 +85,48 @@ def n_trials(engine: Engine, window_start: date, window_end: date) -> int:
                 {"ws": window_start, "we": window_end},
             ).scalar_one()
         )
+
+
+@dataclass(frozen=True)
+class ModelVersion:
+    model_version_id: str
+    model_family: str
+    target_label: str
+    train_start: date
+    train_end: date
+    dataset_id: str
+    feature_version: str
+    label_version: str
+    hyperparameters: Mapping[str, Any]
+    artifact_uri: str
+    artifact_sha256: str
+    code_commit: str
+    config_hash: str
+
+
+def record_model_version(engine: Engine, mv: ModelVersion) -> bool:
+    """Insert a CANDIDATE model version; False if the identical artifact is already recorded,
+    ValueError if the id exists with a different artifact."""
+    with engine.begin() as c:
+        inserted = c.execute(
+            text("""
+                INSERT INTO model_versions (model_version_id, model_family, target_label,
+                  train_start, train_end, dataset_id, feature_version, label_version,
+                  hyperparameters, artifact_uri, artifact_sha256, code_commit, config_hash, status)
+                VALUES (:model_version_id, :model_family, :target_label, :train_start,
+                  :train_end, :dataset_id, :feature_version, :label_version,
+                  CAST(:hp AS JSONB), :artifact_uri, :artifact_sha256, :code_commit,
+                  :config_hash, 'CANDIDATE')
+                ON CONFLICT (model_version_id) DO NOTHING
+                RETURNING model_version_id"""),
+            {**mv.__dict__, "hp": json.dumps(mv.hyperparameters, sort_keys=True)},
+        ).first()
+        if inserted is not None:
+            return True
+        sha = c.execute(
+            text("SELECT artifact_sha256 FROM model_versions WHERE model_version_id = :m"),
+            {"m": mv.model_version_id},
+        ).scalar_one()
+    if sha != mv.artifact_sha256:
+        raise ValueError(f"model {mv.model_version_id} already recorded with a different artifact")
+    return False

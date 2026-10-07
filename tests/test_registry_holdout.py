@@ -103,3 +103,37 @@ def test_guard_without_database_refuses_any_holdout_access() -> None:
     guard.check([date(2026, 4, 2)])
     with pytest.raises(HoldoutLockedError):
         guard.check([date(2026, 4, 6)], run_id="r", justification="j")
+
+
+def test_model_version_is_recorded_as_candidate(migrated_engine: Engine) -> None:
+    from qqq1dte.backtesting.registry import ModelVersion, record_model_version  # noqa: PLC0415
+
+    mv = ModelVersion(
+        model_version_id="m1-f1-A_up",
+        model_family="logistic",
+        target_label="A_up",
+        train_start=date(2023, 3, 28),
+        train_end=date(2024, 3, 27),
+        dataset_id=_dataset(migrated_engine),
+        feature_version="f2",
+        label_version="L2",
+        hyperparameters={"C": 0.01},
+        artifact_uri="data/models/m1/x.json",
+        artifact_sha256="ab" * 32,
+        code_commit="c",
+        config_hash="h",
+    )
+    record_model_version(migrated_engine, mv)
+    with migrated_engine.connect() as c:
+        row = c.execute(
+            text(
+                "SELECT status, hyperparameters, artifact_sha256 FROM model_versions"
+                " WHERE model_version_id = 'm1-f1-A_up'"
+            )
+        ).one()
+    assert row[0] == "CANDIDATE" and row[1] == {"C": 0.01} and row[2] == "ab" * 32
+    record_model_version(migrated_engine, mv)  # identical re-record is a no-op
+    with pytest.raises(ValueError, match="different"):
+        record_model_version(
+            migrated_engine, ModelVersion(**{**mv.__dict__, "artifact_sha256": "cd" * 32})
+        )

@@ -177,6 +177,14 @@ class Baseline(_Section):
     shrinkage_prior_n: int
 
 
+class Logistic(_Section):
+    c_grid: list[float]
+    z_clip: float
+    solver: str
+    max_iter: int
+    tol: float
+
+
 class Metrics(_Section):
     ece_bins: int
     bootstrap_seed: int
@@ -185,6 +193,7 @@ class Metrics(_Section):
 
 class Models(_Section):
     baseline: Baseline
+    logistic: Logistic
     metrics: Metrics
 
 

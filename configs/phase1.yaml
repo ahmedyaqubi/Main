@@ -127,6 +127,12 @@ models:
     tod_bucket_starts: ["09:45", "11:00", "13:00"]   # ET; bucket = last start <= T
     vix_quantiles: [0.3333333333333333, 0.6666666666666666]  # train-fold VIX tercile cuts (spec §9)
     shrinkage_prior_n: 50           # Beta prior strength toward the train unconditional rate
+  logistic:                         # Model 1 (M8): L2 logistic regression, fit on train only
+    c_grid: [0.001, 0.01, 0.1, 1.0, 10.0]   # inverse L2 strength; chosen by calibration-block log loss
+    z_clip: 5.0                     # standardised features clipped to +/- z_clip (train mean/std)
+    solver: lbfgs
+    max_iter: 2000
+    tol: 1.0e-8
   metrics:
     ece_bins: 10                    # equal-count bins; identical predictions share a bin
     bootstrap_seed: 20261007        # session-block bootstrap RNG seed (reproducible CIs)
