@@ -1,17 +1,14 @@
 # M15 decision engine and NO_TRADE analysis (spec §4.1)
 
-Generated 2026-10-07 23:40 UTC, code c4e1bddabeef, run `decision-747dec735c50`. Test blocks 2024-05-28 → 2026-02-27 (440 sessions, 27,944 prediction timestamps); final holdout not opened.
+Generated 2026-10-07 23:51 UTC, code 770893bb7b21, run `decision-7cd0dc2805d1`. Test blocks 2024-05-28 → 2026-02-27 (440 sessions, 27,944 prediction timestamps); final holdout not opened.
 
-**Rule.** Model family `gbm_m2` with its M13 calibrators (test-block probabilities from features only). Per side: calibrated P(WIN) - p_breakeven > 0.03 and EV > 0 at the moderate entry fill (alpha = 0.5), binary-conservative EV (every non-WIN outcome = full -20% stop), §4.9 gates at T_e. Both sides qualifying: higher EV. Blocked regime cells: none.
+**Rule.** Model family `gbm_m2` with its M13 calibrators (test-block probabilities from features only). Per side: calibrated P(WIN) - p_breakeven > 0.03 and EV > 0 at the moderate entry fill (alpha = 0.5), binary-conservative EV (every non-WIN outcome = full -20% stop), §4.9 gates at T_e, and (ADR-0010) at least 200 calibration-block rows with a raw score at or above the current one. Both sides qualifying: higher EV. Blocked regime cells: none.
 
 ## Decisions
 
 | final decision | timestamps | share |
 |---|---|---|
-| NO_TRADE | 27,795 | 99.47% |
-| BLOCKED_POSITION_OPEN | 103 | 0.37% |
-| CALL | 45 | 0.16% |
-| PUT | 1 | 0.00% |
+| NO_TRADE | 27,944 | 100.00% |
 
 ## Rule decision vs engine outcome
 
@@ -19,19 +16,16 @@ CALL / PUT decisions pass through the event engine (one open position, at most 3
 
 | rule decision | engine outcome | timestamps |
 |---|---|---|
-| CALL | BLOCKED_POSITION_OPEN | 102 |
-| CALL | CALL | 45 |
-| CALL | NO_TRADE | 28 |
-| NO_TRADE | NO_TRADE | 27,767 |
-| PUT | BLOCKED_POSITION_OPEN | 1 |
-| PUT | PUT | 1 |
+| NO_TRADE | NO_TRADE | 27,944 |
 
 ## NO_TRADE by reason (per side; rule-level NO_TRADE only)
 
 | reason | timestamps |
 |---|---|
-| CALL:BELOW_BREAKEVEN_MARGIN | 27,620 |
-| PUT:BELOW_BREAKEVEN_MARGIN | 27,614 |
+| CALL:BELOW_BREAKEVEN_MARGIN | 25,459 |
+| PUT:BELOW_BREAKEVEN_MARGIN | 24,644 |
+| PUT:INSUFFICIENT_CALIBRATION_SUPPORT | 3,147 |
+| CALL:INSUFFICIENT_CALIBRATION_SUPPORT | 2,338 |
 | PUT:SELECTED_CONTRACT_ILLIQUID | 153 |
 | CALL:SELECTED_CONTRACT_ILLIQUID | 147 |
 
@@ -39,17 +33,17 @@ CALL / PUT decisions pass through the event engine (one open position, at most 3
 
 | cell | timestamps | NO_TRADE | rate |
 |---|---|---|---|
-| HIGH/CHOP/MACRO | 960 | 943 | 98.23% |
-| HIGH/CHOP/NORMAL | 8,440 | 8,361 | 99.06% |
-| HIGH/TREND/MACRO | 896 | 889 | 99.22% |
-| HIGH/TREND/NORMAL | 4,352 | 4,348 | 99.91% |
+| HIGH/CHOP/MACRO | 960 | 960 | 100.00% |
+| HIGH/CHOP/NORMAL | 8,440 | 8,440 | 100.00% |
+| HIGH/TREND/MACRO | 896 | 896 | 100.00% |
+| HIGH/TREND/NORMAL | 4,352 | 4,352 | 100.00% |
 | LOW/CHOP/NORMAL | 476 | 476 | 100.00% |
-| LOW/TREND/MACRO | 320 | 293 | 91.56% |
+| LOW/TREND/MACRO | 320 | 320 | 100.00% |
 | LOW/TREND/NORMAL | 2,204 | 2,204 | 100.00% |
-| NORMAL/CHOP/MACRO | 704 | 688 | 97.73% |
-| NORMAL/CHOP/NORMAL | 5,532 | 5,514 | 99.67% |
-| NORMAL/TREND/MACRO | 476 | 473 | 99.37% |
-| NORMAL/TREND/NORMAL | 3,584 | 3,578 | 99.83% |
+| NORMAL/CHOP/MACRO | 704 | 704 | 100.00% |
+| NORMAL/CHOP/NORMAL | 5,532 | 5,532 | 100.00% |
+| NORMAL/TREND/MACRO | 476 | 476 | 100.00% |
+| NORMAL/TREND/NORMAL | 3,584 | 3,584 | 100.00% |
 
 ## Distance from the decision threshold
 
@@ -62,9 +56,9 @@ margin = calibrated P(WIN) - p_breakeven; a side needs margin > 0.03. Quantiles 
 
 ## Gate 13 (regime behaviour) and gate 14 (NO_TRADE validated)
 
-- Traded timestamps (entered trades with a P&L): **46**.
-- Gate 13: cells with >= 100 trades are listed in the run metrics (none expected).
-- Gate 14: traded - NO_TRADE counterfactual mean net +14.95 [-11.52, +42.94]: would FAIL
-- Counterfactual at NO_TRADE timestamps (higher-EV side simulated anyway, one independent trade each, moderate fill, net of costs): 27,650 trades, mean net $-2.96 [-5.32, -0.70], median $-28.40.
+- Traded timestamps (entered trades with a P&L): **0**.
+- Gate 13: not evaluable: no traded regime cell (0 trades).
+- Gate 14: **not evaluable: 0 traded timestamps** (rule 11; nothing to compare the NO_TRADE counterfactual with).
+- Counterfactual at NO_TRADE timestamps (higher-EV side simulated anyway, one independent trade each, moderate fill, net of costs): 27,827 trades, mean net $-2.97 [-5.37, -0.71], median $-28.40.
 
 Not a claim of profitability (rule 12): these are research decisions on pre-holdout test blocks.
