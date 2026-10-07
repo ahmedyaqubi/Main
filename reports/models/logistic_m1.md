@@ -1,6 +1,6 @@
 # Model 1 (L2 logistic regression): out-of-sample walk-forward results
 
-Generated 2026-10-07 08:05 UTC, code e21d3af06906, run `walk_forward-8a78b189a6b8` (config hash 428a777cfa8f); C-grid runs `hyperparam_search-c27631a3d8cb`, `hyperparam_search-c0fa0d41ac2e`, `hyperparam_search-beabea5d6d7c`, `hyperparam_search-8d1ec5673c9e`, `hyperparam_search-deae4ea6271e`. n_trials on the test window = 7.
+Generated 2026-10-07 09:01 UTC, code 4f9b459bb000, run `walk_forward-ae9e9d38408f` (config hash 428a777cfa8f); C-grid runs `hyperparam_search-66e51df1edca`, `hyperparam_search-b21f7256888a`, `hyperparam_search-8e1a385e7a7f`, `hyperparam_search-58872e451dfa`, `hyperparam_search-cd3207442af5`. n_trials on the test window = 7.
 
 Features f2 (28 features; day_of_week one-hot), labels L2. Same 7 folds as Model 0 (`reports/models/baseline_m0.md`). Final holdout (sessions after 2026-04-02) was not opened.
 

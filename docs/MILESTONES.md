@@ -128,14 +128,14 @@ Notes / open issues:
 3. Test-first: metrics, bootstrap, splitter and registry/holdout tests were run red before implementation; `tests/test_baseline.py` was written before `baseline.py` but not run red separately.
 4. The calibration block is unused by Model 0 (no calibration step); M8+ uses it.
 
-## M8 — Logistic regression (Model 1) — DONE (2026-10-07; awaiting commit + CI)
+## M8 — Logistic regression (Model 1) — DONE (2026-10-07; CI green on 4f9b459: https://github.com/ahmedyaqubi/Main/actions/runs/37597027525)
 Depends on: M7 (DONE)
 Owner decisions (2026-10-07): Q1 scikit-learn fit, JSON artifact scored with numpy; Q2 missing → training mean + `missing_<feature>` indicator, fills reported; Q3 all 28 f2 features, day_of_week one-hot, no interactions, z clipped ±5; Q4 C grid {0.001, 0.01, 0.1, 1, 10} chosen by calibration-block log loss, fit on train only, no refit; Q5 every grid point is a registered trial; Q6 primary reference = conditional Model 0, also unconditional; Q7 70 CANDIDATE `model_versions` rows; Q8 `qqq1dte.models` added to the no-labels import contract. Parameters in `configs/phase1.yaml` → `models.logistic`.
 Acceptance:
 - [x] Standardisation fit on train only (T-LEAK-11); regularisation chosen on the validation/calibration block, never on test — `src/qqq1dte/models/design.py` (`wide_features`, `fit_design`, `transform`), `src/qqq1dte/models/logistic.py` (`select_c` takes only train and calibration arrays); `tests/test_design.py::test_fit_design_statistics_equal_training_statistics_exactly`, `test_test_data_changes_nothing`, fill/indicator/clip tests; `tests/test_logistic.py::test_select_c_minimises_calibration_log_loss_and_sees_no_test_rows`, known-coefficient recovery, numpy = scikit-learn scores (1e-12)
 - [x] Brier skill vs Model 0 per fold with CI; coefficients reported per fold (stability) — `scripts/m8_logistic.py` → `reports/models/logistic_m1.md` (pooled and per-fold BSS vs conditional and unconditional Model 0 with 2,000-rep session-bootstrap CIs, fold win counts, chosen C, fill rates, standardised coefficients per fold with sign consistency)
 - [x] Serialization round-trip (T-REP-01) — `tests/test_logistic.py::test_t_rep_01_save_load_roundtrip` (bit-identical scores, same sha256), `test_load_rejects_tampered_artifact`; all 70 run artifacts reloaded against their recorded `artifact_sha256`
-Evidence / results (run `walk_forward-8a78b189a6b8` + 5 `hyperparam_search` runs, all COMPLETED; n_trials on the test window = 7; 70 CANDIDATE models in `model_versions`, artifacts `data/models/m1/<run_id>/`; pooled OOS 440 sessions, n_effective ≈ 1,320; scores uncalibrated):
+Evidence / results (run `walk_forward-ae9e9d38408f` + 5 `hyperparam_search` runs from code 4f9b459, all COMPLETED; n_trials on the test window = 7; 70 CANDIDATE models in `model_versions` for that run, artifacts `data/models/m1/<run_id>/`; pooled OOS 440 sessions, n_effective ≈ 1,320; scores uncalibrated):
 - Move-size targets: Model 1 beats conditional Model 0 clearly. BSS B_up 0.25% +0.114 [+0.094, +0.134] (6/7 folds), B_dn 0.25% +0.089 [+0.067, +0.113] (6/7), B_up 0.50% +0.122 [+0.076, +0.168] (7/7), B_dn 0.50% +0.090 [+0.057, +0.124] (6/7). Main terms, stable in sign across all 7 folds: rv_30m, straddle_move (+), minutes_since_open (−), macro_event_today (+). This is volatility forecasting, not direction.
 - Direction targets: no skill. A_up −0.005 [−0.017, +0.006], A_dn +0.004 [−0.007, +0.016], C_call −0.003 [−0.012, +0.006], C_put +0.006 [−0.002, +0.015] (vs unconditional +0.009 [+0.001, +0.018], marginal), D_put −0.003 [−0.009, +0.004]; D_call is worse than Model 0: −0.009 [−0.019, −0.000].
 - C chosen: 0.001 (the smallest grid value) in 42/70 fold-targets, mostly the direction targets, i.e. the selector prefers a near-constant model there.
@@ -144,6 +144,7 @@ Notes / open issues:
 2. Several missing indicators are identical columns (e.g. ret_since_prev_close / dist_prev_high / dist_prev_low / overnight_gap are missing together), so L2 splits their weight; harmless for scores, but read their individual coefficients as a group.
 3. B-label skill is consistent with volatility clustering and with shorter effective windows late in the session; it says nothing about option P&L. The trading-relevant C targets show no reliable skill over Model 0 at this stage.
 4. Test-first: design, logistic and model-registry tests were run red before implementation.
+5. A first run (`walk_forward-8a78b189a6b8`, uncommitted code on e21d3af) gave identical numbers; it and its 70 model rows stay recorded. Same config hashes, so n_trials is unchanged.
 
 ## M9 — Gradient-boosted model (Model 2) — TODO
 Depends on: M8
