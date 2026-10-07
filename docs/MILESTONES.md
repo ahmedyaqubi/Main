@@ -93,7 +93,7 @@ Open issues:
 4. Holiday macro releases (Good Friday NFP 2023-04-07, 2026-04-03) never fire `macro_event_today`. Documented in FEATURES.md.
 5. T-LEAK-05 takes ~100 s (1,000 examples) and is part of every CI run.
 
-## M6 — Label generation — DONE (2026-10-07, pending CI on the commit)
+## M6 — Label generation — DONE (2026-10-07; CI green on a4ce025: https://github.com/ahmedyaqubi/Main/actions/runs/37578959788)
 Depends on: M4 (DONE)
 Owner decisions (2026-10-07): Q1 adjusted and standard strikes treated alike in §5; Q2 no contract or a failed §4.9 gate → C = INVALID (excluded from training); Q3 path gaps: missing bid = 0, rejected records skipped and flagged, > 5 min without a usable quote or no fresh exit quote → UNRESOLVED_DATA; Q4 1-minute path resolution accepted (intra-minute touches unseen).
 Acceptance:
