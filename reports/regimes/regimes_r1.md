@@ -1,6 +1,6 @@
 # Regime analysis R1 (spec §9)
 
-Generated 2026-10-07 19:33 UTC, code 161365e27bb3, run `regime-a1fc599d0e3b`. Test blocks 2024-05-28 → 2026-02-27 (440 sessions); final holdout (after 2026-04-02) not opened.
+Generated 2026-10-07 20:01 UTC, code 67ad763ecc16, run `regime-bffd14dd0c5a`. Test blocks 2024-05-28 → 2026-02-27 (440 sessions); final holdout (after 2026-04-02) not opened.
 
 **Definitions.** Volatility: prior-session VIX close vs tercile cuts of the fold's training sessions (EXTREME merged into HIGH; training sessions with VIX ≥ 30 counted). Trend: efficiency ratio of the last 20 daily moves to the prior close, TREND above the training median else CHOP. Event: MACRO if CPI, FOMC, NFP is scheduled on the session and known by T. LOW_SUPPORT: fewer than 30 sessions (or 100 trades for trade tables); such cells are reported but never used to gate decisions. CIs: session-block bootstrap, 2000 reps, 95%.
 
