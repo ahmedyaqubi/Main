@@ -1,6 +1,6 @@
 # M13 probability calibration: Model 1 and Model 2
 
-Generated 2026-10-07 11:06 UTC, code 9cd7cffb69fa; runs `calibration-7d1242da955e` (logistic_m1), `calibration-383503512f20` (gbm_m2). Final holdout (sessions after 2026-04-02) not opened.
+Generated 2026-10-07 11:23 UTC, code 8b47af4142ea; runs `calibration-799352d4eabb` (logistic_m1), `calibration-06a056389e36` (gbm_m2). Final holdout (sessions after 2026-04-02) not opened.
 
 **Protocol.** Saved model artifacts of `walk_forward-ae9e9d38408f` (logistic_m1), `walk_forward-8adbdf4112a5` (gbm_m2) (sha256-checked, not refit) score each fold's calibration and test blocks. Candidates ['none', 'temperature', 'platt', 'isotonic']: each is fit on the first 50% of the calibration block's sessions and scored (log loss) on the rest; the best is refit on the whole calibration block and applied to the test block. Test blocks are never used to fit or choose. Probabilities below are calibrated on held-out data; raw scores are shown only for comparison.
 
