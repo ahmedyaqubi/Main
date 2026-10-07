@@ -1,6 +1,6 @@
 # ADR-0010 — Trade only where the calibration block supports the score
 
-- Status: **PROPOSED** (drafted 2026-10-07 at the owner's request; not in force until the owner accepts it)
+- Status: **ACCEPTED** (owner, 2026-10-07, option A; drafted the same day at the owner's request)
 - Date: 2026-10-07
 - Milestone: M15 (decision engine); affects every later evaluation that uses `decide`
 - Amends: PHASE_1_SPEC §4.1 (adds one per-side condition); no other definition changes
@@ -48,10 +48,10 @@ The threshold is not tuned to a desired trade count. It is set at the gate-12 bi
 only acts on probabilities whose calibration could in principle be checked. The 46 M15 trades
 (mean net +$12.0, median −$5.9, CI including 0) stay recorded in run `decision-8a196b570c04`.
 
-## Decision (proposed)
+## Decision
 Option A with `decision.min_calibration_support = 200`.
 
-## Consequences (if accepted)
+## Consequences
 - `SideInput` carries the raw score's calibration support. `decide` adds the support check after the
   selection checks and before the margin check. Tests cover the boundary (199 vs 200) and the reason code.
 - M15 is rerun as a new configuration. Expected: 100% NO_TRADE on the test blocks, so gates 13–15 are not

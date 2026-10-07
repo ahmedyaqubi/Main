@@ -101,7 +101,7 @@ Rules shared by all labels:
 
 ### 4.1 Entry condition
 At T, decision engine output ∈ {CALL, PUT, NO_TRADE}. CALL requires all of the following:
-`calibrated_p(C_call) − p_breakeven > edge_margin`, EV after costs (moderate fill) > 0, every gate in §4.9 passes, and the CALL side wins over the PUT side by EV. PUT is symmetric. Both sides failing → NO_TRADE with a reason code.
+`calibrated_p(C_call) − p_breakeven > edge_margin`, EV after costs (moderate fill) > 0, every gate in §4.9 passes, and the CALL side wins over the PUT side by EV. PUT is symmetric. Both sides failing → NO_TRADE with a reason code. **Amended by ADR-0010**: the side also needs ≥ `decision.min_calibration_support` (200) calibration-block rows with a raw score at or above its raw score.
 `config: decision.edge_margin = 0.03` ACCEPTED: a 3 pp buffer over break-even absorbs calibration error of about the ECE gate size.
 Until calibration exists (before M13), the engine may emit predictions but **must emit NO_TRADE for every timestamp** (rule 6).
 

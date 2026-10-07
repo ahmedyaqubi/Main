@@ -28,9 +28,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def side(
-    s: str, p: float | None, entry: float | None = 1.50, reason: str | None = None
+    s: str,
+    p: float | None,
+    entry: float | None = 1.50,
+    reason: str | None = None,
+    support: int = 1_000,
 ) -> SideInput:
-    return SideInput(s, None if p is None else CalibratedProbability(p, f"cal-{s}"), reason, entry)
+    cp = None if p is None else CalibratedProbability(p, f"cal-{s}")
+    return SideInput(s, cp, reason, entry, support)
 
 
 def test_breakeven_and_ev_hand_computed() -> None:
@@ -90,7 +95,7 @@ def test_cal_04_uncalibrated_forces_no_trade() -> None:
     d = decide(side("C", None), side("P", 0.9), CFG)
     assert (d.decision, d.reasons) == ("NO_TRADE", ("UNCALIBRATED",))
     with pytest.raises(TypeError, match="CalibratedProbability"):
-        decide(SideInput("C", 0.9, None, 1.5), side("P", 0.1), CFG)  # type: ignore[arg-type]
+        decide(SideInput("C", 0.9, None, 1.5, 1_000), side("P", 0.1), CFG)  # type: ignore[arg-type]
 
 
 def test_mypy_rejects_a_raw_score_in_a_side_input(tmp_path: Path) -> None:
@@ -98,7 +103,7 @@ def test_mypy_rejects_a_raw_score_in_a_side_input(tmp_path: Path) -> None:
     snippet.write_text(
         textwrap.dedent("""
         from qqq1dte.execution_sim.decision import SideInput
-        SideInput("C", 0.7, None, 1.5)
+        SideInput("C", 0.7, None, 1.5, 1_000)
     """),
         encoding="utf-8",
     )
@@ -106,3 +111,18 @@ def test_mypy_rejects_a_raw_score_in_a_side_input(tmp_path: Path) -> None:
         [str(snippet), "--config-file", str(ROOT / "pyproject.toml"), "--no-incremental"]
     )
     assert status != 0 and "CalibratedProbability" in out
+
+
+def test_adr_0010_minimum_calibration_support() -> None:
+    """ADR-0010: a side needs >= decision.min_calibration_support calibration-block rows whose raw
+    score is >= its raw score; the boundary is inclusive."""
+    need = CFG.decision.min_calibration_support
+    assert need == 200
+    d = decide(side("C", 0.9, support=need - 1), side("P", 0.1), CFG)
+    assert d.decision == "NO_TRADE"
+    assert d.reasons == ("CALL:INSUFFICIENT_CALIBRATION_SUPPORT", "PUT:BELOW_BREAKEVEN_MARGIN")
+    assert d.ev_call is not None  # EV and margin still reported for analysis
+    assert decide(side("C", 0.9, support=need), side("P", 0.1), CFG).decision == "CALL"
+    # support is checked after selection: a selection failure keeps its own reason
+    sel = decide(side("C", 0.9, None, "NO_CONTRACT", support=0), side("P", 0.1), CFG)
+    assert sel.reasons[0] == "CALL:NO_CONTRACT"

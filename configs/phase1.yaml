@@ -53,6 +53,7 @@ decision:
   ev_fill_model: MODERATE            # §4.1: EV after costs at the moderate fill
   model_family: gbm_m2               # M15 Q2: calibrated C_call / C_put probabilities used
   blocked_regime_cells: []           # gate 13 mechanism (M15 Q4): cells set to NO_TRADE by rule
+  min_calibration_support: 200       # ADR-0010: calibration-block rows with raw score >= current
 
 selection:
   rule: atm_first_otm_no_fallback    # OD-3

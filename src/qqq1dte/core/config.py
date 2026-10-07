@@ -93,6 +93,7 @@ class Decision(_Section):
     ev_fill_model: str
     model_family: str
     blocked_regime_cells: list[str]
+    min_calibration_support: int
 
 
 class Selection(_Section):

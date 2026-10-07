@@ -3,8 +3,10 @@
 Per side (CALL = C_call, PUT = C_put), at prediction time T with selection at T_e:
 1. a calibrated probability must exist (else NO_TRADE UNCALIBRATED, T-CAL-04; rule 6);
 2. the frozen selection rule and §4.9 gates must pass (else the selection reason);
-3. calibrated_p - p_breakeven > decision.edge_margin (else BELOW_BREAKEVEN_MARGIN);
-4. EV after costs at the moderate entry fill > 0 (else NEGATIVE_EV).
+3. ADR-0010: at least `decision.min_calibration_support` rows of the fold's calibration block
+   have a raw score >= this side's raw score (else INSUFFICIENT_CALIBRATION_SUPPORT);
+4. calibrated_p - p_breakeven > decision.edge_margin (else BELOW_BREAKEVEN_MARGIN);
+5. EV after costs at the moderate entry fill > 0 (else NEGATIVE_EV).
 A listed regime cell is NO_TRADE REGIME_BLOCKED (gate 13 mechanism). If both sides qualify the
 higher EV wins; an exact tie is NO_TRADE SIDE_TIE. Position limits (BLOCKED_POSITION_OPEN) are
 applied by the backtest engine, separately from these reasons.
@@ -27,6 +29,7 @@ UNCALIBRATED = "UNCALIBRATED"
 REGIME_BLOCKED = "REGIME_BLOCKED"
 BELOW_BREAKEVEN_MARGIN = "BELOW_BREAKEVEN_MARGIN"
 NEGATIVE_EV = "NEGATIVE_EV"
+INSUFFICIENT_CALIBRATION_SUPPORT = "INSUFFICIENT_CALIBRATION_SUPPORT"
 SIDE_TIE = "SIDE_TIE"
 SIDE_NAME = {"C": "CALL", "P": "PUT"}
 MULTIPLIER = 100
@@ -53,6 +56,7 @@ class SideInput:
     p: CalibratedProbability | None  # None: no calibrated probability
     selection_reason: str | None  # None: contract selected and §4.9 gates passed at T_e
     entry_price: float | None  # entry fill (decision.ev_fill_model) on the quote at T_e
+    calibration_support: int  # ADR-0010: calibration-block rows with raw score >= this raw score
 
 
 @dataclass(frozen=True)
@@ -92,6 +96,8 @@ def _side(s: SideInput, cfg: Phase1Config) -> tuple[float | None, float | None, 
         return None, None, s.selection_reason or "NO_ENTRY_PRICE"
     margin = float(s.p) - breakeven_probability(s.entry_price, cfg)
     ev = expected_value(float(s.p), s.entry_price, cfg)
+    if s.calibration_support < cfg.decision.min_calibration_support:
+        return ev, margin, INSUFFICIENT_CALIBRATION_SUPPORT
     if margin <= cfg.decision.edge_margin:
         return ev, margin, BELOW_BREAKEVEN_MARGIN
     if ev <= 0:

@@ -72,18 +72,29 @@ def probabilities(engine: Engine, folds: list[Fold]) -> pl.DataFrame:
     cals = calibrators(engine, ROOT, CFG.regimes.calibration_runs[fam])
     fdir = ROOT / "data" / "features" / CFG.features.version
     parts = []
-    for f in folds:
-        wide = pl.concat(
+
+    def load(sessions: tuple[date, ...]) -> pl.DataFrame:
+        return pl.concat(
             [
                 wide_features(pl.read_parquet(fdir / f"session={d}.parquet"), FEATURE_NAMES)
-                for d in f.test
+                for d in sessions
             ]
         )
+
+    for f in folds:
+        wide, calib_wide = load(f.test), load(f.calib)
         cols: dict[str, Any] = {}
         for tgt, key in (("C_call", "call"), ("C_put", "put")):
             mid, scorer = scorers[(f.index, tgt)]
             cid, calib = cals[mid]
-            cols[f"p_{key}"] = pl.Series(calib.apply(scorer(wide)))
+            raw = scorer(wide)
+            calib_raw = np.sort(scorer(calib_wide))  # the block the calibrator was fit on
+            cols[f"p_{key}"] = pl.Series(calib.apply(raw))
+            cols[f"raw_{key}"] = pl.Series(raw)
+            # ADR-0010: calibration-block rows with a raw score >= this raw score
+            cols[f"support_{key}"] = pl.Series(
+                calib_raw.size - np.searchsorted(calib_raw, raw, side="left")
+            ).cast(pl.Int64)
             cols[f"ver_{key}"] = pl.lit(cid)
         parts.append(wide.select("session_date", "prediction_ts").with_columns(**cols))
     return pl.concat(parts).with_columns(pl.col("prediction_ts").cast(DT))
@@ -121,9 +132,9 @@ def session_job(args: tuple[date, dict[str, pl.DataFrame], list[dict[str, Any]]]
             p = CalibratedProbability(pr[f"p_{key}"], pr[f"ver_{key}"])
             sel = selection_at(d, s, ts + lat, t["und"], t["chain"], t["records"], cal, cfg)
             if isinstance(sel, NoTrade):
-                sides.append(SideInput(s, p, sel.reason, None))
+                sides.append(SideInput(s, p, sel.reason, None, pr[f"support_{key}"]))
             else:
-                sides.append(SideInput(s, p, None, fill.buy(sel.quote)))
+                sides.append(SideInput(s, p, None, fill.buy(sel.quote), pr[f"support_{key}"]))
         out = decide(sides[0], sides[1], cfg, regime_cell=pr["cell"])
         rows.append(
             {
@@ -211,7 +222,9 @@ def write_report(
         "probabilities from features only). Per side: calibrated P(WIN) - p_breakeven > "
         f"{CFG.decision.edge_margin} and EV > 0 at the moderate entry fill (alpha = "
         f"{CFG.fills.moderate_alpha}), binary-conservative EV (every non-WIN outcome = full "
-        "-20% stop), §4.9 gates at T_e. Both sides qualifying: higher EV. Blocked regime cells: "
+        "-20% stop), §4.9 gates at T_e, and (ADR-0010) at least "
+        f"{CFG.decision.min_calibration_support} calibration-block rows with a raw score at or "
+        "above the current one. Both sides qualifying: higher EV. Blocked regime cells: "
         f"{CFG.decision.blocked_regime_cells or 'none'}.",
         "",
         "## Decisions",
