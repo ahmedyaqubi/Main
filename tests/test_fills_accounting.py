@@ -91,3 +91,60 @@ def test_bt_01_pnl_accounting(case: tuple) -> None:  # type: ignore[type-arg]
 def test_spread_cost_unknown_without_a_two_sided_exit_quote() -> None:
     a = account(1.02, 0.0, q(1.00, 1.02), q(None, 0.05), CFG)
     assert a.spread_cost is None and a.net_pnl == pytest.approx(-102 - 1.4)
+
+
+def test_fill_01_three_models() -> None:
+    """T-FILL-01: bid 1.00 / ask 1.10 -> buy 1.10 / 1.08 (1.075 rounded up) / 1.05."""
+    from qqq1dte.execution_sim.fills import Moderate, Optimistic  # noqa: PLC0415
+
+    quote = q(1.00, 1.10)
+    assert Conservative(CFG).buy(quote) == 1.10
+    assert Moderate(CFG, 0.5).buy(quote) == 1.08
+    assert Optimistic(CFG).buy(quote) == 1.05
+    assert (Moderate(CFG, 0.5).name, Optimistic(CFG).name) == ("MODERATE", "OPTIMISTIC")
+    # sells: 1.00 / 1.025 -> 1.02 / 1.05
+    assert Conservative(CFG).sell(quote) == 1.00
+    assert Moderate(CFG, 0.5).sell(quote) == 1.02
+    assert Optimistic(CFG).sell(quote) == 1.05
+
+
+def test_fill_02_every_model_rounds_against_the_trader() -> None:
+    from qqq1dte.execution_sim.fills import Moderate, Optimistic  # noqa: PLC0415
+
+    quote = q(1.01, 1.04)  # mid 1.025
+    for m in (Conservative(CFG), Moderate(CFG, 0.25), Moderate(CFG, 0.75), Optimistic(CFG)):
+        buy, sell = m.buy(quote), m.sell(quote)
+        assert buy == round(buy, 2) and sell == round(sell, 2)
+    assert Optimistic(CFG).buy(quote) == 1.03 and Optimistic(CFG).sell(quote) == 1.02
+    assert Moderate(CFG, 0.25).buy(quote) == 1.03  # 1.02875 -> up
+    assert Moderate(CFG, 0.25).sell(quote) == 1.02  # 1.02125 -> down
+    # alpha = 1 is the conservative price, alpha = 0 the optimistic price
+    assert Moderate(CFG, 1.0).buy(quote) == Conservative(CFG).buy(quote)
+    assert Moderate(CFG, 0.0).sell(quote) == Optimistic(CFG).sell(quote)
+
+
+def test_missing_bid_sells_at_zero_in_every_model() -> None:
+    from qqq1dte.execution_sim.fills import Moderate, Optimistic  # noqa: PLC0415
+
+    for m in (Conservative(CFG), Moderate(CFG, 0.5), Optimistic(CFG)):
+        assert m.sell(q(None, 0.05)) == 0.0
+
+
+def test_cost_multiplier_scales_commission_and_fees_only() -> None:
+    from qqq1dte.execution_sim.fills import scaled_costs  # noqa: PLC0415
+
+    cfg = scaled_costs(CFG, 1.5)
+    assert round_trip_costs(cfg) == pytest.approx((1.95, 0.15))
+    assert round_trip_costs(CFG) == pytest.approx((1.30, 0.10))  # original untouched
+
+
+def test_net_pnl_type_is_gross_minus_costs() -> None:
+    """Gate 9: NetPnl is only built from gross P&L and the round-trip costs."""
+    from qqq1dte.execution_sim.accounting import NetPnl  # noqa: PLC0415
+
+    a = account(1.02, 1.33, q(1.00, 1.02), q(1.33, 1.35), CFG)
+    assert isinstance(a.net, NetPnl)
+    assert float(a.net) == pytest.approx(a.gross_pnl - a.commissions - a.fees)
+    assert a.net.gross == a.gross_pnl and a.net.costs == pytest.approx(1.40)
+    with pytest.raises(TypeError):
+        NetPnl(29.6)  # type: ignore[call-arg]

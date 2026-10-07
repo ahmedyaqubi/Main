@@ -53,9 +53,9 @@ def write_backtest(
                     INSERT INTO simulated_trades (trade_id, candidate_id, fill_model, entry_ts,
                       entry_price, exit_ts, exit_price, target_price, stop_price, outcome,
                       exit_reason, mfe, mae, gross_pnl, commissions, fees, spread_cost,
-                      net_pnl, r_multiple, holding_seconds)
+                      net_pnl, r_multiple, holding_seconds, slippage)
                     VALUES (:tid, :cid, :fm, :ets, :ep, :xts, :xp, :tp, :sp, :outcome, :reason,
-                      :mfe, :mae, :gross, :comm, :fees, :spread, :net, :r, :hold)"""),
+                      :mfe, :mae, :gross, :comm, :fees, :spread, :net, :r, :hold, :slip)"""),
                 {
                     "tid": uuid.uuid4(),
                     "cid": cid,
@@ -77,6 +77,7 @@ def write_backtest(
                     "net": t.net_pnl,
                     "r": t.r_multiple,
                     "hold": t.holding_seconds,
+                    "slip": t.slippage,
                 },
             )
     return cid

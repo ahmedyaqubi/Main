@@ -27,15 +27,14 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import polars as pl
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-from qqq1dte.backtesting.bootstrap import session_bootstrap_ci
 from qqq1dte.backtesting.holdout import HoldoutGuard
 from qqq1dte.backtesting.oos import code_commit, dataset_id
 from qqq1dte.backtesting.registry import complete_run, fail_run, register_run
+from qqq1dte.backtesting.reporting import net_from_frame, summarize_net
 from qqq1dte.core.calendar import TradingCalendar
 from qqq1dte.core.config import load_config
 from qqq1dte.execution_sim.engine import Candidate, Decision, Signal, Trade, run_session
@@ -47,6 +46,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CLEAN = ROOT / "data" / "clean" / "cleaned"
 REJECTED = ROOT / "data" / "clean" / "rejected"
 END = date(2026, 10, 2)
+CFG = load_config()
 REPORT = ROOT / "reports" / "backtest" / "m11_diagnostic.md"
 DT = pl.Datetime("us", "UTC")
 TOL = 1e-9  # float tolerance for price / P&L equality
@@ -160,13 +160,6 @@ def _num(x: object) -> float:
     return float(x) if isinstance(x, int | float) else float("nan")
 
 
-def _ci(df: pl.DataFrame, col: str, reps: int, seed: int, level: float) -> tuple[float, float]:
-    v = df[col].to_numpy().astype(np.float64)
-    return session_bootstrap_ci(
-        df["session_date"].to_numpy(), lambda w: float(np.average(v, weights=w)), reps, seed, level
-    )
-
-
 def write_report(
     dec: pl.DataFrame,
     trades: pl.DataFrame,
@@ -258,13 +251,14 @@ def write_report(
         t = trades.filter(pl.col("side") == side)
         done = t.filter(pl.col("net_pnl").is_not_null())
         oc = {r["outcome"]: r["len"] for r in t.group_by("outcome").len().to_dicts()}
-        lo, hi = _ci(done, "net_pnl", meta["reps"], meta["seed"], meta["level"])
+        net = summarize_net(net_from_frame(done), done["session_date"].to_list(), CFG)  # gate 9
+        lo, hi = net.ci
         lines.append(
             f"| {side} | {t.height:,} | {oc.get('WIN', 0):,} | {oc.get('LOSS', 0):,} "
             f"| {oc.get('BREAKEVEN', 0):,} | {oc.get('TIME_EXIT_PROFIT', 0):,} "
             f"| {oc.get('TIME_EXIT_LOSS', 0):,} | {oc.get('UNRESOLVED_DATA', 0):,} "
-            f"| {_num(done['net_pnl'].mean()):+.2f} [{lo:+.2f}, {hi:+.2f}] "
-            f"| {_num(done['net_pnl'].median()):+.2f} | {_num(done['r_multiple'].mean()):+.3f} "
+            f"| {net.mean:+.2f} [{lo:+.2f}, {hi:+.2f}] "
+            f"| {net.median:+.2f} | {_num(done['r_multiple'].mean()):+.3f} "
             f"| {_num(done['holding_seconds'].median()) / 60:.1f} "
             f"| {_num(done['mfe'].median()):+.3f} | {_num(done['mae'].median()):+.3f} "
             f"| {_num(done['spread_cost'].mean()):.2f} |"

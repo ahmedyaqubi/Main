@@ -111,6 +111,7 @@ class Trade:
     net_pnl: float | None = None
     r_multiple: float | None = None
     holding_seconds: int | None = None
+    slippage: float | None = None  # latency: entry fill at T_e minus the same fill on T's quote, $
     flags: tuple[str, ...] = ()
 
 
@@ -135,6 +136,7 @@ class _Open:
     stop: float
     last_ok: datetime
     last_quote: Quote
+    slippage: float | None = None
     best: float | None = None
     worst: float | None = None
     gap: bool = False
@@ -264,6 +266,7 @@ class _Session:
             "stop_price": p.stop,
             "mfe": rel(p.best),
             "mae": rel(p.worst),
+            "slippage": p.slippage,
             "flags": tuple(dict.fromkeys(p.flags)),
         }
         self.pos = None
@@ -297,6 +300,18 @@ class _Session:
         )
 
     # -- signals ---------------------------------------------------------------------------
+    def _latency_slippage(self, symbol: str, t: datetime, entry: float) -> float | None:
+        """Entry fill minus the same model's fill on the quote in force at T (dollars per
+        position); None if that quote is not usable. Reads only data <= T <= clock."""
+        hist = AsOfReader({"q": self.records}, t).get("q").filter(pl.col("symbol") == symbol)
+        if not hist.height:
+            return None
+        r = hist.sort("available_at").row(-1, named=True)
+        q = Quote(r["bid"], r["ask"], r["bid_sz"], r["ask_sz"], r["available_at"], r["rejected"])
+        if liquidity_failures(q, t, self.cfg):
+            return None
+        return (entry - self.fill.buy(q)) * 100 * self.cfg.trade.contracts
+
     def on_signal(self, s: Signal) -> None:
         t_e = s.ts + self.latency
         self._release(t_e)
@@ -364,6 +379,7 @@ class _Session:
             )
             return
         entry = self.fill.buy(quote)
+        slippage = self._latency_slippage(chosen.symbol, s.ts, entry)
         opt = self.cfg.labels.option
         self.pos = _Open(
             side=s.side,
@@ -378,6 +394,7 @@ class _Session:
             stop=entry * (1 - opt.stop_pct),
             last_ok=quote.available_at,
             last_quote=quote,
+            slippage=slippage,
         )
         self.entries += 1
         self.decisions.append(Decision(s.ts, s.side, "ENTERED"))

@@ -13,6 +13,19 @@ from qqq1dte.execution_sim.selection import Quote
 MULTIPLIER = 100
 
 
+class NetPnl(float):
+    """Gate 9: a dollar P&L that is net of costs by construction. It can only be built from gross
+    P&L and the round-trip costs; report helpers accept only this type."""
+
+    gross: float
+    costs: float
+
+    def __new__(cls, gross: float, costs: float) -> NetPnl:
+        obj = super().__new__(cls, gross - costs)
+        obj.gross, obj.costs = gross, costs
+        return obj
+
+
 @dataclass(frozen=True)
 class Accounting:
     gross_pnl: float
@@ -22,6 +35,7 @@ class Accounting:
     spread_cost: float | None  # (fill vs mid) at entry + exit, dollars; None if a mid is unknown
     one_r: float
     r_multiple: float
+    net: NetPnl
 
 
 def _mid(q: Quote) -> float | None:
@@ -40,7 +54,9 @@ def account(
     em, xm = _mid(entry_quote), _mid(exit_quote)
     spread = None if em is None or xm is None else ((entry_fill - em) + (xm - exit_fill)) * size
     one_r = cfg.labels.option.stop_pct * entry_fill * size + commissions + fees  # §4.7
-    return Accounting(gross, commissions, fees, net, spread, one_r, net / one_r)
+    return Accounting(
+        gross, commissions, fees, net, spread, one_r, net / one_r, NetPnl(gross, commissions + fees)
+    )
 
 
 def classify_time_exit(net_pnl: float, entry_fill: float, cfg: Phase1Config) -> str:

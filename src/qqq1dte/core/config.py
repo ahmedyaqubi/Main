@@ -214,6 +214,12 @@ class Models(_Section):
     metrics: Metrics
 
 
+class Sensitivity(_Section):
+    alphas: list[float]
+    latencies_s: list[int]
+    cost_multipliers: list[float]
+
+
 class Phase1Config(_Section):
     history: History
     session: Session
@@ -225,6 +231,7 @@ class Phase1Config(_Section):
     costs: Costs
     liquidity: Liquidity
     fills: Fills
+    sensitivity: Sensitivity
     pit: Pit
     validation: Validation
     dq: DataQuality

@@ -70,6 +70,11 @@ fills:
   moderate_alpha: 0.5                # OD-6
   tick: 0.01
 
+sensitivity:                         # M12 execution-assumption grid (pre-declared; one run)
+  alphas: [0.0, 0.25, 0.5, 0.75, 1.0]  # moderate fill alpha (1 = conservative prices, 0 = mid)
+  latencies_s: [0, 5, 60]
+  cost_multipliers: [1.0, 1.5]       # scales commission + fees only
+
 pit:
   bar_publication_lag_s: 0           # vendor-specific, set in M2
   oi_available_time: "09:30"         # OD-7

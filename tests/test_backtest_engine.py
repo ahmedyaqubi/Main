@@ -222,3 +222,50 @@ def test_signals_must_be_prediction_timestamps_in_order() -> None:
         run([(et(11, 1), "C")], records())
     with pytest.raises(ValueError, match="order"):
         run([(et(11, 5), "C"), (et(11, 0), "C")], records())
+
+
+def _cfg_latency(seconds: int):  # type: ignore[no-untyped-def]
+    return CFG.model_copy(update={"fills": CFG.fills.model_copy(update={"latency_s": seconds})})
+
+
+def test_fill_03_optimistic_does_not_trigger_on_the_mid() -> None:
+    from qqq1dte.execution_sim.fills import Optimistic  # noqa: PLC0415
+
+    recs = records({et(11, 20): (1.30, 1.40, False)})  # mid 1.35 >= 1.313, bid 1.30 is not
+    res = run_session(D, [Signal(et(11, 0), "C")], und(), chain(), recs, CAL, CFG,
+                      Optimistic(CFG))  # fmt: skip
+    tr = res.trades[0]
+    assert tr.fill_model == "OPTIMISTIC" and tr.entry_price == 1.01
+    assert tr.outcome != "WIN"
+
+
+def test_each_model_sets_target_and_stop_from_its_own_entry_fill() -> None:
+    from qqq1dte.execution_sim.fills import Optimistic  # noqa: PLC0415
+
+    recs = records({et(11, 0): (1.00, 1.04, False), et(11, 20): (1.33, 1.35, False)})
+    sig = [Signal(et(11, 0), "C")]
+    cons = run_session(D, sig, und(), chain(), recs, CAL, CFG).trades[0]
+    opt = run_session(D, sig, und(), chain(), recs, CAL, CFG, Optimistic(CFG)).trades[0]
+    assert (cons.entry_price, cons.target_price) == (1.04, pytest.approx(1.352))
+    assert cons.outcome != "WIN"  # bid 1.33 < 1.352
+    assert (opt.entry_price, opt.target_price) == (1.02, pytest.approx(1.326))
+    assert (opt.outcome, opt.exit_ts, opt.exit_price) == ("WIN", et(11, 20), 1.34)  # sells mid
+
+
+def test_latency_60s_selects_and_fills_on_the_later_snapshot() -> None:
+    cfg = _cfg_latency(60)
+    recs = records({et(11, 1): (1.10, 1.12, False)})
+    res = run_session(D, [Signal(et(11, 0), "C")], und(), chain(), recs, CAL, cfg)
+    c, tr = res.candidates[0], res.trades[0]
+    assert c.quote_ts == et(11, 1) and c.latency_s == 60
+    assert c.quote_ts <= c.prediction_ts + timedelta(seconds=60)
+    assert (tr.entry_ts, tr.entry_price) == (et(11, 1), 1.12)
+    assert tr.slippage == pytest.approx((1.12 - 1.02) * 100)  # vs the same fill on T's quote
+
+
+def test_latency_0_and_5_use_the_same_minute_snapshot() -> None:
+    sig = [Signal(et(11, 0), "C")]
+    a = run_session(D, sig, und(), chain(), records(), CAL, _cfg_latency(0)).trades[0]
+    b = run_session(D, sig, und(), chain(), records(), CAL, _cfg_latency(5)).trades[0]
+    assert (a.entry_price, a.outcome, a.net_pnl) == (b.entry_price, b.outcome, b.net_pnl)
+    assert a.slippage == 0.0 and b.slippage == 0.0
