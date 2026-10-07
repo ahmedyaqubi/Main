@@ -73,7 +73,7 @@ Open issues (carried forward):
 3. The `MULTIPLIER_UNKNOWN` flag is on every option row, so the report's "flagged" count for options equals all rows. Cosmetic; can be excluded from that count.
 4. NQ/ES roll rule and OI (`statistics`) download: before M5 features.
 
-## M5 — Point-in-time feature engine — DONE (2026-10-07, pending CI on the commit)
+## M5 — Point-in-time feature engine — DONE (2026-10-07; CI green on 4cbc36b: https://github.com/ahmedyaqubi/Main/actions/runs/37564128242)
 Depends on: M4 (DONE)
 Deliverables: docs/FEATURES.md, ADR-0004 (+ amendment 1), src/qqq1dte/features/, configs/reference/macro_calendar.csv, scripts/m5_*.py, reports/features/
 Acceptance:
