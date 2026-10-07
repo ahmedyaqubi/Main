@@ -220,6 +220,7 @@ class Gate12(_Section):
     slope_max: float
     bin_min_n: int
     wilson_level: float
+    bin_rule: str
 
 
 class Calibration(_Section):

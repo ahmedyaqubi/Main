@@ -1,6 +1,6 @@
 # ADR-0009 — Gate 12 bin rule: adjust the per-bin level for the number of bins
 
-- Status: **PROPOSED** (drafted 2026-10-07 at the owner's request; not in force until the owner accepts it)
+- Status: **ACCEPTED** (owner, 2026-10-07, option A; drafted the same day at the owner's request)
 - Date: 2026-10-07
 - Milestone: M13 (criterion 4); applies to the gate-12 verdict at M19
 - Amends: PHASE_1_SPEC §11 gate 12 (the bin condition only; the ECE and slope conditions are unchanged)
@@ -42,12 +42,12 @@ a property of the rule, not of these results.
 - **C: keep the rule as written.** It is then a ~40% coin flip against a correct model, which makes
   gate 12 mostly a test of luck when the other two conditions pass.
 
-## Decision (proposed)
+## Decision
 Option A. `calibration.gate12.wilson_level` stays the family-wise level (0.95); the per-bin level becomes
 `1 − (1 − wilson_level) / k`. Reports show the per-bin level used and keep the unadjusted 95% count for
 reference.
 
-## Consequences (if accepted)
+## Consequences
 - `calibration.metrics.gate12` / `reliability` take the adjusted level; tests add the family-wise
   false-fail check (≈ 5% ± simulation error) and keep the 40% test as documentation of the old rule.
 - The M13 report is regenerated with both counts. Nothing is re-fit and no model is chosen from the

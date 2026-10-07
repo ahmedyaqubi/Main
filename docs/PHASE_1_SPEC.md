@@ -232,7 +232,7 @@ All fills round **against** the trader to the $0.01 tick.
 | 1 | Data coverage | ≥ 98% of expected 1-min bars per required instrument-session; ≥ 95% of sessions in the window have a valid 1DTE chain at ≥ 95% of prediction timestamps |
 | 2 | Data quality | 0 open CRITICAL `data_quality_events`; invalid-quote rate ≤ 2% in ATM ± 5 strikes |
 | 3 | PIT integrity | 100% of feature rows satisfy `available_at <= T` (checked on the full dataset, not a sample); replaying 20 random historical timestamps reproduces the stored features exactly |
-| 4 | Leakage tests | full T-LEAK suite passes; planted-future-feature canary detected; model on time-shuffled labels gives OOS AUC within 0.50 ± 0.02 |
+| 4 | Leakage tests | full T-LEAK suite passes; planted-future-feature canary detected; model on time-shuffled labels gives OOS AUC within 0.50 ± 0.02. **Amended by ADR-0008**: the AUC statistic is the mean over 20 label permutations of the mean per-fold OOS AUC |
 | 5 | Baseline | Model 0 OOS Brier, log loss, and calibration reported for every fold |
 | 6 | Beats baseline | Brier skill score vs Model 0 > 0 with session-bootstrap 95% CI lower bound > 0, pooled OOS; and better in ≥ 70% of folds |
 | 7 | PIT option selection | T-SEL suite passes; 100% of journal selections reproduce from the stored snapshot |
@@ -240,7 +240,7 @@ All fills round **against** the trader to the $0.01 tick.
 | 9 | Costs | every reported P&L is net of §4.8 costs (enforced by the report type) |
 | 10 | Walk-forward positive | pooled OOS expectancy (moderate fills, net) > 0 with 95% CI lower bound > 0; positive in ≥ 60% of folds |
 | 11 | Execution robustness | point-estimate expectancy > 0 under **conservative** fills; result sign does not depend on α ∈ [0.25, 0.75] |
-| 12 | Calibration | held-out ECE ≤ 0.03 (10 equal-count bins); calibration slope in [0.8, 1.2]; every bin with n ≥ 200 has its observed rate inside the 95% Wilson CI of its mean predicted value |
+| 12 | Calibration | held-out ECE ≤ 0.03 (10 equal-count bins); calibration slope in [0.8, 1.2]; every bin with n ≥ 200 has its observed rate inside the Wilson CI of its mean predicted value. **Amended by ADR-0009**: per-bin level 1 − 0.05/k (k = bins checked), i.e. 95% family-wise |
 | 13 | Regime behaviour | every traded regime cell with ≥ 100 trades has expectancy CI upper bound > 0; cells failing this are set to NO_TRADE by rule, not by tuning on test |
 | 14 | NO_TRADE validated | counterfactual expectancy of NO_TRADE timestamps (trade simulated anyway) < expectancy of traded timestamps, with session-bootstrap CI on the difference excluding 0 |
 | 15 | Sample size | ≥ 300 OOS trades **and** ≥ 150 distinct OOS sessions with a trade; buckets with n < 100 are labelled LOW_SUPPORT in every report |

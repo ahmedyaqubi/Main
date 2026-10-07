@@ -1,5 +1,6 @@
 """Calibration diagnostics (spec §11 gate 12; Phase 1L): calibration slope, Wilson intervals,
-reliability bins (10 equal-count bins, shared with ECE) and the gate-12 checks."""
+reliability bins (10 equal-count bins, shared with ECE) and the gate-12 checks (bin rule per
+ADR-0009: per-bin level adjusted for the number of checked bins)."""
 
 from __future__ import annotations
 
@@ -29,33 +30,41 @@ def wilson_ci(p: float, n: int, level: float) -> tuple[float, float]:
 
 
 def reliability(y: npt.ArrayLike, p: npt.ArrayLike, cfg: Phase1Config) -> list[dict[str, Any]]:
-    """Per equal-count bin: n, mean predicted, observed rate, the Wilson CI around the mean
-    predicted value, and whether the observed rate lies inside it (bins with n >= bin_min_n)."""
+    """Per equal-count bin: n, mean predicted, observed rate, and whether the observed rate lies
+    inside the Wilson CI of the mean predicted value. ADR-0009: bins with n >= bin_min_n are
+    checked at the per-bin level 1 - (1 - wilson_level) / k (k = number of checked bins); the
+    unadjusted `wilson_level` result is kept as `inside_95` for reference."""
     ya, pa = np.asarray(y, dtype=np.float64), np.asarray(p, dtype=np.float64)
     g = cfg.calibration.gate12
     b = ece_bins(pa, cfg.models.metrics.ece_bins)
+    groups = [(int(k), b == k) for k in np.unique(b)]
+    k_checked = sum(int(m.sum()) >= g.bin_min_n for _, m in groups)
+    level = 1 - (1 - g.wilson_level) / max(k_checked, 1)
     out = []
-    for k in np.unique(b):
-        m = b == k
+    for k, m in groups:
         n = int(m.sum())
         mean_p, obs = float(pa[m].mean()), float(ya[m].mean())
-        lo, hi = wilson_ci(mean_p, n, g.wilson_level)
+        lo, hi = wilson_ci(mean_p, n, level)
+        lo95, hi95 = wilson_ci(mean_p, n, g.wilson_level)
         out.append(
             {
-                "bin": int(k),
+                "bin": k,
                 "n": n,
                 "mean_pred": mean_p,
                 "observed": obs,
+                "level": level,
                 "wilson_lo": lo,
                 "wilson_hi": hi,
                 "checked": n >= g.bin_min_n,
                 "inside": lo <= obs <= hi,
+                "inside_95": lo95 <= obs <= hi95,
             }
         )
     return out
 
 
 def gate12(y: npt.ArrayLike, p: npt.ArrayLike, cfg: Phase1Config) -> dict[str, Any]:
+    """Spec §11 gate 12 with the ADR-0009 bin rule."""
     g = cfg.calibration.gate12
     e = ece(y, p, cfg.models.metrics.ece_bins)
     slope, intercept = calibration_slope(y, p)
@@ -68,6 +77,8 @@ def gate12(y: npt.ArrayLike, p: npt.ArrayLike, cfg: Phase1Config) -> dict[str, A
         "intercept": intercept,
         "bins_checked": len(checked),
         "bins_failed": len(failed),
+        "bins_failed_95": sum(not b["inside_95"] for b in checked),
+        "bin_level": bins[0]["level"] if bins else g.wilson_level,
         "ece_ok": e <= g.ece_max,
         "slope_ok": g.slope_min <= slope <= g.slope_max,
         "bins_ok": not failed,

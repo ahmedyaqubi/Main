@@ -83,7 +83,8 @@ calibration:                         # M13 (spec Phase 1L, gate 12)
     slope_min: 0.8
     slope_max: 1.2
     bin_min_n: 200                   # bins with n >= this must pass the Wilson check
-    wilson_level: 0.95
+    wilson_level: 0.95               # family-wise; per-bin level = 1 - 0.05 / k (ADR-0009)
+    bin_rule: adr-0009-bonferroni
 
 sensitivity:                         # M12 execution-assumption grid (pre-declared; one run)
   alphas: [0.0, 0.25, 0.5, 0.75, 1.0]  # moderate fill alpha (1 = conservative prices, 0 = mid)

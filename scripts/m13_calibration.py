@@ -205,16 +205,16 @@ def write_report(results: dict[str, dict[str, Any]], meta: dict[str, Any]) -> No
         "",
         f"**Gate 12** (spec §11), pooled test blocks: ECE ≤ {g.ece_max} (10 equal-count bins); "
         f"calibration slope in [{g.slope_min}, {g.slope_max}]; every bin with n ≥ {g.bin_min_n} "
-        f"has its observed rate inside the {g.wilson_level:.0%} Wilson CI of its mean "
-        "predicted value. Shown as would-pass / would-fail; the formal verdict is M19.",
+        "has its observed rate inside the Wilson CI of its mean predicted value at the per-bin "
+        f"level 1 - {1 - g.wilson_level:.2f} / k (k = bins checked; 99.5% for 10 bins), per "
+        "ADR-0009 (owner, 2026-10-07; the original every-bin-at-95% rule fails a perfectly "
+        "calibrated model ~40% of the time). Bins failing at the unadjusted 95% are shown for "
+        "reference. Shown as would-pass / would-fail; the formal verdict is M19.",
         "",
         "**Caveats.** (1) M8/M9 used the calibration blocks to choose C / the LightGBM grid "
         "point and for early stopping, so the calibrator is fit on data that already informed "
-        "model selection; the test-block evaluation is unaffected. (2) The bin rule as written "
-        "fails about 40% of perfectly calibrated models with 10 bins "
-        "(1 - 0.95^10; `tests/test_calibration.py::test_gate12_bin_rule_false_fail_rate_is_"
-        "documented`). Bin-rule failures below should be read with that in mind; changing the "
-        "rule needs an owner ADR.",
+        "model selection; the test-block evaluation is unaffected. (2) ADR-0009 was drafted "
+        "after the first M13 results were seen; that is disclosed in the ADR.",
     ]
     for family, res in results.items():
         lines += [
@@ -222,7 +222,7 @@ def write_report(results: dict[str, dict[str, Any]], meta: dict[str, Any]) -> No
             f"## {family}: pooled test blocks",
             "",
             "| target | n | sessions | ECE raw → cal | slope raw → cal | Brier raw → cal [CI] "
-            "| log loss cal [CI] | bins failed / checked | gate 12 |",
+            "| log loss cal [CI] | bins failed / checked (95% unadj.) | gate 12 |",
             "|---|---|---|---|---|---|---|---|---|",
         ]
         for name, r in res["pooled"].items():
@@ -246,7 +246,8 @@ def write_report(results: dict[str, dict[str, Any]], meta: dict[str, Any]) -> No
                 f"| {name} | {r['n']:,} | {r['n_sessions']} | {raw['ece']:.4f} → "
                 f"{cal['ece']:.4f} | {raw['slope']:.3f} → {cal['slope']:.3f} "
                 f"| {raw['brier']:.4f} → {_ci(cal, 'brier')} | {_ci(cal, 'log_loss')} "
-                f"| {cal['bins_failed']} / {cal['bins_checked']} | {verdict} |"
+                f"| {cal['bins_failed']} / {cal['bins_checked']} ({cal['bins_failed_95']}) "
+                f"| {verdict} |"
             )
         methods: dict[str, dict[str, int]] = {}
         for r in res["per_fold"]:
@@ -280,12 +281,13 @@ def write_report(results: dict[str, dict[str, Any]], meta: dict[str, Any]) -> No
                 "",
                 f"### {family} {name}: reliability (pooled test blocks, calibrated)",
                 "",
-                "| bin | n | mean predicted | observed | Wilson CI of mean predicted | inside |",
-                "|---|---|---|---|---|---|",
+                "| bin | n | mean predicted | observed | per-bin level | Wilson CI of mean "
+                "predicted | inside | inside at 95% |",
+                "|---|---|---|---|---|---|---|---|",
                 *[
                     f"| {b['bin']} | {b['n']:,} | {b['mean_pred']:.3f} | {b['observed']:.3f} "
-                    f"| [{b['wilson_lo']:.3f}, {b['wilson_hi']:.3f}] "
-                    f"| {'yes' if b['inside'] else 'NO'} |"
+                    f"| {b['level']:.3f} | [{b['wilson_lo']:.3f}, {b['wilson_hi']:.3f}] "
+                    f"| {'yes' if b['inside'] else 'NO'} | {'yes' if b['inside_95'] else 'no'} |"
                     for b in r["reliability"]
                 ],
             ]

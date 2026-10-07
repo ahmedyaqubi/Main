@@ -106,33 +106,47 @@ def test_wilson_ci_hand_computed() -> None:
 
 
 def test_reliability_bins_and_gate12_bin_check() -> None:
+    """ADR-0009: each checked bin uses the Wilson CI at 1 - (1 - 0.95) / k (k = checked bins);
+    the unadjusted 95% result is kept for reference."""
     rng = np.random.default_rng(7)
     p = rng.uniform(0.1, 0.9, 20_000)
     y = (rng.random(p.size) < p).astype(np.float64)
     bins = reliability(y, p, CFG)
     assert len(bins) == 10 and sum(b["n"] for b in bins) == p.size
     assert all(b["checked"] for b in bins)  # every bin has n >= 200
-    for b in bins:  # spec §11: observed rate inside the Wilson CI of the mean predicted value
-        lo, hi = wilson_ci(b["mean_pred"], b["n"], 0.95)
+    for b in bins:
+        assert b["level"] == pytest.approx(1 - 0.05 / 10)
+        lo, hi = wilson_ci(b["mean_pred"], b["n"], 1 - 0.05 / 10)
         assert (b["wilson_lo"], b["wilson_hi"]) == (lo, hi)
         assert b["inside"] == (lo <= b["observed"] <= hi)
+        lo95, hi95 = wilson_ci(b["mean_pred"], b["n"], 0.95)
+        assert b["inside_95"] == (lo95 <= b["observed"] <= hi95)
     g = gate12(y, p, CFG)
-    assert g["ece_ok"] and g["slope_ok"]
+    assert g["ece_ok"] and g["slope_ok"] and g["bin_level"] == pytest.approx(0.995)
     assert g["pass"] == (g["ece_ok"] and g["slope_ok"] and g["bins_failed"] == 0)
+    assert g["bins_failed_95"] >= g["bins_failed"]
     bad = gate12(y, np.clip(p + 0.15, 0, 1), CFG)  # systematically too high
     assert not bad["pass"] and bad["bins_failed"] > 0 and bad["ece"] > 0.03
 
 
-def test_gate12_bin_rule_false_fail_rate_is_documented() -> None:
-    """Known property of the spec's bin rule (raised with the owner in M13): with 10 bins each
-    checked at 95%, a perfectly calibrated model fails it about 1 - 0.95^10 = 40% of the time."""
-    fails = 0
-    for seed in range(100):
+def _false_fail_rates(seeds: int) -> tuple[float, float]:
+    adj = raw = 0
+    for seed in range(seeds):
         rng = np.random.default_rng(seed)
         p = rng.uniform(0.1, 0.9, 20_000)
         y = (rng.random(p.size) < p).astype(np.float64)
-        fails += not gate12(y, p, CFG)["bins_ok"]
-    assert 0.25 <= fails / 100 <= 0.55
+        g = gate12(y, p, CFG)
+        adj += not g["bins_ok"]
+        raw += g["bins_failed_95"] > 0
+    return adj / seeds, raw / seeds
+
+
+def test_gate12_bin_rule_false_fail_rates() -> None:
+    """ADR-0009: the adjusted rule fails a perfectly calibrated model ~5% of the time; the
+    original rule (every bin at 95%) failed it ~1 - 0.95^10 = 40% of the time."""
+    adj, raw = _false_fail_rates(200)
+    assert adj <= 0.10
+    assert 0.25 <= raw <= 0.55
 
 
 # -- fitting on calibration rows only ---------------------------------------------------------
