@@ -269,3 +269,20 @@ def test_latency_0_and_5_use_the_same_minute_snapshot() -> None:
     b = run_session(D, sig, und(), chain(), records(), CAL, _cfg_latency(5)).trades[0]
     assert (a.entry_price, a.outcome, a.net_pnl) == (b.entry_price, b.outcome, b.net_pnl)
     assert a.slippage == 0.0 and b.slippage == 0.0
+
+
+def test_selection_at_matches_the_engine_and_respects_t_e() -> None:
+    from qqq1dte.execution_sim.engine import selection_at  # noqa: PLC0415
+    from qqq1dte.execution_sim.selection import NoTrade, Selected  # noqa: PLC0415
+
+    recs = records({et(11, 0): (1.00, 1.02, False), et(11, 1): (5.00, 5.02, False)})
+    t_e = et(11, 0) + LAT
+    sel = selection_at(D, "C", t_e, und(), chain(), recs, CAL, CFG)
+    assert isinstance(sel, Selected) and sel.contract.symbol == CALL
+    assert sel.quote.available_at == et(11, 0) and sel.quote.ask == 1.02  # never the 11:01 quote
+    eng = run(([(et(11, 0), "C")]), recs).candidates[0]
+    assert (eng.symbol, eng.quote_ts, eng.ask) == (sel.contract.symbol, sel.quote.available_at,
+                                                    sel.quote.ask)  # fmt: skip
+    bad = records({et(11, 0): (1.00, 1.30, False)})
+    nt = selection_at(D, "C", t_e, und(), chain(), bad, CAL, CFG)
+    assert isinstance(nt, NoTrade) and nt.reason == "SELECTED_CONTRACT_ILLIQUID"

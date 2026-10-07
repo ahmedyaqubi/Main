@@ -4,19 +4,17 @@ on calibration rows only (T-CAL-03) and the uncalibrated guard (T-CAL-04)."""
 from __future__ import annotations
 
 import math
-import textwrap
 from datetime import date, timedelta
 from pathlib import Path
 
 import numpy as np
 import pytest
-from mypy import api
 
 from qqq1dte.calibration.fit import fit_calibration
 from qqq1dte.calibration.methods import Calibrator, fit_method, load, logit, save
 from qqq1dte.calibration.metrics import calibration_slope, gate12, reliability, wilson_ci
 from qqq1dte.core.config import load_config
-from qqq1dte.execution_sim.decision import CalibratedProbability, decide
+from qqq1dte.execution_sim.decision import CalibratedProbability
 from qqq1dte.models.metrics import ece
 
 CFG = load_config()
@@ -177,18 +175,7 @@ def test_method_chosen_on_inner_chronological_split_then_refit() -> None:
     np.testing.assert_allclose(fit.calibrator.apply(p), refit.apply(p))
 
 
-# -- rule 6 / T-CAL-04 ------------------------------------------------------------------------
-def test_cal_04_uncalibrated_forces_no_trade() -> None:
-    d = decide(None, None, None)
-    assert (d.decision, d.reasons) == ("NO_TRADE", ("UNCALIBRATED",))
-    pc = CalibratedProbability(0.7, "cal-1")
-    assert decide(pc, None, None).decision == "NO_TRADE"
-    d2 = decide(pc, CalibratedProbability(0.2, "cal-1"), "cal-1")
-    assert d2.decision == "NO_TRADE" and "DECISION_RULE_PENDING" in d2.reasons  # M15
-    with pytest.raises(TypeError, match="CalibratedProbability"):
-        decide(0.7, 0.2, "cal-1")  # type: ignore[arg-type]
-
-
+# -- rule 6 / T-CAL-04: decision-level tests live in tests/test_decision.py (M15) ---------------
 def test_calibrated_probability_needs_a_version_and_a_valid_value() -> None:
     with pytest.raises(ValueError):
         CalibratedProbability(0.5, "")
@@ -201,21 +188,6 @@ def test_calibrator_emits_calibrated_probability() -> None:
     c = Calibrator("platt", {"a": 1.0, "b": 0.0}, CFG.calibration.prob_clip)
     out = c.probability(0.3, "cal-9")
     assert isinstance(out, CalibratedProbability) and float(out) == pytest.approx(0.3)
-
-
-def test_mypy_rejects_a_raw_score_as_probability(tmp_path: Path) -> None:
-    snippet = tmp_path / "bad_decision.py"
-    snippet.write_text(
-        textwrap.dedent("""
-        from qqq1dte.execution_sim.decision import decide
-        decide(0.7, 0.2, "cal-1")
-    """),
-        encoding="utf-8",
-    )
-    out, _, status = api.run(
-        [str(snippet), "--config-file", str(ROOT / "pyproject.toml"), "--no-incremental"]
-    )
-    assert status != 0 and "CalibratedProbability" in out
 
 
 def test_slope_is_undefined_for_constant_predictions() -> None:

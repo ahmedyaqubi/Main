@@ -40,6 +40,7 @@ from qqq1dte.execution_sim.selection import (
     Contract,
     NoTrade,
     Quote,
+    Selected,
     choose_contract,
     liquidity_failures,
     select_contract,
@@ -162,6 +163,46 @@ def _spot(und: pl.DataFrame, t_e: datetime, cfg: Phase1Config) -> float | None:
     if (t_e - row["available_at"]).total_seconds() > cfg.liquidity.max_quote_age_s:
         return None
     return float((row["bid"] + row["ask"]) / 2)
+
+
+def selection_at(
+    session: date,
+    side: str,
+    t_e: datetime,
+    und: pl.DataFrame,
+    chain: pl.DataFrame,
+    records: pl.DataFrame,
+    cal: TradingCalendar,
+    cfg: Phase1Config,
+) -> Selected | NoTrade:
+    """The frozen selection rule (§5) and §4.9 gates at T_e, from data known at T_e only (the
+    same inputs the event loop uses; for the decision engine, M15)."""
+    spot = _spot(und, t_e, cfg)
+    if spot is None:
+        return NoTrade("NO_SPOT")
+    nxt = cal.next_session(session)
+    known = (
+        AsOfReader({"c": chain}, t_e)
+        .get("c")
+        .filter((pl.col("session_date") == session) & (pl.col("expiration") == nxt))
+    )
+    contracts = [
+        Contract(
+            r["raw_symbol"], float(r["strike"]), r["right"], r["expiration"], r["available_at"]
+        )
+        for r in known.iter_rows(named=True)
+    ]
+    chosen = choose_contract(contracts, spot, side, t_e)
+    if chosen is None:
+        return NoTrade("NO_CONTRACT")
+    hist = AsOfReader({"q": records}, t_e).get("q").filter(pl.col("symbol") == chosen.symbol)
+    quotes = {}
+    if hist.height:
+        r = hist.sort("available_at").row(-1, named=True)
+        quotes[chosen.symbol] = Quote(
+            r["bid"], r["ask"], r["bid_sz"], r["ask_sz"], r["available_at"], r["rejected"]
+        )
+    return select_contract(contracts, spot, side, quotes, t_e, cfg)
 
 
 class _Session:

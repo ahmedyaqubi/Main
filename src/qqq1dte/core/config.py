@@ -89,6 +89,10 @@ class Labels(_Section):
 
 class Decision(_Section):
     edge_margin: float
+    ev_model: str
+    ev_fill_model: str
+    model_family: str
+    blocked_regime_cells: list[str]
 
 
 class Selection(_Section):

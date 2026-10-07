@@ -49,6 +49,10 @@ labels:
 
 decision:
   edge_margin: 0.03
+  ev_model: binary_conservative      # M15 Q1: non-WIN outcomes treated as the full stop loss
+  ev_fill_model: MODERATE            # §4.1: EV after costs at the moderate fill
+  model_family: gbm_m2               # M15 Q2: calibrated C_call / C_put probabilities used
+  blocked_regime_cells: []           # gate 13 mechanism (M15 Q4): cells set to NO_TRADE by rule
 
 selection:
   rule: atm_first_otm_no_fallback    # OD-3
