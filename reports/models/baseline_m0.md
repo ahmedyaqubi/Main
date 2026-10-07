@@ -1,12 +1,12 @@
 # Model 0 (base rates): out-of-sample walk-forward results
 
-Generated 2026-10-07 06:47 UTC, code ba2ae24ad02b, run `walk_forward-c6c69dae663a` (config hash b8439c2a9bd1), n_trials on this data window = 1.
+Generated 2026-10-07 07:04 UTC, code 763497af4365, run `walk_forward-843056faa13a` (config hash b8439c2a9bd1), n_trials on this data window = 1.
 
 Features f2 (dataset 71259fcfbdb40d06), labels L2 (dataset 0aeb046d65c745f4). 7 folds: expanding train from 2023-03-28, 1-session embargo, 2-month calibration block (unused by Model 0), 3-month test blocks 2024-05-28 → 2026-02-27. Final holdout (sessions after 2026-04-02) was not opened.
 
-**These are raw base rates, not calibrated probabilities from a model.** Model 0 is the benchmark later models must beat. CIs: session-block bootstrap, 2000 reps, 95%. Predictions within a session overlap (5-minute cadence, 90-minute horizon), so the honest sample size is n_effective = sessions × ⌊315 / 90⌋ = sessions × 3, not n_predictions.
+**These are raw base rates, not calibrated probabilities from a model.** Model 0 is the benchmark later models must beat. CIs: session-block bootstrap, 2000 reps, 95%. Predictions within a session overlap (5-minute cadence, 90-minute horizon), so the honest sample size is n_effective = sessions x floor(315 / 90) = sessions x 3, not n_predictions.
 
-Unconditional = training base rate. Conditional = rate per (time-of-day bucket 09:45, 11:00, 13:00 × VIX tercile of `vix_prev_close`, cut points from training sessions), shrunk towards the base rate with n0 = 50. D targets are evaluated on resolved predictions only (an unresolved D label is excluded, and counted). C targets exclude predictions without a valid contract.
+Unconditional = training base rate. Conditional = rate per (time-of-day bucket 09:45, 11:00, 13:00 x VIX tercile of `vix_prev_close`, cut points from training sessions), shrunk towards the base rate with n0 = 50. D targets are evaluated on resolved predictions only (an unresolved D label is excluded, and counted). C targets exclude predictions without a valid contract.
 
 ## Pooled out-of-sample (all test blocks)
 
