@@ -73,14 +73,25 @@ Open issues (carried forward):
 3. The `MULTIPLIER_UNKNOWN` flag is on every option row, so the report's "flagged" count for options equals all rows. Cosmetic; can be excluded from that count.
 4. NQ/ES roll rule and OI (`statistics`) download: before M5 features.
 
-## M5 — Point-in-time feature engine — TODO
-Depends on: M4
+## M5 — Point-in-time feature engine — DONE (2026-10-07, pending CI on the commit)
+Depends on: M4 (DONE)
+Deliverables: docs/FEATURES.md, ADR-0004 (+ amendment 1), src/qqq1dte/features/, configs/reference/macro_calendar.csv, scripts/m5_*.py, reports/features/
 Acceptance:
-- [ ] 20–30 features, each documented (definition, formula, source, availability, missing behaviour, rationale, leakage risk) in `docs/FEATURES.md`
-- [ ] Features only consume `AsOfReader`; import-linter contract enforced in CI (T-LEAK-10)
-- [ ] T-LEAK-03…09 pass, including the future-perturbation property test (T-LEAK-05) over ≥ 1,000 random T
-- [ ] Unit test with exact expected value for every feature on a synthetic series
-- [ ] Gate 3 check script: 100% of stored rows satisfy `available_at <= T`; 20-timestamp replay matches
+- [x] 20–30 features, each documented (definition, formula, source, availability, missing behaviour, rationale, leakage risk) — `docs/FEATURES.md`: 28 features, feature_version **f2**
+- [x] Features only consume `AsOfReader`; import-linter contract enforced in CI (T-LEAK-10) — feature functions (`features/defs.py`) take an `AsOfReader` + `Ctx` only; contract "Point-in-time code never imports labels" (features, regimes, execution_sim, core) in `pyproject.toml`, CI step `lint-imports`, `test_leak_10_import_contract_kept`. Mutation check: a planted features→labels import breaks the contract
+- [x] T-LEAK-03…09 pass, including the future-perturbation property test over ≥ 1,000 random T — `tests/test_features_pit.py`: T-LEAK-05 runs 1,000 hypothesis examples (random T, every row with available_at > T scaled by one of {−3, 0, 0.5, 7}), plus T-LEAK-03/04/06/07/08/09 and the macro calendar checks
+- [x] Unit test with exact expected value for every feature on a synthetic series — `tests/test_features_values.py` (all 28, hand-computed; missing-reason test; quote-based cross-market tests)
+- [x] Gate 3 check script: 100% of stored rows satisfy `available_at <= T`; 20-timestamp replay matches — `scripts/m5_gate3.py` → `reports/features/gate3.md`: **PASS**, 0 violations in 1,572,480 rows; 20 random timestamps recomputed from inputs holding the *full* history (data after T included) are identical
+Evidence / results:
+- Snapshots: 882 sessions × 64 timestamps × 28 features = 1,572,480 rows (`data/features/f2/`, catalogued as dataset `71259fcf…`; f1 `cf00f91b…` superseded). Summary and missing-value reasons: `reports/features/summary.md`.
+- Data added (ADR-0004): 9 cross-market symbols (bars $1.84, unused after amendment 1; NBBO $1.33), Cboe VIX daily history (free), macro calendar (119 events, BLS/Fed sources). M5 spend: **$3.17**.
+- Cross-market NBBO quality (`reports/features/summary.md`): SPY, AMD, AVGO, TSM, IEF, SOXX ≥ 98% valid RTH quotes in all but 0–2 sessions; UUP below 98% in 360 sessions and SHY in 273 (worst 83% / 78%), because Databento omits some quiet minutes for them (median 385–388 records/day). Affected timestamps are missing (~0.9%). NVDA 2024-05-28: vendor gap (2 records), NVDA features missing that day.
+Open issues:
+1. **Resolved (owner, 2026-10-07):** cross-market instruments are *optional feature inputs*: their gaps become nulls, and they are not gate-1 "required instruments". Gate 1 is scored on QQQ + QQQ options (M4).
+2. UUP/SHY mids are unchanged in 84% / 93% of minutes (one-tick spreads on slow ETFs): many exact-zero returns. Real microstructure, not staleness. Their information value is for M8/M9 to judge.
+3. Early-window nulls: ATR needs 15 prior sessions and relative volume 10. The data starts 2023-03-28, so the first sessions have nulls. M8 needs train-only imputation or row exclusion (no silent fill).
+4. Holiday macro releases (Good Friday NFP 2023-04-07, 2026-04-03) never fire `macro_event_today`. Documented in FEATURES.md.
+5. T-LEAK-05 takes ~100 s (1,000 examples) and is part of every CI run.
 
 ## M6 — Label generation — TODO
 Depends on: M4 (and the M1 freeze of label definitions)

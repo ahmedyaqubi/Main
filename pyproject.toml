@@ -30,6 +30,7 @@ dev = [
     "mypy>=1.11",
     "types-PyYAML>=6.0",
     "pandas-stubs>=3.0.5.260914",
+    "import-linter>=2.0",
 ]
 
 [build-system]
@@ -71,3 +72,13 @@ files = ["src", "scripts"]
 [[tool.mypy.overrides]]
 module = ["exchange_calendars", "exchange_calendars.*", "pyarrow", "pyarrow.*"]
 ignore_missing_imports = true
+
+[tool.importlinter]
+root_package = "qqq1dte"
+
+[[tool.importlinter.contracts]]
+# T-LEAK-10 (ARCHITECTURE §4, mechanism 4): only labels/ may look forward in time.
+name = "Point-in-time code never imports labels"
+type = "forbidden"
+source_modules = ["qqq1dte.features", "qqq1dte.regimes", "qqq1dte.execution_sim", "qqq1dte.core"]
+forbidden_modules = ["qqq1dte.labels"]

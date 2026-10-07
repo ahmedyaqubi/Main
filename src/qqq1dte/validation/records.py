@@ -294,6 +294,7 @@ def build_definitions(raw_defs: pl.DataFrame, cal: TradingCalendar) -> pl.DataFr
                 "strike",
                 "right",
                 "multiplier",
+                pl.col("ts").alias("available_at"),  # when this definition was received
             ]
         )
     )

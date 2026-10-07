@@ -101,3 +101,19 @@ dq:
     - ex_date: "2023-12-27"
       reduction: 0.21584            # strikes reduced by this, rounded to the penny
       memo: "OCC Information Memo #53847 (QQQ special cash dividend)"
+
+# Feature engine (M5, docs/FEATURES.md, ADR-0004). feature_version f1.
+features:
+  version: "f2"                     # f2: cross-market prices from NBBO mids (ADR-0004 amendment)
+  momentum_minutes: [5, 15, 30, 60]
+  cross_short_minutes: 15           # SPY/SOXX/megacap relative returns
+  cross_long_minutes: 60            # UUP/IEF/SHY returns
+  opening_range_minutes: 15
+  rv_minutes: 30
+  atr_sessions: 14
+  rel_volume_sessions: 20
+  rel_volume_min_sessions: 10
+  megacap_symbols: ["NVDA", "AMD", "AVGO", "TSM"]
+  megacap_min_symbols: 3
+  vix_available_time: "18:00"       # ET on the VIX date: conservative (Cboe close ~16:15, file EOD)
+  annualization_minutes: 98280      # 252 sessions x 390 minutes, for 1-min realized vol

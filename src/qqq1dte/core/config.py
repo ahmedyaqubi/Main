@@ -152,6 +152,22 @@ class DataQuality(_Section):
     strike_adjustments: list[StrikeAdjustment]
 
 
+class Features(_Section):
+    version: str
+    momentum_minutes: list[int]
+    cross_short_minutes: int
+    cross_long_minutes: int
+    opening_range_minutes: int
+    rv_minutes: int
+    atr_sessions: int
+    rel_volume_sessions: int
+    rel_volume_min_sessions: int
+    megacap_symbols: list[str]
+    megacap_min_symbols: int
+    vix_available_time: time
+    annualization_minutes: int
+
+
 class Phase1Config(_Section):
     history: History
     session: Session
@@ -166,6 +182,7 @@ class Phase1Config(_Section):
     pit: Pit
     validation: Validation
     dq: DataQuality
+    features: Features
 
 
 def load_config(path: Path | None = None) -> Phase1Config:
