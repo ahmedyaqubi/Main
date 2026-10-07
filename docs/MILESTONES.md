@@ -171,14 +171,23 @@ Acceptance:
 - [x] Run registry: every run creates a `validation_runs` row before evaluation; `n_trials` computable per data window — `src/qqq1dte/backtesting/registry.py` (`register_run` → REGISTERED, `complete_run`, `fail_run`, `n_trials` = distinct config hashes overlapping a window, any status); `tests/test_registry_holdout.py::test_run_is_registered_before_evaluation_then_completed`, `test_failed_run_still_counts_as_a_trial`
 - [x] Session-block bootstrap utility with a test on a known-variance synthetic series — `src/qqq1dte/backtesting/bootstrap.py` (`session_bootstrap_ci`, multinomial session weights); `tests/test_metrics_bootstrap.py::test_session_bootstrap_respects_within_session_dependence` (half-width ≈ 1.96σ/√n_sessions within 15%, > 3× the naive row-level width), `test_session_bootstrap_is_reproducible`
 
-## M11 — Realistic options backtester — TODO
-Depends on: M6, M10
+## M11 — Realistic options backtester — DONE (2026-10-07; awaiting commit + CI)
+Depends on: M6, M10 (DONE)
+Owner decisions (2026-10-07): Q1 before M13 the engine runs on real data only with a mechanical diagnostic signal (CALL / PUT at every timestamp, separately), used for reconciliation with the C labels and as an unconditional-entry baseline, not a strategy; Q2 conservative fill + §4.8 costs behind a fill-model interface (moderate/optimistic in M12); Q3 clock steps through signals (T_e = T + 5 s) and 1-minute quote snapshots; exits on the bid up to min(T_e + 90 min, forced flat); Q4 journal writer tested on the test DB, the real-data diagnostic writes Parquet + a `validation_runs` row only; Q5 only filled entries count toward max entries; UNFILLED = fill-time hard/age failure; M6 path rules for unresolved data.
 Acceptance:
-- [ ] Event-driven loop with monotonic clock and quote cursor (T-BT-05)
-- [ ] Frozen selection rule at `T_e` (T-SEL-01…05); candidates written to `trade_candidates`
-- [ ] Target/stop on the bid, forced flat, one position, max entries/day (T-BT-02…04)
-- [ ] Per-trade MFE, MAE, P&L, R, holding time, exit reason, unfilled count recorded
-- [ ] Accounting test with hand-computed trades (T-BT-01)
+- [x] Event-driven loop with monotonic clock and quote cursor (T-BT-05) — `src/qqq1dte/execution_sim/engine.py` (`run_session`), `execution_sim/cursor.py` (`QuoteCursor` on the shared `SimClock`); `tests/test_cursor.py` (never returns a quote later than the clock, cannot move backward, shared-clock check, one symbol in time order)
+- [x] Frozen selection rule at `T_e` (T-SEL-01…05); candidates written to `trade_candidates` — engine uses `execution_sim.selection` at T_e, a `Candidate` per selection (gates, failures, quote); `src/qqq1dte/journal/writer.py` (`write_backtest`, one transaction); `tests/test_journal_writer.py` (written and read back; DB PIT trigger rejects a quote after T_e; one trade per candidate × fill model; append-only); `tests/test_backtest_engine.py::test_illiquid_selection_is_no_trade_with_a_candidate_and_no_entry_used`, `test_put_side_selects_highest_strike_at_or_below_spot`; T-SEL suite unchanged and passing
+- [x] Target/stop on the bid, forced flat, one position, max entries/day (T-BT-02…04) — `tests/test_backtest_engine.py::test_bt_02_one_position_at_a_time`, `test_bt_03_max_entries_per_day`, `test_bt_04_forced_flat_at_1550_and_never_expired`, `test_mid_reaching_target_does_not_trigger`, `test_time_exit_at_entry_plus_max_holding`, unresolved-gap / no-bid / rejected-record tests
+- [x] Per-trade MFE, MAE, P&L, R, holding time, exit reason, unfilled count recorded — `Trade` (entry/exit fills and quotes, target/stop, MFE/MAE, gross/commissions/fees/spread cost/net, R, holding seconds, flags); UNFILLED counted in decisions and trades
+- [x] Accounting test with hand-computed trades (T-BT-01) — `src/qqq1dte/execution_sim/accounting.py`, `fills.py`; `tests/test_fills_accounting.py::test_bt_01_pnl_accounting` (5 trades: net, costs, R, spread cost, time-exit class), tick rounding against the trader, conservative fill
+Evidence / results (`scripts/m11_diagnostic.py` → `reports/backtest/m11_diagnostic.md`, run `diagnostic-09621c5bebe5`, 756 pre-holdout research sessions, outputs `data/backtest/m11_diagnostic/<run_id>/`):
+- Reconciliation with the independently written C labels: **4,535 / 4,535 trades match** on contract, outcome, entry, exit price, net P&L and trigger exit time (0 mismatches).
+- Decisions: 2,268 CALL / 2,267 PUT entries (3 per session); NO_TRADE mostly MAX_ENTRIES_PER_DAY, SELECTED_CONTRACT_ILLIQUID 56 / 63; UNFILLED 0 (selection and fill see the same quote at T_e, as expected); UNRESOLVED_DATA 3 / 4.
+- Unconditional-entry baseline (conservative fill, net, per contract; NOT a strategy): mean net CALL −$4.45 [−7.50, −1.19], PUT −$5.77 [−9.05, −2.53]; mean R −0.10 / −0.11; WIN 32% / 33%, LOSS 54% / 58%; median hold 25 / 21 min; mean spread cost $2.30 / $2.51.
+Notes / open issues:
+1. Time exits happen at T_e + 90 min (spec §2: entry + max holding) while C labels end at T + 90 min (§3). With 1-minute quotes both use the same quote; a missing T+90 snapshot could in principle flip a NO_EXIT_QUOTE decision (5 s more age). None occurred.
+2. Entries are taken at the first three timestamps the gates allow, so the baseline concentrates early in the session (from 09:45). It is a reference for later comparisons, not an estimate of any model's performance.
+3. Test-first: cursor, fills/accounting, engine and writer tests were all run red before implementation.
 
 ## M12 — Costs, slippage, latency — TODO
 Depends on: M11
