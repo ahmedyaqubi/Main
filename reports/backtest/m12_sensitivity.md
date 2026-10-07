@@ -1,6 +1,6 @@
 # M12 execution sensitivity of the mechanical baseline (NOT a strategy)
 
-Generated 2026-10-07 10:28 UTC, code 3e5ecc8b4106, run `sensitivity-f6b5dad8437b`. Sessions 756 (2023-03-28 → 2026-04-02, pre-holdout research sessions; holdout after 2026-04-02 not opened).
+Generated 2026-10-07 10:43 UTC, code 52c68a07ed1b, run `sensitivity-1097416fc6c0`. Sessions 756 (2023-03-28 → 2026-04-02, pre-holdout research sessions; holdout after 2026-04-02 not opened).
 
 **What this is.** The M11 mechanical signal (CALL at every prediction timestamp; separately PUT; one open position, ≤ 3 entries per session) re-simulated in full under each execution assumption. Target and stop are set from each model's own entry fill and always trigger on the bid (§6). It measures how much the unconditional-entry baseline depends on execution assumptions. It is not evidence of an edge and makes no claim of profitability (rule 12).
 

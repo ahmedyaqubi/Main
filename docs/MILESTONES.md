@@ -189,12 +189,12 @@ Notes / open issues:
 2. Entries are taken at the first three timestamps the gates allow, so the baseline concentrates early in the session (from 09:45). It is a reference for later comparisons, not an estimate of any model's performance.
 3. Test-first: cursor, fills/accounting, engine and writer tests were all run red before implementation.
 
-## M12 — Costs, slippage, latency — DONE (2026-10-07; awaiting commit + CI)
+## M12 — Costs, slippage, latency — DONE (2026-10-07; CI green on 52c68a0: https://github.com/ahmedyaqubi/Main/actions/runs/37608678539)
 Depends on: M11 (DONE)
 Owner decisions (2026-10-07): Q1 moderate = mid ± α·half-spread, optimistic = mid, all rounded against the trader, triggers on the bid, missing bid sells at 0 in every model; Q2 each fill model is a full re-simulation (target/stop from its own entry fill); Q3 latency moves selection, spot and entry to T_e = T + latency; latency slippage = entry fill at T_e − same fill on T's quote; Q4 mechanical diagnostic signal, grid α {0, .25, .5, .75, 1} × latency {0, 5, 60} s × costs ×{1, 1.5} + three named models, pre-holdout; Q5 one `sensitivity` run for the whole pre-declared grid; Q6 gate 9 by a `NetPnl` type; Q7 cost multiplier scales commission + fees only. Grid in `configs/phase1.yaml` → `sensitivity`.
 Acceptance:
 - [x] Three fill models (T-FILL-01…03); commissions + fees per §4.8 — `src/qqq1dte/execution_sim/fills.py` (`Conservative`, `Moderate`, `Optimistic`, `scaled_costs`); `tests/test_fills_accounting.py::test_fill_01_three_models` (1.10 / 1.08 / 1.05), `test_fill_02_every_model_rounds_against_the_trader`, `test_missing_bid_sells_at_zero_in_every_model`, `test_cost_multiplier_scales_commission_and_fees_only`; `tests/test_backtest_engine.py::test_fill_03_optimistic_does_not_trigger_on_the_mid`, `test_each_model_sets_target_and_stop_from_its_own_entry_fill`, `test_latency_60s_selects_and_fills_on_the_later_snapshot`, `test_latency_0_and_5_use_the_same_minute_snapshot`
-- [x] Sensitivity report: expectancy vs α ∈ {0, 0.25, 0.5, 0.75, 1}, latency ∈ {0, 5, 60} s, costs ×{1, 1.5} — `scripts/m12_sensitivity.py` → `reports/backtest/m12_sensitivity.md`, run `sensitivity-f6b5dad8437b` (756 pre-holdout sessions; trades in `data/backtest/m12_sensitivity/<run_id>/`)
+- [x] Sensitivity report: expectancy vs α ∈ {0, 0.25, 0.5, 0.75, 1}, latency ∈ {0, 5, 60} s, costs ×{1, 1.5} — `scripts/m12_sensitivity.py` → `reports/backtest/m12_sensitivity.md`, run `sensitivity-1097416fc6c0` from code 52c68a0 (supersedes `sensitivity-f6b5dad8437b`, uncommitted code, identical results; 756 pre-holdout sessions; trades in `data/backtest/m12_sensitivity/<run_id>/`)
 - [x] Every P&L figure in reports is net of costs (enforced by type) — gate 9 — `NetPnl` (`execution_sim/accounting.py`, only constructible from gross + costs), `src/qqq1dte/backtesting/reporting.py` (`net_from_frame` rebuilds net from gross/cost columns and checks the stored net; `summarize_net` accepts only `NetPnl`); `tests/test_reporting_gate9.py` (arithmetic, inconsistent/missing cost columns rejected, runtime TypeError for floats, type hints, **mypy rejects a float P&L passed to the report helper**); M11 and M12 reports both use the helpers
 Evidence / results (mechanical baseline, NOT a strategy; mean net $ per trade per contract, 95% session-bootstrap CI):
 - Three models at latency 5 s, costs ×1: CALL conservative −4.45 [−7.50, −1.19], moderate −4.19 [−7.20, −0.94], optimistic −2.39 [−5.41, +0.77]; PUT −5.77 [−9.05, −2.53], −5.06 [−8.38, −1.76], −3.09 [−6.48, +0.16]. Mean spread cost per round trip $2.30–2.51 (conservative) vs $0.42 (optimistic).
@@ -205,6 +205,7 @@ Notes / open issues:
 1. Fill probability is assumed to be 1 whenever the gates pass (spec §6); the grid does not model non-fills or queue position.
 2. Test-first: fill, gate-9 and latency tests were run red first; `test_fill_03_*` and `test_each_model_sets_target_and_stop_from_its_own_entry_fill` passed on first run because the M11 engine already took a fill model (they are regression tests here). One expected median in `test_reporting_gate9.py` was wrong in the first draft and was corrected.
 3. Shared per-session input loader `backtesting/session_data.py` (used by M12; M11 keeps its own loader).
+4. The M11 report was regenerated from 52c68a0 (run `diagnostic-f52a8c29246a`, identical results) because its P&L now goes through the gate-9 helpers.
 
 ## M13 — Probability calibration — TODO
 Depends on: M8/M9 OOS scores, M10

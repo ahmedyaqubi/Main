@@ -1,6 +1,6 @@
 # M11 mechanical diagnostic backtest (NOT a strategy)
 
-Generated 2026-10-07 10:08 UTC, code 54825e8e5825, run `diagnostic-69efc08f5c09`. Sessions 756 (2023-03-28 → 2026-04-02, pre-holdout research sessions; holdout after 2026-04-02 not opened).
+Generated 2026-10-07 10:44 UTC, code 52c68a07ed1b, run `diagnostic-f52a8c29246a`. Sessions 756 (2023-03-28 → 2026-04-02, pre-holdout research sessions; holdout after 2026-04-02 not opened).
 
 **What this is.** Until calibration exists (M13) the decision engine must output NO_TRADE (spec §4.1, rule 6). To exercise the backtester on real data, a mechanical signal requests a CALL (separately a PUT) at every prediction timestamp; the §4.7 limits (one open position, at most 3 entries per session), the frozen selection rule (§5), the §4.9 gates and the conservative fill (§6: buy the ask, sell the bid, both rounded against the trader) apply. The P&L below is an **unconditional-entry baseline** for later comparison (gate 14), not evidence of an edge, and not a claim of profitability (rule 12).
 
