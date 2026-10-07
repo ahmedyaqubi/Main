@@ -1,6 +1,6 @@
 # Model 2 (LightGBM): out-of-sample walk-forward results
 
-Generated 2026-10-07 09:19 UTC, code 507bb6fda553, run `walk_forward-2a8b55bd1356` (config hash 99a5302ec884); grid runs `hyperparam_search-a2691e6cbb5e`, `hyperparam_search-6d2940b2f27d`, `hyperparam_search-af799dcfb60d`, `hyperparam_search-e800f4e01bec`; canary run `canary-541beb1db5f4`. n_trials on the test window = 13.
+Generated 2026-10-07 09:45 UTC, code 0be7adf05fef, run `walk_forward-8adbdf4112a5` (config hash 99a5302ec884); grid runs `hyperparam_search-c69b2f975aa4`, `hyperparam_search-50c831dc8c23`, `hyperparam_search-e6d201098ad5`, `hyperparam_search-56a86d54a627`; canary run `canary-a633f3966f65`. n_trials on the test window = 14.
 
 Features f2 (raw values, LightGBM native missing handling, day_of_week one-hot), labels L2. Same 7 folds as Models 0 and 1. Final holdout (sessions after 2026-04-02) was not opened. Model 1 = saved artifacts of `walk_forward-ae9e9d38408f` (sha256 verified), not refit.
 
@@ -8,22 +8,22 @@ Features f2 (raw values, LightGBM native missing handling, day_of_week one-hot),
 
 BSS = 1 - Brier(M2) / Brier(reference); positive = Model 2 better. M0c = Model 0 conditional, M0u = unconditional, M1 = logistic. CIs: session-block bootstrap, 2000 reps, 95%.
 
-## Gate-4 canary (T-LEAK-13): permuted training labels
+## Gate-4 canary (T-LEAK-13, ADR-0008): permuted training labels
 
-Pass = pooled OOS AUC within 0.50 ± 0.02 on the true test labels.
+Statistic = mean over 20 label permutations of the mean per-fold OOS AUC (true test labels, no pooling of scores across folds). Pass = within 0.50 ± 0.02. Spread = SD / min / max of the per-permutation means. The earlier single-permutation, pooled-score canary `canary-541beb1db5f4` failed for three B targets (below 0.5); see ADR-0008.
 
-| target | pooled AUC | per-fold AUC | result |
-|---|---|---|---|
-| A_up | 0.5008 | 0.521, 0.497, 0.495, 0.523, 0.467, 0.505, 0.513 | PASS |
-| A_dn | 0.4907 | 0.520, 0.503, 0.496, 0.467, 0.488, 0.496, 0.503 | PASS |
-| B_up[m=0.0025] | 0.4960 | 0.496, 0.520, 0.531, 0.517, 0.447, 0.559, 0.465 | PASS |
-| B_dn[m=0.0025] | 0.4477 | 0.459, 0.521, 0.506, 0.456, 0.484, 0.495, 0.468 | FAIL |
-| B_up[m=0.005] | 0.4379 | 0.452, 0.528, 0.498, 0.611, 0.440, 0.593, 0.438 | FAIL |
-| B_dn[m=0.005] | 0.4444 | 0.526, 0.491, 0.424, 0.479, 0.456, 0.572, 0.526 | FAIL |
-| C_call | 0.5049 | 0.501, 0.497, 0.493, 0.443, 0.490, 0.511, 0.469 | PASS |
-| C_put | 0.5032 | 0.512, 0.506, 0.497, 0.526, 0.516, 0.511, 0.485 | PASS |
-| D_call | 0.5174 | 0.528, 0.472, 0.526, 0.512, 0.500, 0.528, 0.502 | PASS |
-| D_put | 0.4970 | 0.479, 0.491, 0.517, 0.519, 0.511, 0.528, 0.469 | PASS |
+| target | statistic | perm SD | perm min / max | per-fold AUC (mean over perms) | result |
+|---|---|---|---|---|---|
+| A_up | 0.4984 | 0.0091 | 0.480 / 0.521 | 0.506, 0.492, 0.505, 0.493, 0.491, 0.503, 0.498 | PASS |
+| A_dn | 0.4994 | 0.0081 | 0.484 / 0.514 | 0.493, 0.500, 0.500, 0.495, 0.503, 0.509, 0.495 | PASS |
+| B_up[m=0.0025] | 0.5059 | 0.0135 | 0.487 / 0.530 | 0.504, 0.506, 0.502, 0.504, 0.488, 0.532, 0.505 | PASS |
+| B_dn[m=0.0025] | 0.5005 | 0.0131 | 0.478 / 0.528 | 0.480, 0.511, 0.503, 0.493, 0.502, 0.515, 0.499 | PASS |
+| B_up[m=0.005] | 0.5055 | 0.0181 | 0.480 / 0.546 | 0.512, 0.531, 0.486, 0.488, 0.521, 0.518, 0.482 | PASS |
+| B_dn[m=0.005] | 0.4957 | 0.0206 | 0.457 / 0.538 | 0.492, 0.485, 0.500, 0.505, 0.490, 0.490, 0.508 | PASS |
+| C_call | 0.4997 | 0.0088 | 0.477 / 0.513 | 0.505, 0.492, 0.507, 0.509, 0.486, 0.496, 0.503 | PASS |
+| C_put | 0.4984 | 0.0086 | 0.482 / 0.514 | 0.508, 0.497, 0.494, 0.500, 0.495, 0.497, 0.498 | PASS |
+| D_call | 0.5000 | 0.0096 | 0.475 / 0.517 | 0.505, 0.492, 0.502, 0.499, 0.502, 0.505, 0.495 | PASS |
+| D_put | 0.4981 | 0.0071 | 0.488 / 0.510 | 0.497, 0.504, 0.502, 0.494, 0.497, 0.495, 0.498 | PASS |
 
 ## Pooled out-of-sample
 
