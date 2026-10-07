@@ -226,12 +226,24 @@ Notes / open issues:
 3. Robustness fixes found on real data: a constant prediction has no slope (NaN → the slope check fails), Platt on constant scores maps to the base rate, run metrics store NaN as null, and the logistic fit uses damped Newton (undamped Newton diverged on an isotonic-calibrated case kept as fixture `tests/fixtures/m13_gbm_f1_ccall_calibrated.npz`, 4,039 predictions and labels, no vendor data).
 4. Test-first: methods, metrics, fit, store and guard tests were run red first; two synthetic convergence tests passed immediately (kept as regression tests); the real-data fixture test reproduced the failure and was red first.
 
-## M14 — Regime analysis — TODO
-Depends on: M13
+## M14 — Regime analysis — DONE (2026-10-07; awaiting commit + CI)
+Depends on: M13 (DONE)
+Owner decisions (2026-10-07): Q1 R1 per §9 with fold-fit thresholds, EXTREME merged into HIGH (only counted), trend UNKNOWN with a reason when history is missing; Q2 labels stored for test-block sessions only; Q3 per-regime calibration (Models 1 and 2, M13 calibrators) and mechanical-baseline expectancy (conservative, moderate) with LOW_SUPPORT flags; Q4 pre-declared OD-9 test (stratified TREND − CHOP within volatility × event for C_call / C_put WIN rate and conservative baseline net CALL / PUT; keep the axis if any 95% CI excludes 0). Also accepted and implemented in this session: **ADR-0009** (gate-12 bin rule, M13). Parameters in `configs/phase1.yaml` → `regimes`.
 Acceptance:
-- [ ] Regime labels per §9 with fold-fit thresholds (T-LEAK-12); stored in `regime_labels`
-- [ ] Per-regime calibration and expectancy with n, sessions, CI; LOW_SUPPORT flags applied
-- [ ] Decision on collapsing the trend axis (OD-9) documented via ADR if changed
+- [x] Regime labels per §9 with fold-fit thresholds (T-LEAK-12); stored in `regime_labels` — `src/qqq1dte/regimes/engine.py` (`session_state` via AsOfReader, `efficiency_ratio`, `fit_thresholds`, `assign`), `regimes/store.py`; `tests/test_regimes.py::test_leak_12_thresholds_fit_on_training_states_only`, `test_session_state_uses_only_information_known_at_t`, `test_missing_history_is_unknown_with_a_reason`, `test_macro_event_only_once_available`, `test_assignment_buckets`, `test_efficiency_ratio_hand_computed`; `tests/test_regime_store.py` (DB: written/read back, `available_at <= ts` enforced). Run `regime-a1fc599d0e3b`: 83,832 labels (27,944 test-block timestamps × 3 axes, version R1)
+- [x] Per-regime calibration and expectancy with n, sessions, CI; LOW_SUPPORT flags applied — `src/qqq1dte/regimes/analysis.py` (`summarize`, `stratified_difference`; tests with known answers); `scripts/m14_regimes.py` → `reports/regimes/regimes_r1.md` (thresholds per fold, sessions per cell per fold, calibration by bucket for 10 targets × 2 models and by full cell for C targets, baseline expectancy by bucket and cell, both net of costs via the gate-9 helpers)
+- [x] Decision on collapsing the trend axis (OD-9) documented via ADR if changed — **not changed**: the pre-declared test keeps the trend axis (12 cells). TREND − CHOP baseline net CALL +$12.97 [+3.28, +22.94], PUT −$12.72 [−22.80, −2.74]; C_call WIN +0.028 [−0.006, +0.061], C_put WIN −0.027 [−0.065, +0.014]. No ADR needed.
+Evidence / results (test blocks 2024-05-28 → 2026-02-27, 440 sessions):
+- Cells: 11 of 12 observed (LOW/CHOP/MACRO never occurs); 6 cells are LOW_SUPPORT pooled (5–15 sessions). LOW volatility appears almost only in fold 1: test-period VIX sat above the training terciles (cuts 13.6–14.6 / 15.7–17.5), so cell membership shifts strongly between folds.
+- Baseline (NOT a strategy): **no regime bucket or cell has a mean-net CI above 0** (28 bucket rows, 44 cell rows, conservative and moderate). CALL side worst in CHOP (−$10.40 [−16.15, −4.81]) and MACRO (−$17.31 [−31.00, −3.64]); PUT side worst in TREND (−$13.09) and HIGH/LOW volatility.
+- Calibrated probabilities by bucket (Model 2, C targets): observed − predicted within ±0.04 in every bucket; ECE 0.016–0.052 (higher in the smaller buckets).
+Notes / open issues:
+1. The efficiency ratio has no direction. The TREND/CHOP separation (CALL better, PUT worse in TREND) most likely reflects that trending stretches in 2024–2026 were mainly up-trends. A direction-aware trend axis would be a new regime version and a new ADR ("Later").
+2. Many buckets and cells are compared; single CIs that exclude 0 are not corrected for multiplicity and are descriptive only.
+3. 21 training sessions per fold have UNKNOWN trend (bar history starts 2023-03-28; 21 prior closes needed); they are excluded from the ER median, counted, and not filled.
+4. Shared loaders `backtesting/artifacts.py` (model scorers, calibrators by run) now used by M13 and M14.
+6. `write_regime_labels` is idempotent: an identical (ts, axis, version) label is kept with its original `thresholds_fit_run`; a different value is an error (`tests/test_regime_store.py::test_rewrite_is_idempotent_and_conflicts_are_errors`).
+5. Test-first: engine, analysis and store tests were run red first.
 
 ## M15 — NO_TRADE logic — TODO
 Depends on: M12, M13, M14
@@ -296,3 +308,4 @@ Acceptance:
 - Size/spread-dependent fill-probability model fit on paper data
 - Delta-targeted selection rule as a pre-registered alternative experiment (OD-3)
 - Breadth features if a reliable point-in-time intraday source exists
+- Direction-aware trend regime axis (e.g. sign of the 20-session move × efficiency ratio); EXTREME volatility bucket once it has ≥ 30 training sessions (M14)

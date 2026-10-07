@@ -86,6 +86,19 @@ calibration:                         # M13 (spec Phase 1L, gate 12)
     wilson_level: 0.95               # family-wise; per-bin level = 1 - 0.05 / k (ADR-0009)
     bin_rule: adr-0009-bonferroni
 
+regimes:                             # M14 (spec §9, OD-9); thresholds fit per fold on training sessions
+  version: R1
+  vix_quantiles: [0.3333333333333333, 0.6666666666666666]   # LOW / NORMAL / HIGH
+  extreme_vix: 30.0                  # EXTREME merged into HIGH; training sessions >= this are counted
+  er_window_sessions: 20             # efficiency ratio over 20 daily moves to the prior close
+  macro_events: [CPI, FOMC, NFP]
+  low_support_sessions: 30           # cell flagged LOW_SUPPORT below this many sessions ...
+  low_support_trades: 100            # ... or below this many trades (trade tables)
+  calibration_runs:                  # M13 runs whose calibrators give the probabilities analysed
+    logistic_m1: calibration-4deeb5149539
+    gbm_m2: calibration-e19b6c392dd0
+  baseline_run: sensitivity-1097416fc6c0   # M12 run: mechanical baseline trades (named models)
+
 sensitivity:                         # M12 execution-assumption grid (pre-declared; one run)
   alphas: [0.0, 0.25, 0.5, 0.75, 1.0]  # moderate fill alpha (1 = conservative prices, 0 = mid)
   latencies_s: [0, 5, 60]

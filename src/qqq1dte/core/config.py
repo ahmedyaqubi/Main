@@ -231,6 +231,18 @@ class Calibration(_Section):
     gate12: Gate12
 
 
+class Regimes(_Section):
+    version: str
+    vix_quantiles: list[float]
+    extreme_vix: float
+    er_window_sessions: int
+    macro_events: list[str]
+    low_support_sessions: int
+    low_support_trades: int
+    calibration_runs: dict[str, str]
+    baseline_run: str
+
+
 class Sensitivity(_Section):
     alphas: list[float]
     latencies_s: list[int]
@@ -250,6 +262,7 @@ class Phase1Config(_Section):
     fills: Fills
     sensitivity: Sensitivity
     calibration: Calibration
+    regimes: Regimes
     pit: Pit
     validation: Validation
     dq: DataQuality

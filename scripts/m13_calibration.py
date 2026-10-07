@@ -17,16 +17,15 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import Callable
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import polars as pl
 from dotenv import load_dotenv
-from sqlalchemy import Engine, create_engine, text
+from sqlalchemy import Engine, create_engine
 
+from qqq1dte.backtesting.artifacts import Scorer, model_scorers
 from qqq1dte.backtesting.holdout import HoldoutGuard
 from qqq1dte.backtesting.oos import (
     TARGETS,
@@ -46,45 +45,15 @@ from qqq1dte.calibration.metrics import calibration_slope, gate12, reliability
 from qqq1dte.calibration.store import CalibrationRecord, record_calibration
 from qqq1dte.core.calendar import TradingCalendar
 from qqq1dte.core.config import Phase1Config, load_config
-from qqq1dte.models import gbm, logistic
-from qqq1dte.models.design import KEYS
 from qqq1dte.models.metrics import brier, ece, log_loss
 
 ROOT = Path(__file__).resolve().parents[1]
 END = date(2026, 10, 2)
 REPORT = ROOT / "reports" / "models" / "calibration_m13.md"
-PREFIX = {"logistic_m1": "m1", "gbm_m2": "m2"}
-Scorer = Callable[[pl.DataFrame], np.ndarray]
 
 
 def scorers(engine: Engine, family: str, run_id: str) -> dict[tuple[int, str], tuple[str, Scorer]]:
-    """(fold, target) -> (model_version_id, scoring function) from the saved artifacts."""
-    p = f"{PREFIX[family]}-{run_id}-f"
-    with engine.connect() as c:
-        rows = c.execute(
-            text(
-                "SELECT model_version_id, target_label, artifact_uri, artifact_sha256 "
-                "FROM model_versions WHERE model_version_id LIKE :p"
-            ),
-            {"p": p + "%"},
-        ).all()
-    out: dict[tuple[int, str], tuple[str, Scorer]] = {}
-    for mid, tgt, uri, sha in rows:
-        fold = int(mid.removeprefix(p).split("-")[0])
-        if family == "logistic_m1":
-            m, _ = logistic.load(ROOT / uri, expected_sha256=sha)
-            out[(fold, tgt)] = (mid, m.score)
-        else:
-            b, _ = gbm.load(ROOT / uri, expected_sha256=sha)
-
-            def _score(df: pl.DataFrame, b: Any = b) -> np.ndarray:
-                feats = [c for c in df.columns if c not in (*KEYS, "y")]
-                return np.asarray(b.predict(df.select(feats).to_numpy().astype(np.float64)))
-
-            out[(fold, tgt)] = (mid, _score)
-    if len(out) != len(TARGETS) * 7:
-        raise RuntimeError(f"expected 70 {family} artifacts for {run_id}, found {len(out)}")
-    return out
+    return model_scorers(engine, ROOT, family, run_id)
 
 
 def evaluate(
