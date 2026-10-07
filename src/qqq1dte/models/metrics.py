@@ -58,3 +58,17 @@ def ece(
 def n_effective(n_sessions: int, minutes_in_window: int, horizon_minutes: int) -> int:
     """Spec §8: non-overlapping label windows = sessions x floor(window / horizon)."""
     return n_sessions * (minutes_in_window // horizon_minutes)
+
+
+def auc(y: npt.ArrayLike, p: npt.ArrayLike) -> float:
+    """ROC AUC via the Mann-Whitney rank formula; tied scores count 1/2."""
+    ya, pa = np.asarray(y, dtype=np.float64), np.asarray(p, dtype=np.float64)
+    n_pos = int((ya == 1).sum())
+    n_neg = len(ya) - n_pos
+    if n_pos == 0 or n_neg == 0:
+        raise ValueError("AUC needs both classes")
+    _, inv, counts = np.unique(pa, return_inverse=True, return_counts=True)
+    first = np.concatenate([[0], np.cumsum(counts)[:-1]])
+    avg_rank = first + (counts + 1) / 2.0  # 1-based average rank of each tie group
+    rank_sum = float(avg_rank[inv][ya == 1].sum())
+    return (rank_sum - n_pos * (n_pos + 1) / 2.0) / (n_pos * n_neg)

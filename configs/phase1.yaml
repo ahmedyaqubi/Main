@@ -133,6 +133,28 @@ models:
     solver: lbfgs
     max_iter: 2000
     tol: 1.0e-8
+  gbm:                              # Model 2 (M9): LightGBM, fit on train only
+    grid:                           # pre-declared; each point is a registered trial
+      num_leaves: [7, 31]
+      min_data_in_leaf: [500, 2000]
+    fixed:
+      objective: binary
+      learning_rate: 0.03
+      feature_fraction: 0.8
+      bagging_fraction: 0.8
+      bagging_freq: 1
+      lambda_l2: 1.0
+      deterministic: true
+      force_row_wise: true
+      num_threads: 4
+      seed: 20261007
+      verbosity: -1
+    max_rounds: 2000
+    early_stopping_rounds: 100      # on calibration-block log loss
+    canary_seed: 20261008           # T-LEAK-13 training-label permutation
+    canary_n_permutations: 20       # ADR-0008: mean per-fold AUC averaged over permutations
+    canary_auc_tolerance: 0.02      # gate 4: OOS AUC within 0.50 +/- tolerance
+    reference_m1_run: walk_forward-ae9e9d38408f   # M8 run whose saved Model 1 artifacts are compared
   metrics:
     ece_bins: 10                    # equal-count bins; identical predictions share a bin
     bootstrap_seed: 20261007        # session-block bootstrap RNG seed (reproducible CIs)

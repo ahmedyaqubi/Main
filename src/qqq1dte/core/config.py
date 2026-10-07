@@ -185,6 +185,22 @@ class Logistic(_Section):
     tol: float
 
 
+class GbmGrid(_Section):
+    num_leaves: list[int]
+    min_data_in_leaf: list[int]
+
+
+class Gbm(_Section):
+    grid: GbmGrid
+    fixed: dict[str, Any]
+    max_rounds: int
+    early_stopping_rounds: int
+    canary_seed: int
+    canary_n_permutations: int
+    canary_auc_tolerance: float
+    reference_m1_run: str
+
+
 class Metrics(_Section):
     ece_bins: int
     bootstrap_seed: int
@@ -194,6 +210,7 @@ class Metrics(_Section):
 class Models(_Section):
     baseline: Baseline
     logistic: Logistic
+    gbm: Gbm
     metrics: Metrics
 
 

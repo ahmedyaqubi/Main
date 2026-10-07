@@ -73,3 +73,14 @@ def test_session_bootstrap_is_reproducible() -> None:
     assert session_bootstrap_ci(sessions, stat, 500, 7, 0.95) == session_bootstrap_ci(
         sessions, stat, 500, 7, 0.95
     )
+
+
+def test_auc_hand_computed_and_ties() -> None:
+    from qqq1dte.models.metrics import auc  # noqa: PLC0415
+
+    # pairs (pos, neg): (0.35 > 0.1), (0.35 < 0.4), (0.8 > 0.1), (0.8 > 0.4) -> 3/4
+    assert auc(np.array([0, 0, 1, 1]), np.array([0.1, 0.4, 0.35, 0.8])) == pytest.approx(0.75)
+    assert auc(np.array([0, 1]), np.array([0.5, 0.5])) == pytest.approx(0.5)  # tie = 1/2
+    assert auc(np.array([0, 1, 1]), np.array([0.2, 0.2, 0.9])) == pytest.approx(0.75)
+    with pytest.raises(ValueError, match="both classes"):
+        auc(np.array([1, 1]), np.array([0.2, 0.3]))

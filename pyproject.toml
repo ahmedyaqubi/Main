@@ -11,6 +11,7 @@ dependencies = [
     "certifi>=2025.1",
     "databento>=0.60",
     "exchange-calendars>=4.5",
+    "lightgbm>=4.5",
     "numpy>=1.26",
     "polars>=1.0",
     "psycopg[binary]>=3.2",
@@ -71,7 +72,7 @@ warn_unreachable = true
 files = ["src", "scripts"]
 
 [[tool.mypy.overrides]]
-module = ["exchange_calendars", "exchange_calendars.*", "pyarrow", "pyarrow.*", "sklearn", "sklearn.*"]
+module = ["exchange_calendars", "exchange_calendars.*", "pyarrow", "pyarrow.*", "sklearn", "sklearn.*", "lightgbm", "lightgbm.*"]
 ignore_missing_imports = true
 
 [tool.importlinter]
