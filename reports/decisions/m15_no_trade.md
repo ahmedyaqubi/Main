@@ -1,6 +1,6 @@
 # M15 decision engine and NO_TRADE analysis (spec §4.1)
 
-Generated 2026-10-07 23:32 UTC, code d5a08dc522c2, run `decision-8a196b570c04`. Test blocks 2024-05-28 → 2026-02-27 (440 sessions, 27,944 prediction timestamps); final holdout not opened.
+Generated 2026-10-07 23:40 UTC, code c4e1bddabeef, run `decision-747dec735c50`. Test blocks 2024-05-28 → 2026-02-27 (440 sessions, 27,944 prediction timestamps); final holdout not opened.
 
 **Rule.** Model family `gbm_m2` with its M13 calibrators (test-block probabilities from features only). Per side: calibrated P(WIN) - p_breakeven > 0.03 and EV > 0 at the moderate entry fill (alpha = 0.5), binary-conservative EV (every non-WIN outcome = full -20% stop), §4.9 gates at T_e. Both sides qualifying: higher EV. Blocked regime cells: none.
 
@@ -13,7 +13,20 @@ Generated 2026-10-07 23:32 UTC, code d5a08dc522c2, run `decision-8a196b570c04`. 
 | CALL | 45 | 0.16% |
 | PUT | 1 | 0.00% |
 
-## NO_TRADE by reason (per side)
+## Rule decision vs engine outcome
+
+CALL / PUT decisions pass through the event engine (one open position, at most 3 entries per session); NO_TRADE there is MAX_ENTRIES_PER_DAY.
+
+| rule decision | engine outcome | timestamps |
+|---|---|---|
+| CALL | BLOCKED_POSITION_OPEN | 102 |
+| CALL | CALL | 45 |
+| CALL | NO_TRADE | 28 |
+| NO_TRADE | NO_TRADE | 27,767 |
+| PUT | BLOCKED_POSITION_OPEN | 1 |
+| PUT | PUT | 1 |
+
+## NO_TRADE by reason (per side; rule-level NO_TRADE only)
 
 | reason | timestamps |
 |---|---|
