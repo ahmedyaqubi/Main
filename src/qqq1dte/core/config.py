@@ -214,6 +214,22 @@ class Models(_Section):
     metrics: Metrics
 
 
+class Gate12(_Section):
+    ece_max: float
+    slope_min: float
+    slope_max: float
+    bin_min_n: int
+    wilson_level: float
+
+
+class Calibration(_Section):
+    methods: list[str]
+    inner_split: float
+    prob_clip: float
+    reference_runs: dict[str, str]
+    gate12: Gate12
+
+
 class Sensitivity(_Section):
     alphas: list[float]
     latencies_s: list[int]
@@ -232,6 +248,7 @@ class Phase1Config(_Section):
     liquidity: Liquidity
     fills: Fills
     sensitivity: Sensitivity
+    calibration: Calibration
     pit: Pit
     validation: Validation
     dq: DataQuality

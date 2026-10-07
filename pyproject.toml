@@ -20,6 +20,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "pyyaml>=6.0",
     "scikit-learn>=1.5",
+    "scipy>=1.13",
     "sqlalchemy>=2.0",
     "tzdata>=2025.2",
 ]
@@ -72,7 +73,7 @@ warn_unreachable = true
 files = ["src", "scripts"]
 
 [[tool.mypy.overrides]]
-module = ["exchange_calendars", "exchange_calendars.*", "pyarrow", "pyarrow.*", "sklearn", "sklearn.*", "lightgbm", "lightgbm.*"]
+module = ["exchange_calendars", "exchange_calendars.*", "pyarrow", "pyarrow.*", "sklearn", "sklearn.*", "lightgbm", "lightgbm.*", "scipy", "scipy.*"]
 ignore_missing_imports = true
 
 [tool.importlinter]

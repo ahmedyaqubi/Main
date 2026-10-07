@@ -207,13 +207,24 @@ Notes / open issues:
 3. Shared per-session input loader `backtesting/session_data.py` (used by M12; M11 keeps its own loader).
 4. The M11 report was regenerated from 52c68a0 (run `diagnostic-f52a8c29246a`, identical results) because its P&L now goes through the gate-9 helpers.
 
-## M13 — Probability calibration — TODO
-Depends on: M8/M9 OOS scores, M10
+## M13 — Probability calibration — DONE (2026-10-07; awaiting commit + CI) — gate 12 would FAIL for every model/target
+Depends on: M8, M9 OOS models (DONE), M10 (DONE)
+Owner decisions (2026-10-07): Q1 calibrate Model 1 and Model 2 (saved artifacts, no refit) for all 10 targets; Q2 fit on each fold's calibration block, evaluate on its test block, disclose that M8/M9 already used the calibration block for selection; Q3 candidates none / temperature / Platt / isotonic chosen by log loss on a chronological inner split of the calibration block, then refit on the whole block; Q4 gate 12 per spec §11 on pooled test blocks (would-pass/fail; verdict at M19); Q5 `CalibratedProbability` type + `decide()` guard; Q6 `calibration_results` rows + one `calibration` run per family. Parameters in `configs/phase1.yaml` → `calibration`.
 Acceptance:
-- [ ] Platt, isotonic, temperature fitted on calibration blocks only (T-CAL-03); chosen method selected without test data
-- [ ] Reliability curves, Brier, log loss, ECE, slope, per-bin n and Wilson CI (T-CAL-01/02)
-- [ ] The decision engine refuses CALL/PUT without a calibration version (T-CAL-04)
-- [ ] Gate 12 evaluated with numbers
+- [x] Platt, isotonic, temperature fitted on calibration blocks only (T-CAL-03); chosen method selected without test data — `src/qqq1dte/calibration/methods.py`, `fit.py` (`fit_calibration` refuses rows overlapping the training period or the test block; inner chronological split); `tests/test_calibration.py` (known Platt / temperature parameters recovered, isotonic monotone, clipping, save/load round trip per method, `test_cal_03_refuses_rows_overlapping_training_or_test`, `test_method_chosen_on_inner_chronological_split_then_refit`)
+- [x] Reliability curves, Brier, log loss, ECE, slope, per-bin n and Wilson CI (T-CAL-01/02) — `src/qqq1dte/calibration/metrics.py` (`calibration_slope`, `wilson_ci`, `reliability`, `gate12`); `test_cal_01_ece_known`, `test_cal_02_perfectly_calibrated_synthetic`, `test_wilson_ci_hand_computed`, slope/robustness tests; `reports/models/calibration_m13.md` (pooled and per-fold metrics, a reliability table per model × target)
+- [x] The decision engine refuses CALL/PUT without a calibration version (T-CAL-04) — `src/qqq1dte/execution_sim/decision.py` (`decide` → NO_TRADE UNCALIBRATED; with a version still NO_TRADE DECISION_RULE_PENDING until M15; `CalibratedProbability` only from a calibrator with a version id); `test_cal_04_uncalibrated_forces_no_trade`, `test_mypy_rejects_a_raw_score_as_probability`; the DB constraint `trade_requires_calibration` (M3) also holds
+- [x] Gate 12 evaluated with numbers — `reports/models/calibration_m13.md`; runs `calibration-7d1242da955e` and `calibration-383503512f20` (one per family, COMPLETED), 140 `calibration_results` rows (sha256 in `artifact_uri`), calibrator JSON in `data/calibration/<run_id>/`
+Evidence / results (pooled test blocks, 440 sessions; would-pass/fail only):
+- **Gate 12 would FAIL for all 20 model × target combinations.** Bin rule fails everywhere (2–9 of 10 bins outside the Wilson CI); slope is outside [0.8, 1.2] in 14 of 20 (mostly direction targets, calibrated slope −0.03 to 0.74: the scores carry little information, so any spread is over-confident).
+- Closest: Model 2 B targets — B_up 0.25% ECE 0.012, slope 0.999; B_up 0.50% ECE 0.007, slope 1.068; B_dn 0.50% ECE 0.010, slope 0.963 — failing only the bin rule (5 / 3 / 2 bins of 10).
+- Decision targets: C_call M1 ECE 0.029, slope 0.49; M2 ECE 0.022, slope 0.35; C_put M1 ECE 0.017, slope 0.74; M2 ECE 0.016, slope 0.86 (bins 3–5 of 10 failed).
+- Calibration rarely improves held-out Brier and sometimes worsens it (e.g. Model 1 B_up 0.25%: slope 1.03 raw → 0.52 calibrated, Brier 0.199 → 0.202). "none" is chosen in 26 / 70 fold-targets for M1 and 38 / 70 for M2: with 2-month calibration blocks and drift between blocks, re-mapping often does not transfer to the next 3 months.
+Notes / open issues:
+1. **Owner decision needed — gate-12 bin rule.** As written (every bin with n ≥ 200 inside its own 95% Wilson CI), a perfectly calibrated model with 10 bins fails about 40% of the time (1 − 0.95^10; `test_gate12_bin_rule_false_fail_rate_is_documented`). The observed failures (2–9 bins) are far beyond that chance level, so the conclusion above does not depend on it, but the rule needs an ADR (e.g. a multiplicity-adjusted per-bin level) before M19.
+2. Calibration blocks were also used for M8/M9 selection (Q2); test-block evaluation is unaffected.
+3. Robustness fixes found on real data: a constant prediction has no slope (NaN → the slope check fails), Platt on constant scores maps to the base rate, run metrics store NaN as null, and the logistic fit uses damped Newton (undamped Newton diverged on an isotonic-calibrated case kept as fixture `tests/fixtures/m13_gbm_f1_ccall_calibrated.npz`, 4,039 predictions and labels, no vendor data).
+4. Test-first: methods, metrics, fit, store and guard tests were run red first; two synthetic convergence tests passed immediately (kept as regression tests); the real-data fixture test reproduced the failure and was red first.
 
 ## M14 — Regime analysis — TODO
 Depends on: M13

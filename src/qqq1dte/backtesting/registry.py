@@ -4,6 +4,7 @@ runs, so failed and abandoned runs still count towards n_trials (the multiple-te
 from __future__ import annotations
 
 import json
+import math
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -52,6 +53,17 @@ def register_run(
     return run_id
 
 
+def _finite(x: Any) -> Any:
+    """JSONB has no NaN/inf: non-finite floats are stored as null."""
+    if isinstance(x, float):
+        return x if math.isfinite(x) else None
+    if isinstance(x, Mapping):
+        return {k: _finite(v) for k, v in x.items()}
+    if isinstance(x, list | tuple):
+        return [_finite(v) for v in x]
+    return x
+
+
 def _finish(engine: Engine, run_id: str, status: str, metrics: Mapping[str, Any]) -> None:
     with engine.begin() as c:
         n = c.execute(
@@ -59,7 +71,7 @@ def _finish(engine: Engine, run_id: str, status: str, metrics: Mapping[str, Any]
                 UPDATE validation_runs SET status = :s, metrics = CAST(:m AS JSONB),
                   finished_at = now()
                 WHERE run_id = :r AND status = 'REGISTERED'"""),
-            {"s": status, "m": json.dumps(metrics, default=str), "r": run_id},
+            {"s": status, "m": json.dumps(_finite(metrics), default=str), "r": run_id},
         ).rowcount
     if n != 1:
         raise RuntimeError(f"run {run_id} is not a REGISTERED run; cannot mark it {status}")

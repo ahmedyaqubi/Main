@@ -70,6 +70,21 @@ fills:
   moderate_alpha: 0.5                # OD-6
   tick: 0.01
 
+calibration:                         # M13 (spec Phase 1L, gate 12)
+  methods: [none, temperature, platt, isotonic]   # candidates; ties -> earlier (simpler) wins
+  inner_split: 0.5                   # chronological share of calibration sessions used to fit
+                                     # when choosing the method (rest scores it); then refit on all
+  prob_clip: 1.0e-4                  # calibrated probabilities clipped to [clip, 1 - clip]
+  reference_runs:                    # saved model artifacts calibrated here
+    logistic_m1: walk_forward-ae9e9d38408f
+    gbm_m2: walk_forward-8adbdf4112a5
+  gate12:
+    ece_max: 0.03
+    slope_min: 0.8
+    slope_max: 1.2
+    bin_min_n: 200                   # bins with n >= this must pass the Wilson check
+    wilson_level: 0.95
+
 sensitivity:                         # M12 execution-assumption grid (pre-declared; one run)
   alphas: [0.0, 0.25, 0.5, 0.75, 1.0]  # moderate fill alpha (1 = conservative prices, 0 = mid)
   latencies_s: [0, 5, 60]

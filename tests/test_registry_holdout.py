@@ -137,3 +137,13 @@ def test_model_version_is_recorded_as_candidate(migrated_engine: Engine) -> None
         record_model_version(
             migrated_engine, ModelVersion(**{**mv.__dict__, "artifact_sha256": "cd" * 32})
         )
+
+
+def test_non_finite_metrics_are_stored_as_null(migrated_engine: Engine) -> None:
+    rid = _register(migrated_engine, {"m": "nan"})
+    complete_run(migrated_engine, rid, {"slope": float("nan"), "x": [1.0, float("inf")]})
+    with migrated_engine.connect() as c:
+        m = c.execute(
+            text("SELECT metrics FROM validation_runs WHERE run_id = :r"), {"r": rid}
+        ).scalar_one()
+    assert m == {"slope": None, "x": [1.0, None]}
