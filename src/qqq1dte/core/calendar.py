@@ -14,6 +14,13 @@ from qqq1dte.core.timeutil import ET, ensure_utc
 REGULAR_CLOSE_MINUTES = 390
 
 
+def add_months(d: date, months: int) -> date:
+    """Calendar-month arithmetic; the day is clamped to the target month's last day."""
+    y, m = divmod(d.year * 12 + d.month - 1 + months, 12)
+    m += 1
+    return date(y, m, min(d.day, calendar.monthrange(y, m)[1]))
+
+
 class TradingCalendar:
     """Session logic for the configured exchange calendar (XNYS)."""
 
@@ -65,11 +72,7 @@ class TradingCalendar:
         """Spec §8: sessions strictly after this date (the last session minus
         validation.final_holdout_months calendar months, day clamped to month end) are the final
         holdout. It is locked until M19: nothing may be tuned or chosen by looking at it."""
-        months = self.cfg.validation.final_holdout_months
-        y, m = divmod(last_session.year * 12 + last_session.month - 1 - months, 12)
-        m += 1
-        last_day = calendar.monthrange(y, m)[1]
-        return date(y, m, min(last_session.day, last_day))
+        return add_months(last_session, -self.cfg.validation.final_holdout_months)
 
     def research_sessions(self, start: date, end: date) -> list[date]:
         return [d for d in self.sessions(start, end) if self.in_research_window(d)]

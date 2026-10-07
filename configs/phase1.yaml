@@ -120,3 +120,14 @@ features:
   megacap_min_symbols: 3
   vix_available_time: "18:00"       # ET on the VIX date: conservative (Cboe close ~16:15, file EOD)
   annualization_minutes: 98280      # 252 sessions x 390 minutes, for 1-min realized vol
+
+# Models (M7+). Baseline = Model 0: unconditional and conditional training-set rates.
+models:
+  baseline:
+    tod_bucket_starts: ["09:45", "11:00", "13:00"]   # ET; bucket = last start <= T
+    vix_quantiles: [0.3333333333333333, 0.6666666666666666]  # train-fold VIX tercile cuts (spec §9)
+    shrinkage_prior_n: 50           # Beta prior strength toward the train unconditional rate
+  metrics:
+    ece_bins: 10                    # equal-count bins; identical predictions share a bin
+    bootstrap_seed: 20261007        # session-block bootstrap RNG seed (reproducible CIs)
+    ci_level: 0.95

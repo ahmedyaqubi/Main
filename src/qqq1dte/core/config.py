@@ -171,6 +171,23 @@ class Features(_Section):
     annualization_minutes: int
 
 
+class Baseline(_Section):
+    tod_bucket_starts: list[time]
+    vix_quantiles: list[float]
+    shrinkage_prior_n: int
+
+
+class Metrics(_Section):
+    ece_bins: int
+    bootstrap_seed: int
+    ci_level: float
+
+
+class Models(_Section):
+    baseline: Baseline
+    metrics: Metrics
+
+
 class Phase1Config(_Section):
     history: History
     session: Session
@@ -186,6 +203,7 @@ class Phase1Config(_Section):
     validation: Validation
     dq: DataQuality
     features: Features
+    models: Models
 
 
 def load_config(path: Path | None = None) -> Phase1Config:
