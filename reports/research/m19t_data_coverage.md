@@ -1,6 +1,6 @@
 # M19T Step 0: data coverage (ADR-0013, PROPOSED)
 
-Generated 2026-10-08 18:59 UTC by `scripts/m19t_coverage.py`, code 6bb890bc1a95. Development sessions 2020-01-02 → 2026-04-02 only. Sessions after 2026-04-02 (ADR-0011 holdout) were stored and cleaned (`scripts/m19t_build_data.py`) and are not read here (the loader refuses them).
+Generated 2026-10-08 19:21 UTC by `scripts/m19t_coverage.py`, code 3d134c99d6ee. Development sessions 2020-01-02 → 2026-04-02 only. Sessions after 2026-04-02 (ADR-0011 holdout) were stored and cleaned (`scripts/m19t_build_data.py`) and are not read here (the loader refuses them).
 
 **Data only.** Entry-time quotes and quote availability. No exit price, P&L or outcome is computed. No trial is registered (n_trials stays 38).
 

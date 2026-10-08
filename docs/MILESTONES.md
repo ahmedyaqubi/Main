@@ -418,7 +418,9 @@ Step 0 (data; no trial):
     - **Adjusted 1DTE exit legs are not stored** for 324 picked entries in 11 sessions, 2023-12 to 2024-02.
     - **$1 grid holes** lie within 3 strikes of the pair in 13–14% of Mon/Wed/Fri-era picks. Elsewhere it is 0.5–2.7%.
 - [ ] ADR-0013 accepted (open questions Q1–Q5 in the ADR's Step-0 results); then Step 1 code (tests first)
-- [ ] Datasets registered in `dataset_versions` from committed code (deferred: the scripts are uncommitted)
+- [x] Rerun from committed code 3d134c9 (2026-10-08). Results are identical: the report body is unchanged and only its header moved to 3d134c9. The earlier run on uncommitted code (header 6bb890b) is superseded.
+  - 7 datasets registered in `dataset_versions`: 5 raw folders plus cleaned 0dte and ext, all new rows.
+  - CI green on 3d134c9: https://github.com/ahmedyaqubi/Main/actions/runs/37829299298
 
 ## M20 — Live market data in PAPER mode — TODO
 Depends on: M19 PASS (or owner ADR)
