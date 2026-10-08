@@ -248,6 +248,22 @@ class Regimes(_Section):
     baseline_run: str
 
 
+class ValidationGates(_Section):
+    min_folds_better_share: float
+    min_folds_positive_share: float
+    regime_min_trades: int
+    min_trades: int
+    min_sessions: int
+    max_pbo: float
+    min_dsr_probability: float
+    pbo_blocks: int
+    journal_replay_sample: int
+    journal_replay_seed: int
+    feature_replay_n: int
+    feature_replay_seed: int
+    evidence: dict[str, str]
+
+
 class Replay(_Section):
     n_replays: int
     inject_at_session: int
@@ -313,6 +329,7 @@ class Phase1Config(_Section):
     journal: Journal
     promotion: Promotion
     monitoring: Monitoring
+    validation_gates: ValidationGates
     pit: Pit
     validation: Validation
     dq: DataQuality

@@ -158,6 +158,10 @@ def test_leak_10_import_contract_kept() -> None:
     exe = shutil.which("lint-imports")
     if exe is None:
         pytest.skip("import-linter not installed")
-    res = subprocess.run([exe], cwd=ROOT, capture_output=True, text=True, check=False)
+    # explicit UTF-8: lint-imports may print UTF-8 (e.g. under PYTHONIOENCODING=utf-8), which the
+    # Windows locale codec cannot decode (stdout would silently become None)
+    res = subprocess.run(
+        [exe], cwd=ROOT, capture_output=True, encoding="utf-8", errors="replace", check=False
+    )
     assert res.returncode == 0, res.stdout + res.stderr
     assert "1 kept, 0 broken" in res.stdout

@@ -104,6 +104,28 @@ regimes:                             # M14 (spec §9, OD-9); thresholds fit per 
     gbm_m2: calibration-e19b6c392dd0
   baseline_run: sensitivity-1097416fc6c0   # M12 run: mechanical baseline trades (named models)
 
+validation_gates:                    # M19: spec §11 numbers (gates 6, 10, 13, 15, 16)
+  min_folds_better_share: 0.70       # gate 6
+  min_folds_positive_share: 0.60     # gate 10
+  regime_min_trades: 100             # gate 13: cells judged only with >= this many trades
+  min_trades: 300                    # gate 15
+  min_sessions: 150                  # gate 15
+  max_pbo: 0.20                      # gate 16
+  min_dsr_probability: 0.95          # gate 16
+  pbo_blocks: 16                     # CSCV partitions (spec OD-8)
+  journal_replay_sample: 200         # gate 17: fresh seeded replay sample
+  journal_replay_seed: 20261012
+  feature_replay_n: 20               # gate 3: random pre-holdout timestamps recomputed
+  feature_replay_seed: 20261013
+  evidence:                          # committed runs the M19 run reads (ids checked)
+    baseline_run: walk_forward-843056faa13a      # M7 (gate 5)
+    model_run: walk_forward-8adbdf4112a5         # M9 gbm_m2 (gate 6)
+    canary_run: canary-a633f3966f65              # gate 4 (ADR-0008)
+    calibration_run: calibration-e19b6c392dd0    # gate 12 (ADR-0009)
+    decision_run: decision-7cd0dc2805d1          # gates 10, 11, 13, 14, 15 (ADR-0010)
+    journal_run: journal-4a7a186908c7            # gates 7, 17
+    monitoring_run: monitoring-10b177d1695e      # gate 18
+
 monitoring:                          # M18 drift monitoring (spec Phase 1Q, gate 18)
   window_sessions: 10                # rolling window for PSI / calibration / expectancy
   regime_window_sessions: 20         # rolling window for regime-cell frequency
