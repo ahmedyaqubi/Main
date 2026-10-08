@@ -137,6 +137,32 @@ study_1b:                            # ADR-0012 (M19S): Phase 1b trade-definitio
   n_trials_at_acceptance: 35
   max_new_trials: 7
 
+study_1c:                            # ADR-0013 (M19T): Phase 1c defined-risk short premium
+  labels_dir: study1c                # data/labels/study1c/<cell>/session=<D>.parquet
+  width: 1.0                         # D1.a
+  ext_start: "2020-01-02"            # D2 development data starts
+  dev_end: "2026-04-02"              # last development session (ADR-0011 holdout after it)
+  cells:                             # D5, frozen at acceptance (2026-10-08); condor = both sides
+    S1: {tenor: 0dte, structure: put,    x: 0.20, window: ["09:45", "10:30"]}
+    S2: {tenor: 0dte, structure: put,    x: 0.33, window: ["09:45", "10:30"]}
+    S3: {tenor: 0dte, structure: condor, x: 0.20, window: ["09:45", "10:30"]}
+    S4: {tenor: 1dte, structure: put,    x: 0.20, window: ["13:00", "14:30"]}
+    S5: {tenor: 1dte, structure: put,    x: 0.33, window: ["13:00", "14:30"]}
+    S6: {tenor: 1dte, structure: condor, x: 0.20, window: ["13:00", "14:30"]}
+  lower_bound_level: 0.95            # D3 ADVANCE: one-sided lower bound, conservative fill
+  kill_level: 0.95                   # D3 KILL: two-sided upper bound, mid fill
+  min_trades: 300                    # D4 guards
+  min_sessions: 300
+  min_sessions_recent: 150
+  recent_from: "2023-01-01"
+  max_advance: 2                     # D3; ties -> more sessions from recent_from on
+  era_starts: {mwf: "2021-05-05", daily: "2022-11-17"}   # Step-0 listings (D2, reporting)
+  degraded_days: ["2021-07-07", "2021-10-26", "2022-09-19"]   # R4: VENDOR_DEGRADED, kept
+  ex_dividends: configs/reference/qqq_ex_dividends.csv          # R5 / D1.d
+  rescreen_min_new_sessions: 250     # D3 AMBIGUOUS: one pre-registered re-screen
+  n_trials_at_acceptance: 38
+  max_new_trials: 2                  # D6: the screen + at most one re-screen
+
 research:                            # M19R research iteration 1 (diagnostics D1-D3)
   implied_c: 1.0e6                   # D1 benchmark logistic: effectively unregularised
   next_session_minutes: 390          # D1: trading minutes of the expiry session (D+1)

@@ -285,6 +285,34 @@ class Study1b(_Section):
     max_new_trials: int
 
 
+class SpreadCell(_Section):
+    tenor: str  # "0dte" | "1dte"
+    structure: str  # "put" | "condor"
+    x: float
+    window: tuple[time, time]
+
+
+class Study1c(_Section):
+    labels_dir: str
+    width: float
+    ext_start: date
+    dev_end: date
+    cells: dict[str, SpreadCell]
+    lower_bound_level: float
+    kill_level: float
+    min_trades: int
+    min_sessions: int
+    min_sessions_recent: int
+    recent_from: date
+    max_advance: int
+    era_starts: dict[str, date]
+    degraded_days: list[date]
+    ex_dividends: str
+    rescreen_min_new_sessions: int
+    n_trials_at_acceptance: int
+    max_new_trials: int
+
+
 class Research(_Section):
     implied_c: float
     next_session_minutes: int
@@ -377,6 +405,7 @@ class Phase1Config(_Section):
     validation_gates: ValidationGates
     research: Research
     study_1b: Study1b
+    study_1c: Study1c
     features_f3: FeaturesF3
     pit: Pit
     validation: Validation

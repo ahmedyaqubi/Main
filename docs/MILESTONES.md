@@ -436,7 +436,22 @@ Step 0 (data; no trial):
   - **Incident:** the rebuild that tested the supplement ran on uncommitted code. Blanking `DATABASE_URL` in PowerShell deleted the variable, so `.env` supplied it again.
     - 3 `dataset_versions` rows were written with `code_commit` `4e42f43…-dirty`: raw 0dte cbbo `15d2aa19`, raw 0dte definition `9d23cd54`, cleaned 0dte `2d647210`.
     - Owner approved deleting them (2026-10-08). The 3 rows were deleted after confirming that nothing referenced them. They are re-registered by the rerun from the commit below.
-- [ ] Step 1 code (tests first): multi-leg labels, R1/R2 selection, purge, ex-dividend exclusion, the D3 screen
+- [x] Step 0 rerun from committed code 9619908: the report body is identical. All M19T `dataset_versions` rows carry clean commits. CI green on 9619908: https://github.com/ahmedyaqubi/Main/actions/runs/37845683116
+- [x] Step 1 plan approved (2026-10-08). **Owner decision: a condor is both sides or NO_TRADE (`CONDOR_SIDE_MISSING`).**
+- [x] Step 1 code, tests first:
+  - **Config:** `study_1c` in `configs/phase1.yaml` (cells S1–S6, D3 levels, D4 guards, eras, R4 days, R5 file, budget).
+  - **Engine:** `execution_sim/spreads.py` (the frozen D1.a rule, moved from `validation/spread_coverage.py`).
+    - `labels/spread.py` covers: open (R1 gates after selection, no fallback, min-bid on short legs only; R2), close (D1.c), costs per leg, max risk, `ex_div_span` (D1.d) and `quote_at`.
+    - `selection.liquidity_failures(check_min_bid=...)`: the default keeps Phase 1 unchanged.
+  - **Screen:** `backtesting/premium_screen.py` (D3/D4).
+  - **Scripts:** `scripts/m19t_build_labels.py`, which registers only from committed code and the full range, and `scripts/m19t_step1.py`.
+    - The screen script registers before computing.
+    - Its `--dry-run-labels` mode was checked on synthetic random-P&L labels only. No real outcome was read before the registered run.
+  - **Tests:** `tests/test_spread_labels.py` (18), `tests/test_premium_screen.py` (8).
+  - **Leakage review**, both findings fixed (tests first):
+    - `AT_BAND_EDGE` picks are now NO_TRADE: the stored strike band was chosen with the session's full-day range.
+    - `quote_at` breaks a duplicate-timestamp tie deterministically, toward the rejected copy.
+- [ ] Step 1 run from committed code: label build (`--register`), then the registered screen `screen_1c` (n_trials 38 → 39), CI, family ledger
 
 ## M20 — Live market data in PAPER mode — TODO
 Depends on: M19 PASS (or owner ADR)

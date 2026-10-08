@@ -73,8 +73,11 @@ def choose_contract(
     return min((c for c in known if c.strike == strikes[j]), key=lambda c: c.symbol)
 
 
-def liquidity_failures(quote: Quote | None, t_e: datetime, cfg: Phase1Config) -> list[str]:
-    """§4.9 gates on the quote in force at t_e; empty list = tradable."""
+def liquidity_failures(
+    quote: Quote | None, t_e: datetime, cfg: Phase1Config, *, check_min_bid: bool = True
+) -> list[str]:
+    """§4.9 gates on the quote in force at t_e; empty list = tradable. `check_min_bid=False`
+    skips only the min-bid gate (ADR-0013 R1: the bought leg of a credit spread)."""
     liq = cfg.liquidity
     if quote is None:
         return ["NO_QUOTE"]
@@ -91,7 +94,7 @@ def liquidity_failures(quote: Quote | None, t_e: datetime, cfg: Phase1Config) ->
     mid = (bid + ask) / 2
     if round(ask - bid, 9) > max(liq.max_spread_abs, liq.max_spread_pct * mid) + 1e-12:
         out.append("SPREAD_TOO_WIDE")
-    if bid < liq.min_bid:
+    if check_min_bid and bid < liq.min_bid:
         out.append("BID_BELOW_MIN")
     if liq.require_size and quote.ask_sz is not None and quote.ask_sz < cfg.trade.contracts:
         out.append("SIZE_BELOW_CONTRACTS")
