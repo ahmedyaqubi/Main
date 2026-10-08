@@ -160,20 +160,35 @@ def test_regime_label_available_after_ts_rejected(migrated_engine: Engine) -> No
         )
 
 
+def _promote_row(c: Connection, model: str) -> None:
+    """A PROMOTED record in the same transaction: required before status = PRODUCTION (M17)."""
+    c.execute(
+        text("""
+        INSERT INTO model_promotions (to_model_id, gate_results, decision, approved_by)
+        VALUES (:m, '{}', 'PROMOTED', 'test approver')"""),
+        {"m": model},
+    )
+
+
 def test_one_production_model_per_target(migrated_engine: Engine) -> None:
     with migrated_engine.begin() as c:
         _parents(c)
+        _promote_row(c, "m1")
         c.execute(
             text("UPDATE model_versions SET status = 'PRODUCTION' WHERE model_version_id='m1'")
         )
-    with pytest.raises(IntegrityError, match="one_production"), migrated_engine.begin() as c:
         c.execute(
             text("""
             INSERT INTO model_versions (model_version_id, model_family, target_label, train_start,
               train_end, dataset_id, feature_version, label_version, hyperparameters,
               artifact_uri, artifact_sha256, code_commit, config_hash, status)
             VALUES ('m2', 'logreg', 'C_call', '2024-01-01', '2024-12-31', 'ds1', 'f1', 'l1',
-              '{}', 'x', 'y', 'abc', 'h', 'PRODUCTION')""")
+              '{}', 'x', 'y', 'abc', 'h', 'CANDIDATE')""")
+        )
+    with pytest.raises(IntegrityError, match="one_production"), migrated_engine.begin() as c:
+        _promote_row(c, "m2")
+        c.execute(
+            text("UPDATE model_versions SET status = 'PRODUCTION' WHERE model_version_id='m2'")
         )
 
 

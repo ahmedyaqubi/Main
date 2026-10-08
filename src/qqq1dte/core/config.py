@@ -248,6 +248,16 @@ class Regimes(_Section):
     baseline_run: str
 
 
+class Promotion(_Section):
+    min_folds_better_share: float
+    min_folds_positive_share: float
+    min_trades: int
+    min_sessions: int
+    max_ece_increase: float
+    candidate_fold: int
+    evidence: dict[str, str]
+
+
 class Journal(_Section):
     replay_sample: int
     replay_seed: int
@@ -274,6 +284,7 @@ class Phase1Config(_Section):
     calibration: Calibration
     regimes: Regimes
     journal: Journal
+    promotion: Promotion
     pit: Pit
     validation: Validation
     dq: DataQuality

@@ -104,6 +104,19 @@ regimes:                             # M14 (spec §9, OD-9); thresholds fit per 
     gbm_m2: calibration-e19b6c392dd0
   baseline_run: sensitivity-1097416fc6c0   # M12 run: mechanical baseline trades (named models)
 
+promotion:                           # M17: Phase 1P gates mapped to spec §11 numbers (owner Q1)
+  min_folds_better_share: 0.70       # gate 6: better than Model 0 in >= 70% of folds
+  min_folds_positive_share: 0.60     # gate 10: positive expectancy in >= 60% of folds
+  min_trades: 300                    # gate 15
+  min_sessions: 150                  # gate 15
+  max_ece_increase: 0.005            # no degradation vs the current model (calibration)
+  candidate_fold: 7                  # the latest walk-forward fold's model is the candidate
+  evidence:                          # stored runs the review reads (decision.model_family)
+    model_run: walk_forward-8adbdf4112a5     # M9 gbm_m2 OOS (BSS vs Model 0, fold shares)
+    canary_run: canary-a633f3966f65          # gate 4 (ADR-0008)
+    calibration_run: calibration-e19b6c392dd0  # gate 12 (ADR-0009)
+    decision_run: decision-7cd0dc2805d1      # trades / expectancy / regimes (ADR-0010)
+
 journal:                             # M16
   replay_sample: 200                 # journaled predictions replayed (T-REP-02) per run
   replay_seed: 20261009
