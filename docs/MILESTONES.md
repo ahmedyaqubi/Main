@@ -382,7 +382,7 @@ Step 1 acceptance (model-free screen + Â; 1 screen run + 2 counted refits):
   - Every definition's mean net per trade is negative at every coverage: −$1.47 to −$16.15.
 Step 2 is not run (kill rule), and the holdout stays locked. The remaining options per ADR-0012 Consequences are new data, a defined-risk-structure ADR, or a different strategy class. Each needs an owner decision.
 
-## M19T — Phase 1c defined-risk short premium (ADR-0013, PROPOSED) — STEP 0 IN PROGRESS
+## M19T — Phase 1c defined-risk short premium (ADR-0013, PROPOSED) — STEP 0 DATA DONE, AWAITING ADR ACCEPTANCE
 Depends on: M19S (closed). ADR-0013 is drafted from the owner's 10-point review; n_trials 38 at drafting.
 Step 0 (data; no trial):
 - [x] Data gap identified. M4 fetched only contracts expiring at D+1 / D+2 (`scripts/m4_fetch_history.py`), so expiry-day (0DTE) quotes are not on disk. Both tenors (S1–S6) need them.
@@ -396,7 +396,29 @@ Step 0 (data; no trial):
     - **Expirations, inferred from listings:** Fridays only from 2020-01 to about 2021-04, then Mon/Wed/Fri until 2022-11-13, then daily. ADR-0013 D2 era reporting is updated to 3 eras (reporting only).
     - Databento flagged 3 extension days as degraded (2021-07-07, 2021-10-26, 2022-09-19). They are to be checked during cleaning.
   - **F:** forward collection, approved at about $0.64 a month. Its script is still to be written.
-- [ ] ADR-0013 accepted; data fetched, cleaned (M4 rules) and verified; then Step 1 code (tests first)
+- [x] Data converted and cleaned (2026-10-08). Built by `scripts/m19t_build_data.py`, with parameters in `configs/m19t_step0.yaml`.
+  - **Separate raw store** `data/raw/m19t/`, cleaned into `data/clean/m19t/`. Earlier scripts read every definition file in the M4 store, so sharing it would have changed the M5–M19S inputs.
+  - Cleaning uses the M4 functions unchanged (`build_definitions`, `clean_option_quotes`, DQ rules v2).
+  - Every rejected record is stored with its reasons. A per-session log is in `dq_log.parquet`.
+  - Raw = cleaned + rejected is asserted for all 1,511 session files, holdout included. The holdout is stored and cleaned only; nothing is reported on it.
+  - The QQQ daily bars are ingested but not cleaned (download band only).
+- [x] Coverage verified: `scripts/m19t_coverage.py` → `reports/research/m19t_data_coverage.md`.
+  - The report covers development sessions only; its loader refuses holdout sessions.
+  - It uses entry-time quotes and quote availability only. **No P&L or outcome was computed, and no trial was registered (n_trials 38).**
+  - Tests first: `tests/test_spread_coverage.py` (9 tests) covers `validation/spread_coverage.py` (credit-fraction pick, grid holes, longest quote gap).
+  - **Sessions.** 0DTE: 1,163 development sessions, 813 of them from 2023. 1DTE: 1,166, of which 814 from 2023. The D4 guards (≥ 300 total, ≥ 150 from 2023) are met.
+  - **Eras, from the listings:** Friday-only until 2021-05-04, Mon/Wed/Fri from 2021-05-05, Tue/Thu (daily) from 2022-11-17.
+  - **Cleaning.** Development rejection rate is 0.00–0.06% per year (8,112 records, all `BID_GT_ASK`; 18 of them are also `NONPOSITIVE_PRICE`).
+  - **Credit rule (D1.a).** It is resolvable without spot. AT_BAND_EDGE is 0% in every cell, with ≥ 9 stored strikes beyond the long leg at p5. NO_QUALIFYING is 0.03–3.6%.
+  - **Expiry-day exit.** 0DTE picked legs: 100% have a usable 15:50 ask. 1DTE: 99.2–99.7%. Path gaps over 5 min occur in 0–2.4% of picks.
+  - **Degraded days.** 2021-07-07, 2021-10-26 and 2022-09-19 show full minute coverage, no gaps, no rejections and the same contract counts as their neighbours.
+    - The median spread on 07-07 and 09-19 is the highest in each 11-session window ($0.37 vs $0.14–0.31; $0.15 vs $0.03–0.15). Owner decision pending (see ADR-0013, Step-0 results).
+  - **Gaps found (no new download made):**
+    - **2023-12-28 has no 0DTE data.** Its contracts carry OCC-adjusted strikes (#53847), and only whole-dollar symbols were requested.
+    - **Adjusted 1DTE exit legs are not stored** for 324 picked entries in 11 sessions, 2023-12 to 2024-02.
+    - **$1 grid holes** lie within 3 strikes of the pair in 13–14% of Mon/Wed/Fri-era picks. Elsewhere it is 0.5–2.7%.
+- [ ] ADR-0013 accepted (open questions Q1–Q5 in the ADR's Step-0 results); then Step 1 code (tests first)
+- [ ] Datasets registered in `dataset_versions` from committed code (deferred: the scripts are uncommitted)
 
 ## M20 — Live market data in PAPER mode — TODO
 Depends on: M19 PASS (or owner ADR)

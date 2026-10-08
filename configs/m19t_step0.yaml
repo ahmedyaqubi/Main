@@ -1,0 +1,22 @@
+# M19T Step 0 (ADR-0013, PROPOSED): data build and coverage checks only. No trial, no P&L.
+# Cell parameters mirror ADR-0013 D5. They move to configs/phase1.yaml when the ADR is accepted.
+# Separate from phase1.yaml so the registered runs' config hash is unchanged.
+
+raw_dir: data/raw/databento/m19t          # Step 0 download (scripts/m19t_fetch.py, $10.18)
+store_dir: data/raw/m19t                  # own raw store: keeps M4-M19S inputs unchanged
+clean_dir: data/clean/m19t
+sources:                                  # download folder suffix -> cleaned dataset name
+  0dte: "0dte"                            # contracts expiring on D, 2023-03-28 -> 2026-10-02
+  ext: "ext"                              # contracts expiring on D and D+1, 2020-01-02 -> 2023-03-27
+ext_start: "2020-01-02"
+dev_end: "2026-04-02"                     # last development session (ADR-0011 holdout after it)
+last_session: "2026-10-02"
+degraded_days: ["2021-07-07", "2021-10-26", "2022-09-19"]   # Databento warnings during the fetch
+degraded_neighbours: 5                    # same-source sessions either side, for comparison
+
+width: 1.0
+put_x: [0.20, 0.33]                       # S1/S2, S4/S5
+call_x: [0.20]                            # call side of the condors (S3, S6)
+windows:                                  # ET entry windows, every schedule.cadence_minutes
+  0dte: ["09:45", "10:30"]
+  1dte: ["13:00", "14:30"]

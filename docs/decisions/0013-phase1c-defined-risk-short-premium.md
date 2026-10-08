@@ -166,6 +166,67 @@ other confirms on forward data. An AMBIGUOUS or PARKED family never uses the hol
 - Walk-forward folds are unchanged: same pre-holdout sessions, with forward data and the holdout
   outside every fold.
 
+## Step-0 results (2026-10-08; data only, no trial)
+Source: `reports/research/m19t_data_coverage.md` (development sessions only; the holdout is
+stored and cleaned, not read). No P&L or outcome has been computed. n_trials is still 38.
+
+**Verified:**
+- **Data spend:** $10.18, within the $20 cap.
+- **Cleaning:** M4 rules unchanged. Development rejection rate is ≤ 0.06% a year. Conservation
+  holds for every file.
+- **Session counts:**
+  - 0DTE: 1,163 sessions, 813 of them from 2023.
+  - 1DTE: 1,166 sessions, 814 of them from 2023.
+  - Every cell clears the D4 session guards.
+- **D2 eras, from the listings:**
+  - Friday-only: up to 2021-05-04;
+  - Mon/Wed/Fri: 2021-05-05 to 2022-11-16;
+  - daily (Tue/Thu continuous): from 2022-11-17.
+- **D1.a:** the rule works with no spot price.
+  - The download band never binds (AT_BAND_EDGE 0%; ≥ 9 stored strikes beyond the long leg at
+    p5).
+  - NO_QUALIFYING rate: 0.03–3.6%.
+- **D1.c exit coverage:**
+  - Usable 15:50 ask on both legs: 100% (0DTE), 99.2–99.7% (1DTE).
+  - Quote gaps > 5 min (→ UNRESOLVED_DATA): 0–2.4% of picks.
+- **D1.e purge:** 1 entry crosses into the holdout (2026-04-02 → 2026-04-06,
+  `LABEL_CROSSES_BLOCK`). 1 exits on the ADR-0006 excluded session.
+
+**Open questions for acceptance (owner decides; no definition has been changed):**
+- **Q1, §4.9 gates per leg (D1.b).** Both legs pass in 74.6–98.1% of 0DTE picks and in 88.5–99.9%
+  of 1DTE picks. The main failures:
+  - the long call leg's `BID_BELOW_MIN` (6.6% of 0DTE call picks);
+  - `SPREAD_TOO_WIDE` on either leg (≤ 3.7%).
+
+  The ADR does not say whether the gates act **before** selection or **after** it:
+  - **before:** the furthest pair whose legs pass is chosen;
+  - **after:** the rule picks a pair, then a failed gate gives NO_TRADE with no fallback, like
+    spec §5.
+
+  It also does not say whether the $0.20 min-bid gate should apply to a leg that is bought.
+- **Q2, missing long strike.** A pair whose long strike is not listed is treated as ineligible,
+  and the rule moves on to other pairs. That is how the coverage check implemented it.
+  - $1 grid holes lie within 3 strikes of the pair in 13–14% of Mon/Wed/Fri-era picks
+    (0.5–2.7% in the other eras).
+  - Confirm, or make it NO_TRADE.
+  - Also confirm that OCC-adjusted strikes count like standard ones (M6 Q1).
+- **Q3, OCC #53847 gap.** The Step-0 download requested whole-dollar symbols only, so:
+  - **2023-12-28 has no 0DTE data;**
+  - adjusted 1DTE exit legs are missing for 324 picked entries in 11 sessions (2023-12 to
+    2024-02).
+
+  Options: (a) a small supplemental download (to be priced first), or (b) log these as
+  `UNRESOLVED_DATA` / NO_DATA and exclude them.
+- **Q4, degraded days** (2021-07-07, 2021-10-26, 2022-09-19).
+  - **Same as their neighbours:** full minute coverage, no gaps, no rejections, the same
+    contract counts.
+  - **Different:** 07-07 and 09-19 have the widest median spread in their 11-session windows.
+
+  Options: keep them, keep them flagged with a with/without sensitivity row (descriptive), or
+  exclude them by ADR.
+- **Q5, ex-dividend dates (D1.d).** Not yet sourced or stored. They are needed before the Step-1
+  code.
+
 ## Consequences
 - New code: multi-leg positions, per-leg fills and gates, labels spanning two sessions, the
   purge rule, and the ex-dividend list. The engine is otherwise reused unchanged.
