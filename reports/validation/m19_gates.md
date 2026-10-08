@@ -1,17 +1,17 @@
 # M19 full historical validation: gates 1-18 (spec §11)
 
-Generated 2026-10-08 03:58 UTC, code a983dad8f8a9, run `final_validation-1910724fb43c`. Walk-forward evidence (7 folds, test blocks 2024-05-28 → 2026-02-27). **Final holdout not opened** (ADR-0011; final_test_access_log rows: 0). n_trials on the test window: **28** distinct registered configurations.
+Generated 2026-10-08 04:17 UTC, code 287846e89027, run `final_validation-b060967f6104`. Walk-forward evidence (7 folds, test blocks 2024-05-28 → 2026-02-27). **Final holdout not opened** (ADR-0011; final_test_access_log rows: 0). n_trials on the test window: **28** distinct registered configurations.
 
-## Verdict: **FAIL** — 8 PASS, 6 FAIL, 4 NOT_EVALUABLE (counts as not passed).
+## Verdict: **FAIL** — 10 PASS, 4 FAIL, 4 NOT_EVALUABLE (counts as not passed).
 
 Progression to M20 (paper mode) is blocked unless the owner records an ADR accepting the limitation (M19 criterion 3). This report states evidence and uncertainty only; it makes no claim of profitability (rule 12).
 
 | # | gate | status | rule | key numbers |
 |---|---|---|---|---|
 | 1 | Data coverage | **PASS** | ≥ 98% of 1-min bars per session; ≥ 95% of sessions with a valid chain at ≥ 95% of timestamps | sessions=882; sessions_below_bar_coverage=0; min_bar_coverage_seen=0.9923; sessions_with_valid_chain=879; valid_chain_session_share=0.9966 |
-| 2 | Data quality | **FAIL** | 0 open CRITICAL DQ events; invalid-quote rate ≤ 2% (ATM ± 5) | open_critical_events=0; invalid_quote_rate=0.0002544; open CRITICAL now 8 |
+| 2 | Data quality | **PASS** | 0 open CRITICAL DQ events; invalid-quote rate ≤ 2% (ATM ± 5) | open_critical_events=0; invalid_quote_rate=0.0002544; open CRITICAL now 0 |
 | 3 | PIT integrity | **PASS** | 100% of feature rows available_at ≤ T; 20 random timestamps replay exactly | 1,346,688 pre-holdout rows, 0 violations; 20/20 replays identical |
-| 4 | Leakage tests | **FAIL** | T-LEAK suite passes; planted-future canary; shuffled-label AUC 0.50 ± 0.02 (ADR-0008) | canary statistic 0.4957-0.5059 (10 targets); import contract kept |
+| 4 | Leakage tests | **PASS** | T-LEAK suite passes; planted-future canary; shuffled-label AUC 0.50 ± 0.02 (ADR-0008) | canary statistic 0.4957-0.5059 (10 targets); import contract kept |
 | 5 | Baseline | **PASS** | Model 0 OOS Brier, log loss, calibration per fold | 70 fold x target rows, 10 pooled targets |
 | 6 | Beats baseline | **FAIL** | BSS vs Model 0 CI lower bound > 0, pooled OOS; better in >= 70% of folds | C_call BSS +0.0066 [-0.0008, +0.0138], 5/7 folds; C_put BSS +0.0046 [-0.0020, +0.0116], 5/7 folds |
 | 7 | PIT option selection | **PASS** | T-SEL suite passes; 100% of journal selections reproduce | 55,888/55,888 journal candidates reproduced |
@@ -34,19 +34,19 @@ Progression to M20 (paper mode) is blocked unless the owner records an ADR accep
 - M4 evaluation: pass
 - From M4 (`reports/dq/gates.md`, full downloaded history).
 
-### Gate 2: Data quality — FAIL
+### Gate 2: Data quality — PASS
 
 - M4 evaluation: pass
-- open CRITICAL events now = 0: fail
+- open CRITICAL events now = 0 (current dataset versions): pass
 
 ### Gate 3: PIT integrity — PASS
 
 - no violations: pass
 - replays identical: pass
 
-### Gate 4: Leakage tests — FAIL
+### Gate 4: Leakage tests — PASS
 
-- T-LEAK test files pass: fail
+- T-LEAK test files pass: pass
 - import contract (lint-imports): pass
 - shuffled-label canary: pass
 

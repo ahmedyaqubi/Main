@@ -308,13 +308,25 @@ Notes / open issues (disclosed: the monitor design was refined after real-data r
 4. The three development runs used uncommitted code on 12e79be; the rerun from b2e4aa8 (`monitoring-10b177d1695e`) reproduced the final results exactly.
 5. Test-first: drift tests were run red first; one synthetic test case was mis-specified (combined gap not balanced) and corrected.
 
-## M19 — Full historical validation — TODO
-Depends on: M7–M18
+## M19 — Full historical validation — DONE: verdict **FAIL** (2026-10-08; CI green on 287846e: https://github.com/ahmedyaqubi/Main/actions/runs/37726181006)
+Depends on: M7–M18 (DONE)
+Owner decisions (2026-10-08): **ADR-0011 (option B)** — the final holdout stays locked while pre-holdout gates fail (opening it could not change a FAIL verdict and would spend it); Q2 gate 16: DSR needs trade returns (not evaluable), PBO (CSCV, 16 blocks) over the 9 model-selection configurations; Q3 decisive evidence recomputed in the run (gate 3, gate 7 all journal candidates, gate 16 PBO, gate 17 replay, test suites), the rest read from committed runs by id (`configs/phase1.yaml` → `validation_gates.evidence`).
 Acceptance:
-- [ ] Single registered run over the full walk-forward; final holdout opened exactly once (logged)
-- [ ] Gates 1–18 evaluated with numbers, CIs, sample sizes, `n_trials`, DSR, PBO in `reports/validation/`
-- [ ] Explicit PASS/FAIL per gate; FAIL on any gate stops progression to M20 unless the owner records an ADR accepting the limitation
-- [ ] No claim of profitability; report states evidence and uncertainty only
+- [x] Single registered run over the full walk-forward; final holdout opened exactly once (logged) — **amended by ADR-0011**: one registered `final_validation` run over the walk-forward evidence; the holdout was **not opened** (`HoldoutGuard` on pre-holdout sessions; `final_test_access_log` 0 rows). It is reserved for the first configuration that passes every pre-holdout gate.
+- [x] Gates 1–18 evaluated with numbers, CIs, sample sizes, `n_trials`, DSR, PBO in `reports/validation/` — `reports/validation/m19_gates.md`, run `final_validation-b060967f6104` (code 287846e); `src/qqq1dte/validation/phase1_gates.py` (gate evaluators, `pbo_cscv`, `deflated_sharpe_probability`), `tests/test_validation_gates.py` (thresholds, PBO noise ≈ 0.5 / dominant = 0 / hand case, DSR formula and monotonicity); n_trials on the test window = 28
+- [x] Explicit PASS/FAIL per gate; FAIL on any gate stops progression to M20 unless the owner records an ADR accepting the limitation — **PASS: 1, 2, 3, 4, 5, 7, 8, 9, 17, 18. FAIL: 6, 12, 15, 16. NOT_EVALUABLE (counted as not passed): 10, 11, 13, 14.** Progression to M20 is blocked.
+- [x] No claim of profitability; report states evidence and uncertainty only — stated in the report
+Evidence / results (walk-forward test blocks 2024-05-28 → 2026-02-27, decision configuration gbm_m2 + ADR-0010):
+- Gate 3: 1,346,688 pre-holdout feature rows, 0 PIT violations; 20/20 random timestamps recomputed identically. Gate 7: all 55,888 journaled candidates re-selected exactly. Gate 17: 200/200 journal predictions replayed (fresh seed), 373/373 tests pass in-run.
+- Gate 6 FAIL: BSS vs Model 0 C_call +0.0066 [−0.0008, +0.0138], C_put +0.0046 [−0.0020, +0.0116]; 5/7 folds each (< 70%).
+- Gate 12 FAIL: C_call ECE 0.0216, slope 0.348, 4/10 bins outside; C_put ECE 0.0155, slope 0.857, 1/10 bins outside.
+- Gate 15 FAIL: 0 trades (ADR-0010). Gates 10, 11, 13, 14: not evaluable without trades.
+- Gate 16 FAIL: PBO C_call 0.062, **C_put 0.410** (> 0.20); DSR not evaluable (no trade returns).
+- Gate 18 PASS (M18 replay); gate 4 PASS (canary 0.4957–0.5059, import contract kept, T-LEAK tests).
+Notes / open issues:
+1. First run `final_validation-1910724fb43c` (uncommitted code on a983dad) reported gates 2 and 4 FAIL for reasons in the checks, not the project: gate 2 counted CRITICAL events of two superseded cleaned-options dataset versions (the current version's 4 events are all ADR-resolved, as M4 reported) — fixed to count current versions only; gate 4's `test_leak_10_import_contract_kept` crashed decoding `lint-imports` output under `PYTHONIOENCODING=utf-8` on Windows (contract kept, exit 0) — fixed with explicit UTF-8 decoding. All other numbers identical in the rerun.
+2. An earlier draft of the gate module overwrote M4's `validation/gates.py`; it was restored from git before any commit, and the new module lives in `validation/phase1_gates.py`.
+3. What M19 says: on 3+ years of 1-minute QQQ and OPRA data, the pre-declared models do not show a reliable, calibrated, cost-adjusted edge for the C option targets; the decision engine (with ADR-0010) correctly refuses to trade. Better features or models would be needed; the holdout remains available to test them.
 
 ## M20 — Live market data in PAPER mode — TODO
 Depends on: M19 PASS (or owner ADR)
