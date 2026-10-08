@@ -256,6 +256,35 @@ class FeaturesF3(_Section):
     extra_features: list[str]
 
 
+class StudyDefinition(_Section):
+    strike_offset: int
+    cap_minutes: int
+    option_target: float | None = None
+    option_stop: float | None = None
+    und_stop: float | None = None
+    und_target: float | None = None
+    entry_cutoff: time | None = None
+
+
+class Study1b(_Section):
+    labels_dir: str
+    reference_m2_run: str
+    definitions: dict[str, StudyDefinition]
+    refit_horizons: list[int]
+    coverages: list[float]
+    lower_bound_level: float
+    max_advance: int
+    tie_tolerance: float
+    tie_order: list[str]
+    min_trades: int
+    min_sessions: int
+    time_buckets: list[str]
+    sensitivity_deadbands: list[float]
+    sensitivity_margins: list[float]
+    n_trials_at_acceptance: int
+    max_new_trials: int
+
+
 class Research(_Section):
     implied_c: float
     next_session_minutes: int
@@ -347,6 +376,7 @@ class Phase1Config(_Section):
     monitoring: Monitoring
     validation_gates: ValidationGates
     research: Research
+    study_1b: Study1b
     features_f3: FeaturesF3
     pit: Pit
     validation: Validation

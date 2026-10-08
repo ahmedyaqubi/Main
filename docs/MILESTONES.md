@@ -356,6 +356,23 @@ Stage-2 results (`reports/research/m19r_experiments.md`; runs E1 `experiment-d87
   The 6-trial Stage-2 budget is used up.
 - **Closed 2026-10-08 (owner):** no configuration passes gates 6 and 12; the tail rules show no cost-adjusted edge. The closing report is `reports/research/m19r_closing.md`. Descriptive statistics of the trade definition (pre-holdout, no model) come from `scripts/m19r_label_stats.py`: unconditional win rate 25–28% vs breakeven about 0.41; mean net −$5.05 to −$5.27 per trade; median entry spread $0.02 (0.82% of premium). M19 stays FAIL, M20 stays blocked, and the holdout stays locked. Open follow-ups (new data, a trade-definition ADR, a different strategy class) are under "Later"; none has been started.
 
+## M19S — Phase 1b trade-definition study (ADR-0012) — IN PROGRESS (Step 1 code done; runs pending from committed code)
+Depends on: M19R (closed); ADR-0012 ACCEPTED 2026-10-08 (n_trials 35 at acceptance; budget ≤ 7 new trials, cap 42)
+Step 1 acceptance (model-free screen + Â; 1 screen run + 2 counted refits):
+- [x] Study label engine for T0–T5. Covers option bracket, time exit, QQQ bracket and the 2-strikes-ITM selection, all point-in-time.
+  - `labels/option.py` (`ExitRule`; the Phase 1 rule is the default and unchanged);
+  - `execution_sim/selection.py` (`strike_offset`, `NO_OFFSET_STRIKE`);
+  - `labels/underlying.py` (`underlying_move`, `und_bracket`);
+  - `labels/common.py` (horizon parameter);
+  - tests in `tests/test_study1b_labels.py`.
+  - The smoke run (7 sessions, uncommitted code, not registered) reproduces the stored L2 option labels exactly for T0, and the stored A_up / A_dn exactly from ret_90 (`scripts/m19s_build_labels.py --verify-t0`). The full build runs from committed code.
+- [x] Screen logic: `backtesting/screen.py`. Covers a*, Â, coverage, the shared paired bootstrap, guards, the advance rule and the live-like policy / drawdown. Tests in `tests/test_study1b_screen.py`, with exact synthetic answers and the bootstrap identical to `session_bootstrap_ci`.
+- Note: the edge-margin sensitivity (D2) needs calibrated direction probabilities, so it is reported in Step 2, not Step 1 (rule 6).
+- [ ] A labels at h = 45 and 150; Model 2 refits at those horizons with the frozen M9 grid point per fold (registered, counted)
+- [ ] Screen per ADR-0012 D2: coverage-conditional a*(c), Â(c) on test blocks, paired-bootstrap Δ(c), guards, advance rule, sensitivity and distribution reports; registered run; report `reports/research/m19s_step1.md`
+- [ ] Advance or kill decision recorded here
+Step 2 (≤ 4 configurations) is planned only after Step 1, and needs the D5 second-source choice first.
+
 ## M20 — Live market data in PAPER mode — TODO
 Depends on: M19 PASS (or owner ADR)
 Acceptance:

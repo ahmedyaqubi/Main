@@ -112,6 +112,31 @@ features_f3:                         # M19R Stage 2 E1: extras on top of the sto
   extra_features: [opt_call_mom_5m, opt_put_mom_5m, opt_call_mom_15m, opt_put_mom_15m,
                    pc_imbalance_chg_15m, opt_call_size_imb, opt_put_size_imb, qqq_book_imb]
 
+study_1b:                            # ADR-0012 (M19S): Phase 1b trade-definition study; study-only
+  labels_dir: study1b                # data/labels/study1b/<definition>/session=<D>.parquet
+  reference_m2_run: walk_forward-8adbdf4112a5   # M9 Model 2: 90-min A scores + frozen grid points
+  definitions:                       # D1, frozen at acceptance (2026-10-08)
+    T0:  {strike_offset: 0, cap_minutes: 90,  option_target: 0.30, option_stop: 0.20}
+    T1a: {strike_offset: 0, cap_minutes: 45}
+    T1b: {strike_offset: 0, cap_minutes: 90}
+    T2:  {strike_offset: 0, cap_minutes: 90,  und_stop: 0.0019, und_target: 0.0030}
+    T3:  {strike_offset: 2, cap_minutes: 90}
+    T4:  {strike_offset: 0, cap_minutes: 90,  option_target: 0.30, option_stop: 0.30}
+    T5:  {strike_offset: 0, cap_minutes: 150, option_target: 0.30, option_stop: 0.20, entry_cutoff: "13:20"}
+  refit_horizons: [45, 150]          # A labels + Model 2 refits (frozen M9 grid point), counted
+  coverages: [1.0, 0.20, 0.05]
+  lower_bound_level: 0.95            # one-sided lower bound of the paired-bootstrap delta
+  max_advance: 2
+  tie_tolerance: 0.005
+  tie_order: [T1b, T1a, T2, T0, T4, T5, T3]
+  min_trades: 300                    # gate-15 floors applied to development data
+  min_sessions: 150
+  time_buckets: ["09:45", "11:00", "13:20"]   # ET; bucket = last start <= T
+  sensitivity_deadbands: [0.0003, 0.0005, 0.0010]   # report only
+  sensitivity_margins: [0.01, 0.03, 0.05]           # report only
+  n_trials_at_acceptance: 35
+  max_new_trials: 7
+
 research:                            # M19R research iteration 1 (diagnostics D1-D3)
   implied_c: 1.0e6                   # D1 benchmark logistic: effectively unregularised
   next_session_minutes: 390          # D1: trading minutes of the expiry session (D+1)

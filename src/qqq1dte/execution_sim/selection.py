@@ -15,6 +15,7 @@ from qqq1dte.core.config import Phase1Config
 
 SELECTED_CONTRACT_ILLIQUID = "SELECTED_CONTRACT_ILLIQUID"
 NO_CONTRACT = "NO_CONTRACT"
+NO_OFFSET_STRIKE = "NO_OFFSET_STRIKE"  # ADR-0012 T3: the offset strike is not listed
 
 
 @dataclass(frozen=True, order=True)
@@ -49,16 +50,27 @@ class NoTrade:
 
 
 def choose_contract(
-    chain: Sequence[Contract], spot: float, side: str, t_e: datetime
+    chain: Sequence[Contract], spot: float, side: str, t_e: datetime, strike_offset: int = 0
 ) -> Contract | None:
     """Steps 1-3: among contracts known at t_e, CALL = lowest strike >= spot, PUT = highest
-    strike <= spot. The caller passes the 1DTE expiry's chain."""
+    strike <= spot. The caller passes the 1DTE expiry's chain.
+
+    strike_offset > 0 (ADR-0012 T3, study only) then moves that many listed strikes of the same
+    right in the money (CALL: lower, PUT: higher); None when that strike is not listed."""
     known = [c for c in chain if c.right == side and c.available_at <= t_e]
     if side == "C":
         eligible = [c for c in known if c.strike >= spot]
-        return min(eligible, key=lambda c: (c.strike, c.symbol)) if eligible else None
-    eligible = [c for c in known if c.strike <= spot]
-    return max(eligible, key=lambda c: (c.strike, c.symbol)) if eligible else None
+        base = min(eligible, key=lambda c: (c.strike, c.symbol)) if eligible else None
+    else:
+        eligible = [c for c in known if c.strike <= spot]
+        base = max(eligible, key=lambda c: (c.strike, c.symbol)) if eligible else None
+    if base is None or strike_offset == 0:
+        return base
+    strikes = sorted({c.strike for c in known})
+    j = strikes.index(base.strike) + (-strike_offset if side == "C" else strike_offset)
+    if not 0 <= j < len(strikes):
+        return None
+    return min((c for c in known if c.strike == strikes[j]), key=lambda c: c.symbol)
 
 
 def liquidity_failures(quote: Quote | None, t_e: datetime, cfg: Phase1Config) -> list[str]:
@@ -93,10 +105,13 @@ def select_contract(
     quotes: Mapping[str, Quote],
     t_e: datetime,
     cfg: Phase1Config,
+    strike_offset: int = 0,
 ) -> Selected | NoTrade:
     """Spec §5: pick the contract, then gate it. No fallback to another strike."""
-    contract = choose_contract(chain, spot, side, t_e)
+    contract = choose_contract(chain, spot, side, t_e, strike_offset)
     if contract is None:
+        if strike_offset and choose_contract(chain, spot, side, t_e) is not None:
+            return NoTrade(NO_OFFSET_STRIKE)
         return NoTrade(NO_CONTRACT)
     quote = quotes.get(contract.symbol)
     failures = liquidity_failures(quote, t_e, cfg)

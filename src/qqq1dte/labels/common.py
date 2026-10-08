@@ -24,6 +24,14 @@ class LabelRow:
     flags: tuple[str, ...] = field(default_factory=tuple)
 
 
-def label_t_end(t: datetime, session: date, cal: TradingCalendar, cfg: Phase1Config) -> datetime:
-    """T_end = min(T + H, forced flat time) (spec §3, §2)."""
-    return min(t + timedelta(minutes=cfg.labels.horizon_minutes), cal.forced_exit_time(session))
+def label_t_end(
+    t: datetime,
+    session: date,
+    cal: TradingCalendar,
+    cfg: Phase1Config,
+    horizon_minutes: int | None = None,
+) -> datetime:
+    """T_end = min(T + H, forced flat time) (spec §3, §2). H = labels.horizon_minutes unless a
+    study horizon is passed (ADR-0012)."""
+    h = cfg.labels.horizon_minutes if horizon_minutes is None else horizon_minutes
+    return min(t + timedelta(minutes=h), cal.forced_exit_time(session))

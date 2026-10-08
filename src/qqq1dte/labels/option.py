@@ -18,7 +18,7 @@ from datetime import date, datetime, timedelta
 import polars as pl
 
 from qqq1dte.core.calendar import TradingCalendar
-from qqq1dte.core.config import Phase1Config
+from qqq1dte.core.config import Phase1Config, StudyDefinition
 from qqq1dte.core.pit import AsOfReader, ForwardWindowReader
 from qqq1dte.execution_sim.selection import (
     Contract,
@@ -29,9 +29,37 @@ from qqq1dte.execution_sim.selection import (
     select_contract,
 )
 from qqq1dte.labels.common import INVALID, LabelRow, label_t_end
+from qqq1dte.labels.underlying import STOP_FIRST, und_bracket
 
 UNRESOLVED_DATA = "UNRESOLVED_DATA"
+UND_STOP, UND_TARGET = "UND_STOP", "UND_TARGET"
 SIDE_ID = {"C": "C_call", "P": "C_put"}
+
+
+@dataclass(frozen=True)
+class ExitRule:
+    """How a trade exits. The Phase 1 rule (spec §3 C: +30% / -20% on the bid, cap = label
+    horizon) is the default; other rules exist only for the ADR-0012 study. A missing option
+    target/stop disables that trigger; a QQQ bracket (und_stop/und_target, relative to P_T) exits
+    at the option bid in force when the triggering bar is known."""
+
+    cap_minutes: int
+    option_target: float | None
+    option_stop: float | None
+    und_stop: float | None = None
+    und_target: float | None = None
+    strike_offset: int = 0
+
+    @classmethod
+    def phase1(cls, cfg: Phase1Config) -> ExitRule:
+        o = cfg.labels.option
+        return cls(cfg.labels.horizon_minutes, o.target_pct, o.stop_pct)
+
+    @classmethod
+    def from_study(cls, d: StudyDefinition) -> ExitRule:
+        return cls(
+            d.cap_minutes, d.option_target, d.option_stop, d.und_stop, d.und_target, d.strike_offset
+        )
 
 
 @dataclass(frozen=True)
@@ -136,10 +164,17 @@ class _Path:
     flags: tuple[str, ...]
 
 
-def _walk(path: pl.DataFrame, start: datetime, entry: float, cfg: Phase1Config) -> _Path:
-    """Scan the post-entry path on the bid (M6 Q3)."""
-    tgt = entry * (1 + cfg.labels.option.target_pct)
-    stop = entry * (1 - cfg.labels.option.stop_pct)
+def _walk(
+    path: pl.DataFrame,
+    start: datetime,
+    entry: float,
+    cfg: Phase1Config,
+    target_pct: float | None,
+    stop_pct: float | None,
+) -> _Path:
+    """Scan the post-entry path on the bid (M6 Q3); a None target/stop never triggers."""
+    tgt = entry * (1 + target_pct) if target_pct is not None else math.inf
+    stop = entry * (1 - stop_pct) if stop_pct is not None else -math.inf
     max_gap = timedelta(minutes=cfg.labels.option.max_path_gap_minutes)
     flags: list[str] = []
     last_ok, last_bid = start, None
@@ -177,7 +212,7 @@ def _walk(path: pl.DataFrame, start: datetime, entry: float, cfg: Phase1Config) 
     return _Path(None, None, None, last_ok, last_bid, best, worst, tuple(dict.fromkeys(flags)))
 
 
-def _entry_selection(
+def _entry_selection(  # noqa: PLR0913 (data tables + study strike offset)
     side: str,
     t_e: datetime,
     session: date,
@@ -186,6 +221,8 @@ def _entry_selection(
     records: pl.DataFrame,
     cal: TradingCalendar,
     cfg: Phase1Config,
+    *,
+    strike_offset: int = 0,
 ) -> tuple[float | None, Contract | None, Selected | NoTrade]:
     """Spot, chosen contract and the gated selection, all from data known at T_e."""
     spot = _spot(und, t_e, cfg)
@@ -203,7 +240,7 @@ def _entry_selection(
         )
         for r in known.iter_rows(named=True)
     ]
-    chosen = choose_contract(contracts, spot, side, t_e)
+    chosen = choose_contract(contracts, spot, side, t_e, strike_offset)
     quotes: dict[str, Quote] = {}
     if chosen is not None:
         hist = AsOfReader({"q": records}, t_e).get("q").filter(pl.col("symbol") == chosen.symbol)
@@ -212,10 +249,10 @@ def _entry_selection(
             quotes[chosen.symbol] = Quote(
                 q["bid"], q["ask"], q["bid_sz"], q["ask_sz"], q["available_at"], bool(q["rejected"])
             )
-    return spot, chosen, select_contract(contracts, spot, side, quotes, t_e, cfg)
+    return spot, chosen, select_contract(contracts, spot, side, quotes, t_e, cfg, strike_offset)
 
 
-def option_label(
+def option_label(  # noqa: PLR0913 (data tables + optional study exit rule)
     side: str,
     t: datetime,
     session: date,
@@ -224,11 +261,19 @@ def option_label(
     records: pl.DataFrame,
     cal: TradingCalendar,
     cfg: Phase1Config,
+    *,
+    rule: ExitRule | None = None,
+    bars: pl.DataFrame | None = None,
 ) -> tuple[LabelRow, OptionOutcome]:
+    """C label / trade outcome at T under `rule` (default: the Phase 1 rule). `bars` (QQQ 1-min
+    bars) are needed only for a QQQ-bracket rule."""
+    rule = rule or ExitRule.phase1(cfg)
     lid = SIDE_ID[side]
-    t_end = label_t_end(t, session, cal, cfg)
+    t_end = label_t_end(t, session, cal, cfg, rule.cap_minutes)
     t_e = t + timedelta(seconds=cfg.fills.latency_s)
-    spot, chosen, sel = _entry_selection(side, t_e, session, und, chain, records, cal, cfg)
+    spot, chosen, sel = _entry_selection(
+        side, t_e, session, und, chain, records, cal, cfg, strike_offset=rule.strike_offset
+    )
     if isinstance(sel, NoTrade):
         return (
             LabelRow(lid, "", None, INVALID, t_end, reason=sel.reason, flags=sel.details),
@@ -252,18 +297,30 @@ def option_label(
         )
 
     entry = _ceil_cent(_num(sel.quote.ask))  # conservative: pay the ask, rounded against us
+    und_hit, ambiguous, reason = None, False, None
+    exit_by = t_end  # end of the option path: T_end, or when a QQQ-bracket trigger is known
+    if rule.und_stop is not None and rule.und_target is not None:
+        if bars is None:
+            raise ValueError("a QQQ-bracket exit rule needs the QQQ bars")
+        und_hit, hit_at, ambiguous, reason = und_bracket(
+            bars, session, t, t_end, cal, side, rule.und_stop, rule.und_target
+        )
+        exit_by = hit_at or t_end
     path = (
-        ForwardWindowReader({"q": records}, start=t_e, end=t_end)
+        ForwardWindowReader({"q": records}, start=t_e, end=exit_by)
         .get("q")
         .filter(pl.col("symbol") == sel.contract.symbol)
         .sort("available_at")
     )
-    p = _walk(path, sel.quote.available_at, entry, cfg)
+    p = _walk(path, sel.quote.available_at, entry, cfg, rule.option_target, rule.option_stop)
     max_gap = timedelta(minutes=cfg.labels.option.max_path_gap_minutes)
-    reason = None
-    if p.outcome == "GAP" or (p.outcome is None and t_end - p.last_ok > max_gap):
+    if reason is not None:
+        pass  # QQQ window unusable (missing bar / no reference price): never filled
+    elif p.outcome == "GAP" or (p.outcome is None and exit_by - p.last_ok > max_gap):
         reason = "PATH_GAP_TOO_LONG"
-    elif p.outcome is None and (t_end - p.last_ok).total_seconds() > cfg.liquidity.max_quote_age_s:
+    elif (
+        p.outcome is None and (exit_by - p.last_ok).total_seconds() > cfg.liquidity.max_quote_age_s
+    ):
         reason = "NO_EXIT_QUOTE"
     if reason is not None:
         return (
@@ -291,6 +348,9 @@ def option_label(
     )
     if p.outcome is not None:
         outcome, exit_ts, exit_px = p.outcome, p.exit_ts, _num(p.exit_px)
+    elif und_hit is not None:  # QQQ bracket: the option bid in force when the bar is known
+        outcome = UND_STOP if und_hit == STOP_FIRST else UND_TARGET
+        exit_ts, exit_px = exit_by, p.last_bid if p.last_bid is not None else 0.0
     else:  # time exit at T_end on the bid in force then (a missing bid counts as 0)
         exit_ts, exit_px = t_end, p.last_bid if p.last_bid is not None else 0.0
         net = (exit_px - entry) * 100 * cfg.trade.contracts - costs
@@ -300,7 +360,15 @@ def option_label(
         )
     net = (exit_px - entry) * 100 * cfg.trade.contracts - costs
     return (
-        LabelRow(lid, "", 1 if outcome == "WIN" else 0, outcome, t_end, flags=p.flags),
+        LabelRow(
+            lid,
+            "",
+            1 if outcome == "WIN" else 0,
+            outcome,
+            t_end,
+            ambiguous_bar=ambiguous,
+            flags=p.flags,
+        ),
         OptionOutcome(
             side,
             t,
