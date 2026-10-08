@@ -5,6 +5,13 @@ Global criteria for every milestone: `uv run pytest`, `uv run ruff check .`, `uv
 in CI; tests for numerical code were written first; this file is updated with evidence.
 Test IDs refer to `docs/TEST_PLAN.md`; gate numbers refer to `PHASE_1_SPEC.md` §11.
 
+> **PHASE 1 CLOSED (owner, 2026-10-08).** No validated, calibrated, cost-adjusted edge was found:
+> M19 FAIL; M19R no edge; M19S KILL; M19T KILL.
+> - Registered trials on the development window: 39. The final holdout was never opened (ADR-0011).
+> - Synthesis and recommendation: `reports/research/phase1_synthesis.md`.
+> - M20–M22 are not started and stay blocked. Forward data collection (ADR-0013 D8) is not set up.
+> - Any further research needs a new project ADR (see the synthesis report §6).
+
 ## M1 — Specification & architecture — DONE (2026-10-05)
 Depends on: none
 Deliverables: docs/PHASE_1_SPEC.md, docs/ARCHITECTURE.md, docs/SCHEMA.md, docs/TEST_PLAN.md, docs/decisions/0001-*.md
@@ -483,21 +490,21 @@ Step 0 (data; no trial):
     - Holdout access: none. Data spend: $10.26.
     - n_trials on the shared window is now **39**. That raises the bar for any later family.
 
-## M20 — Live market data in PAPER mode — TODO
+## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:
 - [ ] Live feed adapter implements the `AsOfReader` interface; market-data permissions only. **No order API anywhere** (T-SAFE-01)
 - [ ] The full 12-step loop (Phase 1T) runs at every scheduled timestamp; DQ failures produce NO_TRADE with a reason
 - [ ] Live-vs-replay check: one recorded live day replayed offline reproduces the decisions
 
-## M21 — Live paper validation — TODO
+## M21 — Live paper validation — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M20
 Acceptance:
 - [ ] Gates 19–20: ≥ 60 sessions and ≥ 100 paper trades; ECE ≤ 0.05; slippage vs model; PSI ≤ 0.2
 - [ ] Weekly paper report with sample sizes and CIs; drift status
 - [ ] Moderate-fill α re-estimated from paper quotes; any change via ADR (does not retroactively alter M19 results)
 
-## M22 — Dashboard — TODO
+## M22 — Dashboard — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M21 (engine stable)
 Acceptance:
 - [ ] Read-only view over the journal/monitoring; shows every Phase 1U field, including sample size, CI, and NO_TRADE reason
