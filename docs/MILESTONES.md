@@ -275,12 +275,21 @@ Notes / open issues:
 3. Feature values are journaled by reference to the immutable f2 snapshot row (dataset `71259fcf…`), not copied; replay reads that row.
 4. Test-first: schema, writer and replay tests were written before the code; the first replay-test run failed on a fixture without PUT quotes (test data, fixed).
 
-## M17 — Model versioning & promotion — TODO
-Depends on: M16
+## M17 — Model versioning & promotion — DONE (2026-10-08; CI green on cc297f8: https://github.com/ahmedyaqubi/Main/actions/runs/37720505643)
+Depends on: M16 (DONE)
+Owner decisions (2026-10-08): Q1 Phase 1P gates mapped to spec §11 numbers (`configs/phase1.yaml` → `promotion`), NOT_EVALUABLE counts as not passed; Q2 DB-enforced human-only path (migration 0003) + single code path `promote`; Q3 approver recorded as **Ahmed**; Q4 review the decision family's latest-fold candidates (gbm_m2 fold 7, C_call / C_put) from stored evidence runs, expected KEEP_CURRENT.
 Acceptance:
-- [ ] `model_versions` + `model_promotions`; at most one PRODUCTION per target (DB constraint test)
-- [ ] Promotion requires all Phase 1P gates and a named human approver; there is no automatic path (test)
-- [ ] Failing candidate → KEEP_CURRENT recorded
+- [x] `model_versions` + `model_promotions`; at most one PRODUCTION per target (DB constraint test) — unique index `one_production` (M3) tested through a promotion record (`tests/test_db_schema.py::test_one_production_model_per_target`); migration 0003 makes `model_promotions` append-only (`tests/test_promotion.py::test_promotion_records_are_append_only`)
+- [x] Promotion requires all Phase 1P gates and a named human approver; there is no automatic path (test) — `src/qqq1dte/models/promotion.py` (`evaluate_gates`, `eligible`, `promote`, manual CLI `python -m qqq1dte.models.promotion --review-run … --target … --approved-by …`); migration 0003 trigger refuses PRODUCTION without a PROMOTED record in the same transaction; tests: `test_direct_status_change_to_production_is_refused`, `test_promote_refuses_failing_gates_and_blank_approver`, `test_promote_requires_an_explicit_named_approver`, `test_only_the_promotion_module_can_set_production` (static), `test_manual_promotion_command_uses_stored_gate_results`, per-gate threshold tests
+- [x] Failing candidate → KEEP_CURRENT recorded — `record_keep_current`; `test_failing_candidate_records_keep_current`; run `promotion_review-d7ae9c089efa` (code cc297f8, reviewer Ahmed): **KEEP_CURRENT for C_call and C_put**, gate results stored in `model_promotions` and `reports/models/promotion_m17.md`
+Evidence / results (candidates `m2-walk_forward-8adbdf4112a5-f7-C_call` / `-C_put`; no production model exists):
+- PASS: leakage (canary 0.4997 / 0.4984), no degradation (no current model).
+- FAIL: out-of-sample performance (BSS vs Model 0 +0.0066 [−0.0008, +0.0138] / +0.0046 [−0.0020, +0.0116]; CIs include 0), calibration (gate 12), sample size (0 trades under ADR-0010).
+- NOT_EVALUABLE: regimes (gate 13), after costs (gates 10/11), walk-forward stability (needs fold-level traded expectancy; Model 0 fold share alone is 5/7).
+Notes / open issues:
+1. Comparison against an existing production model needs that model's stored evidence; the review script stops with an error in that case (none exists today). To be built when a first promotion happens.
+2. `conservative_mean_net` (gate 11) is not available from decision runs, which simulate the moderate fill; with 0 trades it is moot. A future review with trades should rerun the traded decisions under the conservative fill.
+3. Test-first: promotion and migration tests were run red first; the static check initially flagged a read-only `WHERE status = 'PRODUCTION'` and was narrowed to writes.
 
 ## M18 — Drift monitoring — TODO
 Depends on: M16
