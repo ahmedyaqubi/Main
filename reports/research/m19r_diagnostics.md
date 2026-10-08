@@ -1,6 +1,6 @@
 # M19R Stage 1 diagnostics (research iteration 1)
 
-Generated 2026-10-08 04:58 UTC, code 7b8912dcdfbc, run `diagnostic-5ef116763afd`. Walk-forward folds 1-7; final holdout locked (ADR-0011). BSS = 1 - Brier(model) / Brier(reference), session-bootstrap 95% CIs. Model 2 = saved M9 LightGBM artifacts (uncalibrated scores).
+Generated 2026-10-08 05:12 UTC, code 5ed682e4205e, run `diagnostic-28e2588a772d`. Walk-forward folds 1-7; final holdout locked (ADR-0011). BSS = 1 - Brier(model) / Brier(reference), session-bootstrap 95% CIs. Model 2 = saved M9 LightGBM artifacts (uncalibrated scores).
 
 ## D1: is the move-size (B) skill beyond the option-implied move?
 

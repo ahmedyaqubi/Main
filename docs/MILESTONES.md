@@ -328,7 +328,7 @@ Notes / open issues:
 2. An earlier draft of the gate module overwrote M4's `validation/gates.py`; it was restored from git before any commit, and the new module lives in `validation/phase1_gates.py`.
 3. What M19 says: on 3+ years of 1-minute QQQ and OPRA data, the pre-declared models do not show a reliable, calibrated, cost-adjusted edge for the C option targets; the decision engine (with ADR-0010) correctly refuses to trade. Better features or models would be needed; the holdout remains available to test them.
 
-## M19R — Research iteration 1: move-size (B) and direction — IN PROGRESS
+## M19R — Research iteration 1: move-size (B) and direction — IN PROGRESS (stage 1 CI green on 5ed682e: https://github.com/ahmedyaqubi/Main/actions/runs/37731145335)
 Depends on: M19 (verdict FAIL; holdout locked by ADR-0011)
 Owner decisions (2026-10-08): diagnostics first, then the owner picks Stage-2 experiments; Stage-2 trial budget ≤ 6 new configurations declared before any run; no data purchases (data on disk only); holdout untouched.
 Acceptance:
@@ -337,7 +337,7 @@ Acceptance:
 - [x] D3 feature-group ablation for direction targets (A_up, A_dn, C_call, C_put): Brier change when each pre-declared feature group is dropped, scored on **calibration blocks** (fit on train) so the test blocks are not used to choose features — groups pre-declared in `configs/phase1.yaml` → `research.feature_groups`; result below
 - [ ] Stage-2 experiments declared (≤ 6 configurations) before any run — **declared 2026-10-08 (owner, option a): E1 f3 direction features + Model 2 (C_call, C_put); E2 E1 + D1 implied inputs + Model 2; E3 E1 + Model 1; E4 E1 + Model 2, C_put only (4 of 6)**; any configuration re-evaluated on gates 6 and 12 on the walk-forward; the holdout stays locked
 - [ ] All runs registered (counted in n_trials); reports in `reports/research/`
-Stage-1 results (run `diagnostic-5ef116763afd`, uncommitted code on 7b8912d; `reports/research/m19r_diagnostics.md`):
+Stage-1 results (run `diagnostic-28e2588a772d` from code 5ed682e, identical to the uncommitted `diagnostic-5ef116763afd`; `reports/research/m19r_diagnostics.md`):
 - **D1: the B skill is almost entirely what the option price already implies.** Implied-move benchmark vs Model 0: +0.085 to +0.137 BSS; Model 2 vs the implied benchmark: B_up 0.25% +0.0195 [+0.0015, +0.0352] (4/7 folds), B_up 0.50% +0.003 [−0.027, +0.032], B_dn 0.25% −0.014 [−0.028, +0.000], B_dn 0.50% −0.018 [−0.039, +0.001]. A volatility edge beyond implied is at most small (B_up 0.25% only).
 - **D2: direction is far from tradable.** Observed C_call win rate: top decile 0.298, top 2% 0.300, top 1% 0.288 vs median breakeven 0.412 (base 0.241). C_put: top decile 0.350, top 2% 0.371 [0.331, 0.411], top 1% 0.374 [0.319, 0.432] — the closest to breakeven, still below it. A_up / A_dn top deciles 0.465 / 0.429 vs bases 0.449 / 0.391.
 - **D3 (calibration blocks): small but real direction information** in price path (A_up ΔBrier +0.0030 [+0.0009, +0.0052]; A_dn +0.0022), momentum and cross-asset groups for A targets; for C_call: calendar (+0.0012), options flow, volume; for C_put: no group's CI excludes 0.
