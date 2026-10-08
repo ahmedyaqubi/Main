@@ -1,7 +1,7 @@
 # ADR-0013 — Phase 1c: defined-risk short premium (model-free screen first)
 
-- Status: **PROPOSED**. Drafted 2026-10-08 from the owner's 10-point review. Acceptance waits for
-  the Step-0 data quote and the owner's purchase decision.
+- Status: **ACCEPTED** 2026-10-08 by the owner ("agree to all, go ahead and proceed"), with the
+  Step-0 resolutions R1–R5 below. Drafted 2026-10-08 from the owner's 10-point review.
 - Date: 2026-10-08
 - Milestone: M19T (placeholder name)
 - Amends, **for this strategy family only**: PHASE_1_SPEC §3 (C labels), §4.7–4.8 (exits, costs
@@ -11,6 +11,9 @@
   by M19R D1 (option prices already price move size; any volatility-risk-premium edge sits with
   the seller). No short-premium outcome has been looked at.
 - Registry at drafting: **n_trials = 38**.
+- Disclosure (R1–R5): the resolutions were chosen after seeing the Step-0 coverage numbers (gate
+  pass rates, grid holes, data gaps, spreads on the degraded days). No exit price, P&L or outcome
+  had been computed.
 
 ## Context
 - Every long-premium definition failed: theta plus costs exceed the direction signal (M19S:
@@ -226,6 +229,37 @@ stored and cleaned, not read). No P&L or outcome has been computed. n_trials is 
   exclude them by ADR.
 - **Q5, ex-dividend dates (D1.d).** Not yet sourced or stored. They are needed before the Step-1
   code.
+
+### Resolutions (owner, 2026-10-08; these amend D1–D2 as stated)
+- **R1 (Q1), gates act after selection.** D1.a picks the pair. If either leg then fails a §4.9
+  gate, the entry is NO_TRADE (`LEG_ILLIQUID`, with the failed checks logged). There is no
+  fallback to another pair, as in spec §5.
+  - Both legs: freshness, two-sided quote, spread and size gates.
+  - **Short leg only:** the min-bid gate (`liquidity.min_bid`). It is not applied to the bought
+    (long) leg. That leg is protection, and at exit it is sold at the bid, with a missing bid
+    counted as 0.
+- **R2 (Q2), missing long strike.** A pair whose long strike (short ∓ $1) is not listed at T_e
+  is ineligible. D1.a then considers the other listed pairs, so the furthest qualifying listed
+  pair is chosen.
+  - OCC-adjusted strikes count like standard strikes (as M6 Q1). The pair must still be exactly
+    $1 wide.
+- **R3 (Q3), OCC #53847 supplement.**
+  - Approved by the owner, under a $20 cap: download the adjusted-strike expiry-day contracts
+    (`scripts/m19t_fetch_adjusted.py`).
+  - Anything still missing afterwards is `UNRESOLVED_DATA` (logged and counted), never filled.
+  - Done 2026-10-08: **$0.0804**, 52 files for 26 sessions. Afterwards 2023-12-28 has 0DTE data,
+    and all 324 adjusted 1DTE exit legs are stored.
+- **R4 (Q4), degraded days are kept.**
+  - 2021-07-07, 2021-10-26 and 2022-09-19 stay in the screen, flagged `VENDOR_DEGRADED`
+    (configured with their source).
+  - The report adds a with/without row for each cell. That row is descriptive only and never
+    changes the D3 outcome.
+- **R5 (Q5), ex-dividend dates.**
+  - Source: Invesco's QQQ distribution history, cross-checked against a second public source.
+  - Stored in `configs/reference/` with the declaration date, the ex-date and the source of
+    each, so availability is point-in-time. The 2023-12 special dividend is included.
+  - D1.d binds only where a short call is held over a close, which in practice means S6. The
+    0DTE cells are flat at 15:50.
 
 ## Consequences
 - New code: multi-leg positions, per-leg fills and gates, labels spanning two sessions, the

@@ -95,11 +95,17 @@ def clean_source(
     defs = build_definitions(read_raw(defn), cal)
     defs.write_parquet(out / "definitions" / f"{name}.parquet", mkdir=True)
     log: list[dict[str, Any]] = []
-    by_day = sorted(cbbo, key=lambda r: r.partition_date)
-    for i, r in enumerate(by_day, 1):
-        d = r.partition_date
-        raw = read_raw([r])
-        row: dict[str, Any] = {"source": name, "session_date": d, "raw_file_id": r.raw_file_id}
+    # A session can have several files: the main pull plus OCC-adjusted strikes (ADR-0013 Q3).
+    by_day: dict[date, list[IngestResult]] = defaultdict(list)
+    for r in cbbo:
+        by_day[r.partition_date].append(r)
+    for i, (d, files) in enumerate(sorted(by_day.items()), 1):
+        raw = read_raw(files)
+        row: dict[str, Any] = {
+            "source": name,
+            "session_date": d,
+            "raw_file_id": ",".join(sorted(f.raw_file_id for f in files)),
+        }
         if raw.height == 0:
             log.append({**row, "n_raw": 0, "n_cleaned": 0, "n_rejected": 0, "reasons": "",
                         "flags": ""})  # fmt: skip

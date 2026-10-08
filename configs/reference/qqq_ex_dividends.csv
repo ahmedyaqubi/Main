@@ -1,0 +1,30 @@
+ex_date,kind,amount,known_from,source
+2020-03-23,regular,0.36269,2019-12-24,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2020-06-22,regular,0.42426,2020-03-24,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2020-09-21,regular,0.38824,2020-06-23,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2020-12-21,regular,0.56133,2020-09-22,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2021-03-22,regular,0.39468,2020-12-22,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2021-06-21,regular,0.39679,2021-03-23,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2021-09-20,regular,0.41391,2021-06-22,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2021-12-20,regular,0.49141,2021-09-21,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2022-03-21,regular,0.43369,2021-12-21,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2022-06-21,regular,0.5274,2022-03-23,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2022-09-19,regular,0.51856,2022-06-21,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2022-12-19,regular,0.65541,2022-09-20,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2023-03-20,regular,0.47223,2022-12-20,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2023-06-20,regular,0.50395,2023-03-22,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2023-09-18,regular,0.53555,2023-06-20,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2023-12-18,regular,0.80826,2023-09-19,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2023-12-27,special,0.21584,2023-12-26,declared 2023-12-26; api.nasdaq.com QQQ dividend history; OCC memo #53847
+2024-03-18,regular,0.57345,2023-12-19,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2024-06-24,regular,0.7615,2024-03-26,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2024-09-23,regular,0.67686,2024-06-25,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2024-12-23,regular,0.83466,2024-09-24,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2025-03-24,regular,0.71571,2024-12-24,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2025-06-23,regular,0.59111,2025-03-25,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2025-09-22,regular,0.69395,2025-06-24,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2025-12-22,regular,0.79408,2025-09-23,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2026-03-23,regular,0.73282,2025-12-23,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2026-06-22,regular,0.81349,2026-03-24,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2026-09-21,regular,0.75143,2026-06-23,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history
+2026-12-21,regular,,2026-09-22,rule: QQQ Trust N-30B-2 (sec.gov/Archives/edgar/data/0001067839/000119312518355790); dates: api.nasdaq.com QQQ dividend history

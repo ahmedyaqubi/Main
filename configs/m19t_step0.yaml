@@ -11,7 +11,9 @@ sources:                                  # download folder suffix -> cleaned da
 ext_start: "2020-01-02"
 dev_end: "2026-04-02"                     # last development session (ADR-0011 holdout after it)
 last_session: "2026-10-02"
-degraded_days: ["2021-07-07", "2021-10-26", "2022-09-19"]   # Databento warnings during the fetch
+# ADR-0013 R4: kept, flagged VENDOR_DEGRADED (source: Databento "degraded" warnings during the
+# 2026-10-08 Step-0 fetch); the screen adds a descriptive with/without row
+degraded_days: ["2021-07-07", "2021-10-26", "2022-09-19"]
 degraded_neighbours: 5                    # same-source sessions either side, for comparison
 
 width: 1.0

@@ -1,6 +1,6 @@
 # M19T Step 0: data coverage (ADR-0013, PROPOSED)
 
-Generated 2026-10-08 19:21 UTC by `scripts/m19t_coverage.py`, code 3d134c99d6ee. Development sessions 2020-01-02 → 2026-04-02 only. Sessions after 2026-04-02 (ADR-0011 holdout) were stored and cleaned (`scripts/m19t_build_data.py`) and are not read here (the loader refuses them).
+Generated 2026-10-08 21:12 UTC by `scripts/m19t_coverage.py`, code 4e42f434be33. Development sessions 2020-01-02 → 2026-04-02 only. Sessions after 2026-04-02 (ADR-0011 holdout) were stored and cleaned (`scripts/m19t_build_data.py`) and are not read here (the loader refuses them).
 
 **Data only.** Entry-time quotes and quote availability. No exit price, P&L or outcome is computed. No trial is registered (n_trials stays 38).
 
@@ -8,7 +8,7 @@ Sources: `0dte` = Step-0 expiry-day contracts (sessions from 2023-03-28); `ext` 
 
 ## 1. Sessions per era and weekday
 
-Eras are inferred from the listings: Mon and Wed expirations are continuous from **2021-05-05**, Tue and Thu from **2022-11-17**. Isolated sessions inside a run with no listed whole-dollar contract expiring that day: 2023-12-28 (see §5). A session counts for 0DTE if a standard contract expiring that day is listed, and for 1DTE if one expiring on the next session is listed. Excluded sessions (ADR-0006) are counted separately.
+Eras are inferred from the listings: Mon and Wed expirations are continuous from **2021-05-05**, Tue and Thu from **2022-11-17**. Isolated sessions inside a run with no listed whole-dollar contract expiring that day: none (see §5). A session counts for 0DTE if a standard contract expiring that day is listed, and for 1DTE if one expiring on the next session is listed. Excluded sessions (ADR-0006) are counted separately.
 
 | era | weekday | sessions | excluded | with 0DTE expiry | with next-session expiry |
 |---|---|---|---|---|---|
@@ -25,17 +25,17 @@ Eras are inferred from the listings: Mon and Wed expirations are continuous from
 | 3 daily | Mon | 157 | 0 | 157 | 157 |
 | 3 daily | Tue | 175 | 0 | 175 | 175 |
 | 3 daily | Wed | 173 | 1 | 172 | 172 |
-| 3 daily | Thu | 168 | 0 | 167 | 168 |
+| 3 daily | Thu | 168 | 0 | 168 | 168 |
 | 3 daily | Fri | 172 | 0 | 172 | 172 |
 
 | era | sessions | 0DTE sessions | 1DTE entry sessions |
 |---|---|---|---|
 | 1 Friday-only | 337 | 75 | 77 |
 | 2 Mon/Wed/Fri | 389 | 245 | 245 |
-| 3 daily | 845 | 843 | 844 |
-| all | 1571 | 1163 | 1166 |
+| 3 daily | 845 | 844 | 844 |
+| all | 1571 | 1164 | 1166 |
 
-Sessions from 2023 on with a 0DTE expiry: 813; with a next-session expiry: 814 (D4 guard: ≥ 150). Friday→Monday and pre-holiday 1DTE entries are counted in the 1DTE column; D4 reports them as descriptive rows only.
+Sessions from 2023 on with a 0DTE expiry: 814; with a next-session expiry: 814 (D4 guard: ≥ 150). Friday→Monday and pre-holiday 1DTE entries are counted in the 1DTE column; D4 reports them as descriptive rows only.
 
 ## 2. Expiry-day quotes at the forced exit (15:50 ET; close - 10 min on early closes)
 
@@ -45,7 +45,7 @@ Every standard contract expiring that day in the stored band. *Ask usable*: the 
 |---|---|---|---|---|---|---|---|
 | 1 Friday-only | 75 | 2 | 5,086 | 100.00% | 60.89% | 75/75 | 2020-01-03 100.0% |
 | 2 Mon/Wed/Fri | 245 | 1 | 19,644 | 100.00% | 58.53% | 245/245 | 2021-05-05 100.0% |
-| 3 daily | 843 | 9 | 89,150 | 99.93% | 59.50% | 843/843 | 2025-11-20 92.3% |
+| 3 daily | 844 | 9 | 90,446 | 99.93% | 59.46% | 844/844 | 2025-11-20 92.3% |
 
 Sessions with ask usable for < 95% of stored contracts: 3: 2025-10-17 (94%), 2025-11-19 (95%), 2025-11-20 (92%).
 
@@ -64,36 +64,36 @@ At every entry timestamp T in the cell windows (0DTE 09:45-10:30, 1DTE 13:00-14:
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 0dte | C | 0.20 | 1 Friday-only | 750 | 98.00% | 0.00% | 2.00% | 9.0 | 74.56% | 100.00% | 100.00% | 0.00% |
 | 0dte | C | 0.20 | 2 Mon/Wed/Fri | 2,450 | 99.88% | 0.00% | 0.12% | 12.0 | 84.76% | 100.00% | 100.00% | 0.20% |
-| 0dte | C | 0.20 | 3 daily | 8,430 | 99.94% | 0.00% | 0.06% | 14.0 | 93.60% | 100.00% | 100.00% | 0.91% |
+| 0dte | C | 0.20 | 3 daily | 8,440 | 99.94% | 0.00% | 0.06% | 14.0 | 93.42% | 100.00% | 100.00% | 0.91% |
 | 0dte | P | 0.20 | 1 Friday-only | 750 | 97.20% | 0.00% | 2.80% | 11.0 | 83.40% | 100.00% | 100.00% | 0.00% |
 | 0dte | P | 0.20 | 2 Mon/Wed/Fri | 2,450 | 99.67% | 0.00% | 0.33% | 12.0 | 92.10% | 100.00% | 100.00% | 0.29% |
-| 0dte | P | 0.20 | 3 daily | 8,430 | 99.92% | 0.00% | 0.08% | 14.0 | 97.55% | 100.00% | 100.00% | 0.55% |
+| 0dte | P | 0.20 | 3 daily | 8,440 | 99.92% | 0.00% | 0.08% | 15.0 | 97.55% | 100.00% | 100.00% | 0.55% |
 | 0dte | P | 0.33 | 1 Friday-only | 750 | 96.40% | 0.00% | 3.60% | 12.0 | 79.53% | 100.00% | 100.00% | 0.00% |
 | 0dte | P | 0.33 | 2 Mon/Wed/Fri | 2,450 | 99.02% | 0.00% | 0.98% | 14.0 | 91.26% | 100.00% | 100.00% | 0.29% |
-| 0dte | P | 0.33 | 3 daily | 8,430 | 99.47% | 0.00% | 0.53% | 16.0 | 97.72% | 100.00% | 100.00% | 0.62% |
+| 0dte | P | 0.33 | 3 daily | 8,440 | 99.47% | 0.00% | 0.53% | 16.0 | 97.72% | 100.00% | 100.00% | 0.62% |
 | 1dte | C | 0.20 | 1 Friday-only | 1,463 | 97.74% | 0.00% | 2.26% | 9.0 | 88.53% | 100.00% | 100.00% | 0.00% |
 | 1dte | C | 0.20 | 2 Mon/Wed/Fri | 4,636 | 100.00% | 0.00% | 0.00% | 11.0 | 99.22% | 100.00% | 100.00% | 1.23% |
-| 1dte | C | 0.20 | 3 daily | 15,827 | 99.95% | 0.00% | 0.05% | 12.0 | 99.71% | 99.66% | 99.51% | 1.75% |
+| 1dte | C | 0.20 | 3 daily | 15,827 | 99.95% | 0.00% | 0.05% | 12.0 | 99.71% | 99.91% | 99.75% | 1.75% |
 | 1dte | P | 0.20 | 1 Friday-only | 1,463 | 97.68% | 0.00% | 2.32% | 9.0 | 95.73% | 100.00% | 100.00% | 0.00% |
 | 1dte | P | 0.20 | 2 Mon/Wed/Fri | 4,636 | 100.00% | 0.00% | 0.00% | 10.0 | 99.70% | 99.96% | 99.96% | 1.23% |
-| 1dte | P | 0.20 | 3 daily | 15,827 | 99.91% | 0.00% | 0.09% | 13.0 | 99.75% | 99.00% | 99.00% | 0.75% |
+| 1dte | P | 0.20 | 3 daily | 15,827 | 99.91% | 0.00% | 0.09% | 13.0 | 99.75% | 99.90% | 99.90% | 0.75% |
 | 1dte | P | 0.33 | 1 Friday-only | 1,463 | 96.58% | 0.00% | 3.42% | 12.0 | 97.17% | 100.00% | 100.00% | 0.00% |
 | 1dte | P | 0.33 | 2 Mon/Wed/Fri | 4,636 | 100.00% | 0.00% | 0.00% | 13.0 | 98.81% | 100.00% | 100.00% | 1.47% |
-| 1dte | P | 0.33 | 3 daily | 15,827 | 99.77% | 0.00% | 0.23% | 15.0 | 99.88% | 99.09% | 99.09% | 0.92% |
+| 1dte | P | 0.33 | 3 daily | 15,827 | 99.77% | 0.00% | 0.23% | 15.0 | 99.88% | 100.00% | 100.00% | 0.92% |
 
 §4.9 failures on the picked legs (share of picked entries; one entry can fail several checks):
 
 | tenor | side | X | leg | check | share |
 |---|---|---|---|---|---|
-| 0dte | C | 0.20 | long | BID_BELOW_MIN | 6.58% |
+| 0dte | C | 0.20 | long | BID_BELOW_MIN | 6.71% |
 | 0dte | C | 0.20 | long | SPREAD_TOO_WIDE | 1.74% |
 | 0dte | C | 0.20 | short | SPREAD_TOO_WIDE | 2.46% |
 | 0dte | P | 0.20 | long | SPREAD_TOO_WIDE | 2.36% |
 | 0dte | P | 0.20 | long | BID_BELOW_MIN | 0.78% |
 | 0dte | P | 0.20 | short | SPREAD_TOO_WIDE | 2.86% |
-| 0dte | P | 0.33 | long | SPREAD_TOO_WIDE | 2.90% |
+| 0dte | P | 0.33 | long | SPREAD_TOO_WIDE | 2.91% |
 | 0dte | P | 0.33 | long | BID_BELOW_MIN | 0.14% |
-| 0dte | P | 0.33 | short | SPREAD_TOO_WIDE | 3.72% |
+| 0dte | P | 0.33 | short | SPREAD_TOO_WIDE | 3.71% |
 | 1dte | C | 0.20 | long | BID_BELOW_MIN | 0.62% |
 | 1dte | C | 0.20 | long | SPREAD_TOO_WIDE | 0.38% |
 | 1dte | C | 0.20 | short | SPREAD_TOO_WIDE | 0.38% |
@@ -109,13 +109,13 @@ Sessions with at least one OK pick in the window:
 |---|---|---|---|---|---|
 | 0dte | C | 0.20 | 1 Friday-only | 75 | 75 (100.00%) |
 | 0dte | C | 0.20 | 2 Mon/Wed/Fri | 245 | 245 (100.00%) |
-| 0dte | C | 0.20 | 3 daily | 843 | 843 (100.00%) |
+| 0dte | C | 0.20 | 3 daily | 844 | 844 (100.00%) |
 | 0dte | P | 0.20 | 1 Friday-only | 75 | 75 (100.00%) |
 | 0dte | P | 0.20 | 2 Mon/Wed/Fri | 245 | 245 (100.00%) |
-| 0dte | P | 0.20 | 3 daily | 843 | 843 (100.00%) |
+| 0dte | P | 0.20 | 3 daily | 844 | 844 (100.00%) |
 | 0dte | P | 0.33 | 1 Friday-only | 75 | 74 (98.67%) |
 | 0dte | P | 0.33 | 2 Mon/Wed/Fri | 245 | 245 (100.00%) |
-| 0dte | P | 0.33 | 3 daily | 843 | 843 (100.00%) |
+| 0dte | P | 0.33 | 3 daily | 844 | 844 (100.00%) |
 | 1dte | C | 0.20 | 1 Friday-only | 77 | 76 (98.70%) |
 | 1dte | C | 0.20 | 2 Mon/Wed/Fri | 244 | 244 (100.00%) |
 | 1dte | C | 0.20 | 3 daily | 833 | 833 (100.00%) |
@@ -142,9 +142,6 @@ Picked entries whose legs are not stored on the expiry day (all rules pooled; *o
 | 1dte | 2022-11 | False | 2 | 1 |
 | 1dte | 2022-12 | False | 4 | 1 |
 | 1dte | 2023-02 | False | 14 | 1 |
-| 1dte | 2023-12 | True | 83 | 2 |
-| 1dte | 2024-01 | True | 214 | 8 |
-| 1dte | 2024-02 | True | 27 | 1 |
 | 1dte | 2025-04 | False | 10 | 1 |
 
 Picked entries with a $1 grid hole within 3 strikes of the pair (the rule skips a pair whose long strike is not listed):
@@ -153,7 +150,7 @@ Picked entries with a $1 grid hole within 3 strikes of the pair (the rule skips 
 |---|---|---|---|
 | 0dte | 1 Friday-only | 2,187 | 27 (1.23%) |
 | 0dte | 2 Mon/Wed/Fri | 7,315 | 1023 (13.98%) |
-| 0dte | 3 daily | 25,233 | 135 (0.54%) |
+| 0dte | 3 daily | 25,263 | 135 (0.53%) |
 | 1dte | 1 Friday-only | 4,272 | 114 (2.67%) |
 | 1dte | 2 Mon/Wed/Fri | 13,908 | 1799 (12.94%) |
 | 1dte | 3 daily | 47,421 | 393 (0.83%) |
@@ -168,10 +165,10 @@ Raw = cleaned + rejected held for every file, holdout included (asserted in `scr
 | ext | 2021 | 207 | 7,718,040 | 1,468 | 0.02% |
 | ext | 2022 | 251 | 11,185,290 | 1,026 | 0.01% |
 | ext | 2023 | 58 | 3,546,180 | 1 | 0.00% |
-| 0dte | 2023 | 192 | 6,610,180 | 870 | 0.01% |
-| 0dte | 2024 | 252 | 10,722,208 | 1,089 | 0.01% |
-| 0dte | 2025 | 250 | 12,322,344 | 1,650 | 0.01% |
-| 0dte | 2026 | 63 | 3,528,686 | 1,958 | 0.06% |
+| 0dte | 2023 | 192 | 6,684,700 | 870 | 0.01% |
+| 0dte | 2024 | 252 | 11,141,788 | 1,089 | 0.01% |
+| 0dte | 2025 | 250 | 12,349,062 | 1,650 | 0.01% |
+| 0dte | 2026 | 63 | 3,532,741 | 1,958 | 0.06% |
 
 | source | rejection reason | records | share of raw |
 |---|---|---|---|
@@ -181,13 +178,14 @@ Raw = cleaned + rejected held for every file, holdout included (asserted in `scr
 
 | source | flag (kept) | records | share of raw |
 |---|---|---|---|
-| 0dte | MULTIPLIER_UNKNOWN | 33,177,851 | 99.98% |
-| 0dte | ZERO_BID | 5,663,541 | 17.07% |
-| 0dte | NO_EVENT_TS | 5,059,839 | 15.25% |
-| 0dte | NO_BID | 3,285,463 | 9.90% |
-| 0dte | OUTSIDE_RTH | 1,240,243 | 3.74% |
+| 0dte | MULTIPLIER_UNKNOWN | 33,702,724 | 99.98% |
+| 0dte | ZERO_BID | 5,828,648 | 17.29% |
+| 0dte | NO_EVENT_TS | 5,143,716 | 15.26% |
+| 0dte | NO_BID | 3,288,702 | 9.76% |
+| 0dte | OUTSIDE_RTH | 1,259,690 | 3.74% |
+| 0dte | ADJUSTED_STRIKE | 524,873 | 1.56% |
 | 0dte | ZERO_QUOTE | 36,713 | 0.11% |
-| 0dte | EMPTY_BOOK | 34,791 | 0.10% |
+| 0dte | EMPTY_BOOK | 34,841 | 0.10% |
 | 0dte | NO_ASK | 105 | 0.00% |
 | ext | MULTIPLIER_UNKNOWN | 25,374,215 | 99.99% |
 | ext | ZERO_BID | 4,063,162 | 16.01% |
@@ -205,7 +203,7 @@ Only whole-dollar strikes were requested (the M4 band rule), so half-dollar or O
 | 1 Friday-only | 1dte | 154 | 35 | 10 | 0.61 | 96.06% |
 | 2 Mon/Wed/Fri | 0dte | 490 | 40 | 186 | 2.63 | 93.49% |
 | 2 Mon/Wed/Fri | 1dte | 490 | 40 | 186 | 2.52 | 93.68% |
-| 3 daily | 0dte | 1,688 | 52 | 388 | 1.69 | 99.79% |
+| 3 daily | 0dte | 1,690 | 53 | 388 | 1.69 | 99.79% |
 | 3 daily | 1dte | 176 | 37 | 0 | 0.00 | 100.00% |
 
 Months with holes (expiryxside rows): 2020-01 (4), 2020-03 (4), 2021-04 (6), 2021-05 (34), 2021-06 (14), 2021-07 (54), 2021-08 (48), 2021-09 (56), 2021-10 (34), 2021-11 (36), 2021-12 (32), 2022-01 (30), 2022-02 (4), 2022-03 (14), 2022-04 (8), 2022-05 (4), 2022-06 (2), 2022-11 (8), 2023-06 (6), 2024-01 (12), 2024-02 (4), 2024-04 (2), 2024-05 (2), 2024-06 (16), 2024-07 (14), 2024-08 (12), 2024-09 (10), 2024-10 (30), 2024-11 (14), 2024-12 (16), 2025-01 (14), 2025-02 (2), 2025-04 (2), 2025-05 (10), 2025-06 (20), 2025-07 (24), 2025-08 (32), 2025-09 (34), 2025-10 (26), 2025-11 (14), 2025-12 (26), 2026-01 (34), 2026-02 (6), 2026-03 (4).

@@ -382,7 +382,7 @@ Step 1 acceptance (model-free screen + Â; 1 screen run + 2 counted refits):
   - Every definition's mean net per trade is negative at every coverage: −$1.47 to −$16.15.
 Step 2 is not run (kill rule), and the holdout stays locked. The remaining options per ADR-0012 Consequences are new data, a defined-risk-structure ADR, or a different strategy class. Each needs an owner decision.
 
-## M19T — Phase 1c defined-risk short premium (ADR-0013, PROPOSED) — STEP 0 DATA DONE, AWAITING ADR ACCEPTANCE
+## M19T — Phase 1c defined-risk short premium (ADR-0013, ACCEPTED) — STEP 0 DONE, STEP 1 NEXT
 Depends on: M19S (closed). ADR-0013 is drafted from the owner's 10-point review; n_trials 38 at drafting.
 Step 0 (data; no trial):
 - [x] Data gap identified. M4 fetched only contracts expiring at D+1 / D+2 (`scripts/m4_fetch_history.py`), so expiry-day (0DTE) quotes are not on disk. Both tenors (S1–S6) need them.
@@ -417,10 +417,26 @@ Step 0 (data; no trial):
     - **2023-12-28 has no 0DTE data.** Its contracts carry OCC-adjusted strikes (#53847), and only whole-dollar symbols were requested.
     - **Adjusted 1DTE exit legs are not stored** for 324 picked entries in 11 sessions, 2023-12 to 2024-02.
     - **$1 grid holes** lie within 3 strikes of the pair in 13–14% of Mon/Wed/Fri-era picks. Elsewhere it is 0.5–2.7%.
-- [ ] ADR-0013 accepted (open questions Q1–Q5 in the ADR's Step-0 results); then Step 1 code (tests first)
 - [x] Rerun from committed code 3d134c9 (2026-10-08). Results are identical: the report body is unchanged and only its header moved to 3d134c9. The earlier run on uncommitted code (header 6bb890b) is superseded.
   - 7 datasets registered in `dataset_versions`: 5 raw folders plus cleaned 0dte and ext, all new rows.
   - CI green on 3d134c9: https://github.com/ahmedyaqubi/Main/actions/runs/37829299298
+- [x] **ADR-0013 ACCEPTED (owner, 2026-10-08)**, with resolutions R1–R5. The disclosure says they were chosen after seeing coverage numbers, never outcomes.
+  - **R1:** §4.9 gates act after selection, with no fallback. The min-bid gate applies to the short leg only.
+  - **R2:** a pair whose long strike is not listed is ineligible. Adjusted strikes count like standard ones.
+  - **R3:** OCC #53847 supplement.
+    - Downloaded with `scripts/m19t_fetch_adjusted.py`: **$0.0804** (owner cap $20), 52 files for 26 expiry sessions, 2023-12-28 → 2026-01-16. 2 requests had no listed symbols.
+    - After the rebuild, **2023-12-28 has 0DTE data**. 0DTE sessions: 1,164, of which 814 from 2023.
+    - **All 324 adjusted 1DTE exit legs are now stored.** Daily-era 1DTE exit usable: 99.75–100%.
+    - The rebuild groups a session's main and adjusted files before cleaning.
+  - **R4:** the degraded days are kept, flagged `VENDOR_DEGRADED` (`configs/m19t_step0.yaml`), with a descriptive with/without row.
+  - **R5:** `configs/reference/qqq_ex_dividends.csv`, built by `scripts/m19t_ex_dividends.py` with `core/dividends.py` and `tests/test_dividends.py` (4 tests).
+    - All 27 regular ex-dates for 2020 → 2026-09 in the Nasdaq history equal the trust's N-30B-2 rule (first business day after the third Friday of Mar/Jun/Sep/Dec).
+    - The special dividend (ex-date 2023-12-27) was declared on 2023-12-26.
+    - Spend for M19T so far: $10.18 + $0.08 = **$10.26**.
+  - **Incident:** the rebuild that tested the supplement ran on uncommitted code. Blanking `DATABASE_URL` in PowerShell deleted the variable, so `.env` supplied it again.
+    - 3 `dataset_versions` rows were written with `code_commit` `4e42f43…-dirty`: raw 0dte cbbo `15d2aa19`, raw 0dte definition `9d23cd54`, cleaned 0dte `2d647210`.
+    - Owner approved deleting them (2026-10-08). The 3 rows were deleted after confirming that nothing referenced them. They are re-registered by the rerun from the commit below.
+- [ ] Step 1 code (tests first): multi-leg labels, R1/R2 selection, purge, ex-dividend exclusion, the D3 screen
 
 ## M20 — Live market data in PAPER mode — TODO
 Depends on: M19 PASS (or owner ADR)
