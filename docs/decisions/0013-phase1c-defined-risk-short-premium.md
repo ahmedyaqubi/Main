@@ -261,6 +261,12 @@ stored and cleaned, not read). No P&L or outcome has been computed. n_trials is 
   - D1.d binds only where a short call is held over a close, which in practice means S6. The
     0DTE cells are flat at 15:50.
 
+## Outcome (2026-10-08)
+- Step 1 screen `screen_1c-9c607f3c96e7` (code 8b86c35; n_trials 38 → 39): **every cell KILL →
+  family KILL**. Under D3 the defined-risk short-premium family is **closed**. There is no
+  re-screen, and no holdout request.
+- Report: `reports/research/m19t_step1_screen.md`.
+
 ## Consequences
 - New code: multi-leg positions, per-leg fills and gates, labels spanning two sessions, the
   purge rule, and the ex-dividend list. The engine is otherwise reused unchanged.

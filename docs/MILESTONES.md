@@ -382,7 +382,7 @@ Step 1 acceptance (model-free screen + Â; 1 screen run + 2 counted refits):
   - Every definition's mean net per trade is negative at every coverage: −$1.47 to −$16.15.
 Step 2 is not run (kill rule), and the holdout stays locked. The remaining options per ADR-0012 Consequences are new data, a defined-risk-structure ADR, or a different strategy class. Each needs an owner decision.
 
-## M19T — Phase 1c defined-risk short premium (ADR-0013, ACCEPTED) — STEP 0 DONE, STEP 1 NEXT
+## M19T — Phase 1c defined-risk short premium (ADR-0013, ACCEPTED) — DONE: KILL, FAMILY CLOSED
 Depends on: M19S (closed). ADR-0013 is drafted from the owner's 10-point review; n_trials 38 at drafting.
 Step 0 (data; no trial):
 - [x] Data gap identified. M4 fetched only contracts expiring at D+1 / D+2 (`scripts/m4_fetch_history.py`), so expiry-day (0DTE) quotes are not on disk. Both tenors (S1–S6) need them.
@@ -455,7 +455,33 @@ Step 0 (data; no trial):
   - Ext sessions 2021-02-09 and 2021-02-10 have definitions but **zero quote records** (vendor gap; `dq_log` n_raw = 0).
   - Their entries are now `UNRESOLVED_DATA` (`ENTRY_DATA_MISSING` / `EXIT_DATA_MISSING`): logged, never filled.
   - The Step-0 coverage report had counted those cells as NO_QUALIFYING.
-- [ ] Step 1 run from committed code: label build (`--register`), then the registered screen `screen_1c` (n_trials 38 → 39), CI, family ledger
+- [x] **Step 1 run from committed code 8b86c35 (2026-10-08): family outcome KILL. Every cell is KILL. Per ADR-0013 D3, the defined-risk short-premium family is CLOSED.**
+  - **Labels:** `scripts/m19t_build_labels.py --register`, registered as label dataset `data/labels/study1c`. 11,640 entry rows per 0DTE cell, 21,964 per 1DTE cell.
+  - **Screen:** registered run `screen_1c-9c607f3c96e7` (n_trials 38 → 39) → `reports/research/m19t_step1_screen.md`. It was not rerun, because a rerun would be a second trial.
+  - **Results:** mean net per session at the conservative fill [95% CI], and the two-sided 95% upper bound at the mid fill (KILL needs < 0):
+
+    | cell | sessions | mean net (cons) [95% CI] | mid upper bound |
+    |---|---|---|---|
+    | S1 | 1,155 | −$14.30 [−17.48, −11.19] | −0.55 |
+    | S2 | 1,153 | −$24.98 [−29.15, −21.03] | −0.74 |
+    | S3 | 1,153 | −$26.35 [−29.52, −22.95] | −3.84 |
+    | S4 | 1,143 | −$19.92 [−24.26, −15.90] | −1.21 |
+    | S5 | 1,142 | −$33.65 [−39.01, −28.60] | −1.23 |
+    | S6 | 1,115 | −$36.29 [−41.11, −31.68] | −5.38 |
+
+    - No cell is barred by a guard, and none is era-driven. All 3 eras are negative at the conservative fill in every cell.
+    - The R4 with/without-degraded-days rows are unchanged to within $0.06.
+  - **Descriptive reading (not a further test):** in every cell the realized loss share is well above the break-even loss share on the same trades.
+    - For example, S1 has a loss share of 0.329 against a break-even of 0.186, and S4 0.291 against 0.135.
+    - The losses are large relative to the credits, so the premium collected did not cover the tail.
+    - Even at the mid fill the mean is negative in every cell after the $2.80–$5.60 round-trip costs.
+  - **Verification:**
+    - 18 sampled OK trades (3 per cell) were recomputed by hand from the cleaned quotes, independently of `labels.spread`: 0 mismatches.
+    - The holdout was not read (`HoldoutGuard`; the loader refuses those sessions).
+  - CI green on 369b48b (https://github.com/ahmedyaqubi/Main/actions/runs/37850595475) and on 8b86c35 (https://github.com/ahmedyaqubi/Main/actions/runs/37850845520).
+  - **Family ledger (ADR-0013 D6):** budget 2 trials (screen plus one re-screen). Spent 1. Remaining: 0. A KILL forbids the re-screen, and the family is closed.
+    - Holdout access: none. Data spend: $10.26.
+    - n_trials on the shared window is now **39**. That raises the bar for any later family.
 
 ## M20 — Live market data in PAPER mode — TODO
 Depends on: M19 PASS (or owner ADR)
