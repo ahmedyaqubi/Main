@@ -1,6 +1,6 @@
 # M18 drift monitoring (spec Phase 1Q, gate 18)
 
-Generated 2026-10-08 03:25 UTC, code 12e79be6a990, run `monitoring-6455ec4d4e17`. Predictions: journal run `journal-4a7a186908c7`. Reference: test blocks of folds [1, 2, 3, 4] (250 sessions). Final holdout not opened.
+Generated 2026-10-08 03:35 UTC, code b2e4aa8c2ffa, run `monitoring-10b177d1695e`. Predictions: journal run `journal-4a7a186908c7`. Reference: test blocks of folds [1, 2, 3, 4] (250 sessions). Final holdout not opened.
 
 Monitors over the last 10 sessions: feature PSI (max over 27 features) and prediction PSI, with thresholds calibrated to no-drift noise (owner, M18 option A): WARN above the 99.0% and PAPER_ONLY above the 99.9% quantile of the monitor's PSI over 5,000 random 10-session windows of the reference, each compared with the reference without its own sessions (reference thresholds: features 4.962 / 5.714, predictions 1.103 / 1.832, regimes WARN 2.396); calibration z = mean(observed - predicted) / reference session-clustered SE, per decision target and combined (any |z| > 2.0 WARN; DISABLED only when the combined |z| > 3.0); expectancy (>= 20 trades); regime-cell PSI over 20 sessions (WARN only). DISABLED latches until a named human re-enables; `decide` returns NO_TRADE DRIFT_DISABLED while disabled.
 
