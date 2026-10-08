@@ -451,6 +451,10 @@ Step 0 (data; no trial):
   - **Leakage review**, both findings fixed (tests first):
     - `AT_BAND_EDGE` picks are now NO_TRADE: the stored strike band was chosen with the session's full-day range.
     - `quote_at` breaks a duplicate-timestamp tie deterministically, toward the rejected copy.
+- [x] **Fix after the first label-build attempt on 369b48b** (it crashed; nothing was registered).
+  - Ext sessions 2021-02-09 and 2021-02-10 have definitions but **zero quote records** (vendor gap; `dq_log` n_raw = 0).
+  - Their entries are now `UNRESOLVED_DATA` (`ENTRY_DATA_MISSING` / `EXIT_DATA_MISSING`): logged, never filled.
+  - The Step-0 coverage report had counted those cells as NO_QUALIFYING.
 - [ ] Step 1 run from committed code: label build (`--register`), then the registered screen `screen_1c` (n_trials 38 → 39), CI, family ledger
 
 ## M20 — Live market data in PAPER mode — TODO

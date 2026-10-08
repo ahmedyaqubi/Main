@@ -76,14 +76,25 @@ def store_1dte(d: date) -> str:
     return "ext" if d < ZERO_START else "m4"
 
 
+def store_paths(src: str, d: date) -> tuple[Path, Path]:
+    if src == "m4":
+        return (
+            M4 / "cleaned" / "cleaned_options_data" / "cbbo-1m" / f"{d}.parquet",
+            M4 / "rejected" / "cleaned_options_data" / "cbbo-1m" / f"{d}.parquet",
+        )
+    return M19T / "cleaned" / src / f"{d}.parquet", M19T / "rejected" / src / f"{d}.parquet"
+
+
+def has_records(src: str, d: date) -> bool:
+    """False for a session with no quote records at all (vendor gap, logged in dq_log with
+    n_raw = 0, e.g. ext 2021-02-09 / 02-10): its entries are UNRESOLVED_DATA, never filled."""
+    return store_paths(src, d)[0].exists()
+
+
 def records(src: str, d: date, dev_end: date) -> pl.DataFrame:
     if d > dev_end:
         raise RuntimeError(f"holdout session {d} requested: refused (ADR-0011)")
-    if src == "m4":
-        c = M4 / "cleaned" / "cleaned_options_data" / "cbbo-1m" / f"{d}.parquet"
-        r = M4 / "rejected" / "cleaned_options_data" / "cbbo-1m" / f"{d}.parquet"
-    else:
-        c, r = M19T / "cleaned" / src / f"{d}.parquet", M19T / "rejected" / src / f"{d}.parquet"
+    c, r = store_paths(src, d)
     return option_records(pl.read_parquet(c), pl.read_parquet(r))
 
 
@@ -160,6 +171,12 @@ def session_job(  # noqa: PLR0912, PLR0915 (one session, all cells)
             reason = "LABEL_CROSSES_BLOCK" if exp > s1c.dev_end else "EXIT_SESSION_EXCLUDED"
             rows = [
                 {**base, "prediction_ts": t, "status": EXCLUDED, "reason": reason} for t in times
+            ]
+        elif not has_records(src, d) or not has_records(store_0dte(exp), exp):
+            reason = "ENTRY_DATA_MISSING" if not has_records(src, d) else "EXIT_DATA_MISSING"
+            rows = [
+                {**base, "prediction_ts": t, "status": "UNRESOLVED_DATA", "reason": reason}
+                for t in times
             ]
         else:
             contracts = [
