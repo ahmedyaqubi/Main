@@ -22,37 +22,52 @@ import argparse
 import os
 import sys
 from concurrent.futures import ProcessPoolExecutor
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import polars as pl
 from dotenv import load_dotenv
-from sqlalchemy import Engine, create_engine, text
+from sqlalchemy import create_engine
 
-from qqq1dte.backtesting.artifacts import calibrators, model_scorers
 from qqq1dte.backtesting.bootstrap import session_bootstrap_ci
 from qqq1dte.backtesting.holdout import HoldoutGuard
 from qqq1dte.backtesting.oos import code_commit, dataset_id
 from qqq1dte.backtesting.registry import complete_run, fail_run, register_run
 from qqq1dte.backtesting.reporting import net_from_frame, summarize_net
 from qqq1dte.backtesting.session_data import session_inputs
-from qqq1dte.backtesting.splits import Fold, walk_forward_folds
+from qqq1dte.backtesting.splits import walk_forward_folds
 from qqq1dte.core.calendar import TradingCalendar
 from qqq1dte.core.config import load_config
-from qqq1dte.execution_sim.decision import CalibratedProbability, SideInput, decide
-from qqq1dte.execution_sim.engine import Signal, run_session, selection_at
+from qqq1dte.execution_sim.engine import Signal, run_session
 from qqq1dte.execution_sim.fills import Moderate
-from qqq1dte.execution_sim.selection import NoTrade
-from qqq1dte.features.engine import FEATURE_NAMES
-from qqq1dte.models.design import wide_features
+from qqq1dte.journal.pipeline import (
+    decide_session,
+    decision_run_config,
+    probabilities,
+    regime_frame,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 END = date(2026, 10, 2)
 REPORT = ROOT / "reports" / "decisions" / "m15_no_trade.md"
 CFG = load_config()
 DT = pl.Datetime("us", "UTC")
+PROB_COLS = (
+    "session_date",
+    "prediction_ts",
+    "fold",
+    "p_call",
+    "raw_call",
+    "support_call",
+    "ver_call",
+    "p_put",
+    "raw_put",
+    "support_put",
+    "ver_put",
+    "cell",
+)
 TRADE_COLS = [
     "side",
     "outcome",
@@ -65,55 +80,6 @@ TRADE_COLS = [
 ]
 
 
-def probabilities(engine: Engine, folds: list[Fold]) -> pl.DataFrame:
-    """Calibrated P(WIN) for C_call / C_put at every test-block timestamp (features only)."""
-    fam = CFG.decision.model_family
-    scorers = model_scorers(engine, ROOT, fam, CFG.calibration.reference_runs[fam])
-    cals = calibrators(engine, ROOT, CFG.regimes.calibration_runs[fam])
-    fdir = ROOT / "data" / "features" / CFG.features.version
-    parts = []
-
-    def load(sessions: tuple[date, ...]) -> pl.DataFrame:
-        return pl.concat(
-            [
-                wide_features(pl.read_parquet(fdir / f"session={d}.parquet"), FEATURE_NAMES)
-                for d in sessions
-            ]
-        )
-
-    for f in folds:
-        wide, calib_wide = load(f.test), load(f.calib)
-        cols: dict[str, Any] = {}
-        for tgt, key in (("C_call", "call"), ("C_put", "put")):
-            mid, scorer = scorers[(f.index, tgt)]
-            cid, calib = cals[mid]
-            raw = scorer(wide)
-            calib_raw = np.sort(scorer(calib_wide))  # the block the calibrator was fit on
-            cols[f"p_{key}"] = pl.Series(calib.apply(raw))
-            cols[f"raw_{key}"] = pl.Series(raw)
-            # ADR-0010: calibration-block rows with a raw score >= this raw score
-            cols[f"support_{key}"] = pl.Series(
-                calib_raw.size - np.searchsorted(calib_raw, raw, side="left")
-            ).cast(pl.Int64)
-            cols[f"ver_{key}"] = pl.lit(cid)
-        parts.append(wide.select("session_date", "prediction_ts").with_columns(**cols))
-    return pl.concat(parts).with_columns(pl.col("prediction_ts").cast(DT))
-
-
-def regime_cells(engine: Engine) -> pl.DataFrame:
-    with engine.connect() as c:
-        rows = c.execute(
-            text("SELECT ts, axis, value FROM regime_labels WHERE regime_version = :v"),
-            {"v": CFG.regimes.version},
-        ).all()
-    df = pl.DataFrame(rows, schema={"ts": DT, "axis": pl.String, "value": pl.String}, orient="row")
-    wide = df.pivot(on="axis", index="ts", values="value")
-    return wide.select(
-        pl.col("ts").alias("prediction_ts"),
-        cell=pl.concat_str(["volatility", "trend", "event"], separator="/"),
-    )
-
-
 def _trade_row(tr: Any) -> dict[str, Any]:
     return {k: getattr(tr, k) for k in TRADE_COLS}
 
@@ -123,47 +89,31 @@ def session_job(args: tuple[date, dict[str, pl.DataFrame], list[dict[str, Any]]]
     cfg = load_config()
     cal = TradingCalendar(cfg)
     fill = Moderate(cfg, cfg.fills.moderate_alpha)
-    lat = timedelta(seconds=cfg.fills.latency_s)
-    rows, signals = [], []
-    for pr in probs:
-        ts = pr["prediction_ts"]
-        sides = []
-        for s, key in (("C", "call"), ("P", "put")):
-            p = CalibratedProbability(pr[f"p_{key}"], pr[f"ver_{key}"])
-            sel = selection_at(d, s, ts + lat, t["und"], t["chain"], t["records"], cal, cfg)
-            if isinstance(sel, NoTrade):
-                sides.append(SideInput(s, p, sel.reason, None, pr[f"support_{key}"]))
-            else:
-                sides.append(SideInput(s, p, None, fill.buy(sel.quote), pr[f"support_{key}"]))
-        out = decide(sides[0], sides[1], cfg, regime_cell=pr["cell"])
+    decisions, eng = decide_session(d, t, probs, cfg)
+    rows = []
+    for x in decisions:
+        out, (c, p) = x.outcome, x.sides
         rows.append(
             {
-                **pr,
+                **{k: v for k, v in x.prob.items() if k in PROB_COLS},
                 "decision": out.decision,
                 "reasons": list(out.reasons),
                 "ev_call": out.ev_call,
                 "ev_put": out.ev_put,
                 "margin_call": out.margin_call,
                 "margin_put": out.margin_put,
-                "entry_call": sides[0].entry_price,
-                "entry_put": sides[1].entry_price,
+                "entry_call": c.side_input.entry_price,
+                "entry_put": p.side_input.entry_price,
+                "final": x.final,
             }
         )
-        if out.decision in ("CALL", "PUT"):
-            signals.append(Signal(ts, "C" if out.decision == "CALL" else "P"))
-    res = run_session(d, signals, t["und"], t["chain"], t["records"], cal, cfg, fill)
-    final = {dec.prediction_ts: dec for dec in res.decisions}
     trades = [
         {"session_date": d, "prediction_ts": tr.prediction_ts, **_trade_row(tr)}
-        for tr in res.trades
+        for tr in eng.trades
         if tr.net_pnl is not None
     ]
     cfs = []
     for r in rows:
-        e = final.get(r["prediction_ts"])
-        r["final"] = (
-            r["decision"] if e is None else ({"ENTERED": r["decision"]}.get(e.decision, e.decision))
-        )
         if r["decision"] != "NO_TRADE":
             continue
         evs = [(r["ev_call"], "C"), (r["ev_put"], "P")]
@@ -370,16 +320,7 @@ def main() -> int:
     run_id = register_run(
         engine,
         run_kind="decision",
-        config={
-            "model": "decision_engine",
-            "decision": CFG.decision.model_dump(mode="json"),
-            "fills": CFG.fills.model_dump(mode="json"),
-            "trade": CFG.trade.model_dump(mode="json"),
-            "costs": CFG.costs.model_dump(mode="json"),
-            "calibration_run": CFG.regimes.calibration_runs[CFG.decision.model_family],
-            "model_run": CFG.calibration.reference_runs[CFG.decision.model_family],
-            "regime_version": CFG.regimes.version,
-        },
+        config=decision_run_config(CFG),
         data_window=(test[0], test[-1]),
         dataset_id=dataset_id(engine, f"data/features/{CFG.features.version}"),
         code_commit=commit,
@@ -387,8 +328,8 @@ def main() -> int:
     )
     print(f"registered run {run_id}")
     try:
-        probs = probabilities(engine, folds).join(
-            regime_cells(engine), on="prediction_ts", how="left"
+        probs = probabilities(engine, ROOT, CFG, folds).join(
+            regime_frame(engine, CFG), on="prediction_ts", how="left"
         )
         by_session = {d: g.to_dicts() for (d,), g in probs.group_by("session_date")}
         parts: dict[str, list[dict[str, Any]]] = {"rows": [], "trades": [], "counterfactual": []}

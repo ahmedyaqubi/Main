@@ -248,6 +248,11 @@ class Regimes(_Section):
     baseline_run: str
 
 
+class Journal(_Section):
+    replay_sample: int
+    replay_seed: int
+
+
 class Sensitivity(_Section):
     alphas: list[float]
     latencies_s: list[int]
@@ -268,6 +273,7 @@ class Phase1Config(_Section):
     sensitivity: Sensitivity
     calibration: Calibration
     regimes: Regimes
+    journal: Journal
     pit: Pit
     validation: Validation
     dq: DataQuality

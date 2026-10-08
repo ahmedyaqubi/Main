@@ -104,6 +104,10 @@ regimes:                             # M14 (spec §9, OD-9); thresholds fit per 
     gbm_m2: calibration-e19b6c392dd0
   baseline_run: sensitivity-1097416fc6c0   # M12 run: mechanical baseline trades (named models)
 
+journal:                             # M16
+  replay_sample: 200                 # journaled predictions replayed (T-REP-02) per run
+  replay_seed: 20261009
+
 sensitivity:                         # M12 execution-assumption grid (pre-declared; one run)
   alphas: [0.0, 0.25, 0.5, 0.75, 1.0]  # moderate fill alpha (1 = conservative prices, 0 = mid)
   latencies_s: [0, 5, 60]

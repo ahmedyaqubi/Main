@@ -165,7 +165,7 @@ def _spot(und: pl.DataFrame, t_e: datetime, cfg: Phase1Config) -> float | None:
     return float((row["bid"] + row["ask"]) / 2)
 
 
-def selection_at(
+def selection_detail_at(
     session: date,
     side: str,
     t_e: datetime,
@@ -174,12 +174,13 @@ def selection_at(
     records: pl.DataFrame,
     cal: TradingCalendar,
     cfg: Phase1Config,
-) -> Selected | NoTrade:
+) -> tuple[Selected | NoTrade, Contract | None, Quote | None]:
     """The frozen selection rule (§5) and §4.9 gates at T_e, from data known at T_e only (the
-    same inputs the event loop uses; for the decision engine, M15)."""
+    same inputs the event loop uses), with the chosen contract and its quote (if any) for the
+    journal's candidate rows (M16)."""
     spot = _spot(und, t_e, cfg)
     if spot is None:
-        return NoTrade("NO_SPOT")
+        return NoTrade("NO_SPOT"), None, None
     nxt = cal.next_session(session)
     known = (
         AsOfReader({"c": chain}, t_e)
@@ -194,15 +195,31 @@ def selection_at(
     ]
     chosen = choose_contract(contracts, spot, side, t_e)
     if chosen is None:
-        return NoTrade("NO_CONTRACT")
+        return NoTrade("NO_CONTRACT"), None, None
     hist = AsOfReader({"q": records}, t_e).get("q").filter(pl.col("symbol") == chosen.symbol)
     quotes = {}
+    quote: Quote | None = None
     if hist.height:
         r = hist.sort("available_at").row(-1, named=True)
-        quotes[chosen.symbol] = Quote(
+        quote = Quote(
             r["bid"], r["ask"], r["bid_sz"], r["ask_sz"], r["available_at"], r["rejected"]
         )
-    return select_contract(contracts, spot, side, quotes, t_e, cfg)
+        quotes[chosen.symbol] = quote
+    return select_contract(contracts, spot, side, quotes, t_e, cfg), chosen, quote
+
+
+def selection_at(
+    session: date,
+    side: str,
+    t_e: datetime,
+    und: pl.DataFrame,
+    chain: pl.DataFrame,
+    records: pl.DataFrame,
+    cal: TradingCalendar,
+    cfg: Phase1Config,
+) -> Selected | NoTrade:
+    """The frozen selection rule (§5) and §4.9 gates at T_e (decision engine, M15)."""
+    return selection_detail_at(session, side, t_e, und, chain, records, cal, cfg)[0]
 
 
 class _Session:

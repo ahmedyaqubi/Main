@@ -1,6 +1,6 @@
 # M15 decision engine and NO_TRADE analysis (spec §4.1)
 
-Generated 2026-10-07 23:51 UTC, code 770893bb7b21, run `decision-7cd0dc2805d1`. Test blocks 2024-05-28 → 2026-02-27 (440 sessions, 27,944 prediction timestamps); final holdout not opened.
+Generated 2026-10-08 01:16 UTC, code 6ff546396309, run `decision-8a5f9559f8c4`. Test blocks 2024-05-28 → 2026-02-27 (440 sessions, 27,944 prediction timestamps); final holdout not opened.
 
 **Rule.** Model family `gbm_m2` with its M13 calibrators (test-block probabilities from features only). Per side: calibrated P(WIN) - p_breakeven > 0.03 and EV > 0 at the moderate entry fill (alpha = 0.5), binary-conservative EV (every non-WIN outcome = full -20% stop), §4.9 gates at T_e, and (ADR-0010) at least 200 calibration-block rows with a raw score at or above the current one. Both sides qualifying: higher EV. Blocked regime cells: none.
 
