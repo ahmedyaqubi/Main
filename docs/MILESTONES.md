@@ -262,11 +262,18 @@ Notes / open issues:
 3. The M13 decision guard tests moved to `tests/test_decision.py` with the new interface (per-side calibration versions; `CalibratedProbability` carries its own version).
 4. Test-first: decision and selection_at tests were run red first.
 
-## M16 — Prediction/trade journal — TODO
-Depends on: M15
+## M16 — Prediction/trade journal — DONE (2026-10-08; code 1348fb8 CI green: https://github.com/ahmedyaqubi/Main/actions/runs/37716079120)
+Depends on: M15 (DONE)
+Owner decisions (2026-10-07/08): Q1 per-target versions in a new append-only `prediction_scores` table (predictions' single version columns = CALL side); Q2 a non-owner role `qqq1dte_journal_writer` with INSERT/SELECT only (owner granted CREATEROLE to `qqq1dte` locally; CI's user is superuser); Q3 journal every test-block prediction of the current decision configuration (BACKTEST mode), counterfactuals stay in Parquet; Q4 `journal.replay` re-derives everything from stored references, seeded sample of 200.
 Acceptance:
-- [ ] Every Phase 1O field persisted; journal tables append-only (DB role test: UPDATE/DELETE fail)
-- [ ] `journal.replay(prediction_id)` reproduces stored scores and decision (T-REP-02)
+- [x] Every Phase 1O field persisted; journal tables append-only (DB role test: UPDATE/DELETE fail) — `migrations/versions/0002_prediction_scores_journal_role.py`; `src/qqq1dte/journal/writer.py` (`write_prediction`, one transaction); `tests/test_journal_schema.py` (`test_journal_writer_role_cannot_update_or_delete` × 4 tables × UPDATE/DELETE → permission denied; role can INSERT/SELECT; `prediction_scores` append-only and keys; upgrade/downgrade keeps grants); field-coverage table in `reports/journal/m16_journal.md` (all 25 Phase 1O fields mapped; target/stop/MFE/MAE/outcome/P&L/costs live on `simulated_trades` and are empty here because there are 0 trades)
+- [x] `journal.replay(prediction_id)` reproduces stored scores and decision (T-REP-02) — `src/qqq1dte/journal/replay.py`; `tests/test_journal_replay.py` (synthetic prediction reproduced; a 1e-6 tampered score detected); run `journal-4a7a186908c7`: **200 / 200 sampled predictions reproduced, 3,400 checks, 0 failures**
+Evidence / results: run `journal-4a7a186908c7` (code 1348fb8, decision config hash `1eb97f25…`, the M15 ADR-0010 configuration): 27,944 predictions, 55,888 `prediction_scores`, 55,888 `trade_candidates` (the chosen contract per side, with gate results), 0 `simulated_trades`; all decisions NO_TRADE; 0 underlying prices older than 60 s.
+Notes / open issues:
+1. The M15 decision logic moved to `src/qqq1dte/journal/pipeline.py` (shared by M15 and M16); the M15 report was reproduced identically after the move (run `decision-8a5f9559f8c4`, uncommitted code on 6ff5463; same configuration hash, so n_trials unchanged).
+2. Roles are cluster-wide: migration 0002 creates the role if missing (needs CREATEROLE, fails loudly otherwise) and never drops it on downgrade (only revokes its privileges in that database).
+3. Feature values are journaled by reference to the immutable f2 snapshot row (dataset `71259fcf…`), not copied; replay reads that row.
+4. Test-first: schema, writer and replay tests were written before the code; the first replay-test run failed on a fixture without PUT quotes (test data, fixed).
 
 ## M17 — Model versioning & promotion — TODO
 Depends on: M16
