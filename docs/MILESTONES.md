@@ -382,6 +382,22 @@ Step 1 acceptance (model-free screen + Â; 1 screen run + 2 counted refits):
   - Every definition's mean net per trade is negative at every coverage: −$1.47 to −$16.15.
 Step 2 is not run (kill rule), and the holdout stays locked. The remaining options per ADR-0012 Consequences are new data, a defined-risk-structure ADR, or a different strategy class. Each needs an owner decision.
 
+## M19T — Phase 1c defined-risk short premium (ADR-0013, PROPOSED) — STEP 0 IN PROGRESS
+Depends on: M19S (closed). ADR-0013 is drafted from the owner's 10-point review; n_trials 38 at drafting.
+Step 0 (data; no trial):
+- [x] Data gap identified. M4 fetched only contracts expiring at D+1 / D+2 (`scripts/m4_fetch_history.py`), so expiry-day (0DTE) quotes are not on disk. Both tenors (S1–S6) need them.
+- [x] Price quote: `scripts/m19t_price_gap.py` (price only) → `reports/research/m19t_price_quote.md`
+- [x] Owner approval 2026-10-08: everything, with a $20 cap. Downloaded with `scripts/m19t_fetch.py`; the exact total was **$10.18**. Raw files are in `data/raw/databento/m19t/`.
+  - **X:** QQQ daily bars 2020–2023, $0.0013.
+  - **A:** expiry-day contracts for the development period, 757 sessions, $5.08.
+  - **H:** holdout-period storage, 126 sessions, $1.21. Locked.
+  - **E:** the 2020–2023 extension, 628 sessions with listed contracts, $3.89.
+    - 186 sessions had no listed contracts expiring on D or D+1. Those are not trading days for this family, and they are logged, not filled.
+    - **Expirations, inferred from listings:** Fridays only from 2020-01 to about 2021-04, then Mon/Wed/Fri until 2022-11-13, then daily. ADR-0013 D2 era reporting is updated to 3 eras (reporting only).
+    - Databento flagged 3 extension days as degraded (2021-07-07, 2021-10-26, 2022-09-19). They are to be checked during cleaning.
+  - **F:** forward collection, approved at about $0.64 a month. Its script is still to be written.
+- [ ] ADR-0013 accepted; data fetched, cleaned (M4 rules) and verified; then Step 1 code (tests first)
+
 ## M20 — Live market data in PAPER mode — TODO
 Depends on: M19 PASS (or owner ADR)
 Acceptance:
