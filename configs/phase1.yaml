@@ -104,6 +104,14 @@ regimes:                             # M14 (spec §9, OD-9); thresholds fit per 
     gbm_m2: calibration-e19b6c392dd0
   baseline_run: sensitivity-1097416fc6c0   # M12 run: mechanical baseline trades (named models)
 
+features_f3:                         # M19R Stage 2 E1: extras on top of the stored f2 snapshots
+  version: f3                        # f3 row = f2 features + these extras (data/features/f3x)
+  extras_dir: f3x
+  option_mom_minutes: [5, 15]
+  pc_change_minutes: 15
+  extra_features: [opt_call_mom_5m, opt_put_mom_5m, opt_call_mom_15m, opt_put_mom_15m,
+                   pc_imbalance_chg_15m, opt_call_size_imb, opt_put_size_imb, qqq_book_imb]
+
 research:                            # M19R research iteration 1 (diagnostics D1-D3)
   implied_c: 1.0e6                   # D1 benchmark logistic: effectively unregularised
   next_session_minutes: 390          # D1: trading minutes of the expiry session (D+1)

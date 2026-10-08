@@ -248,6 +248,14 @@ class Regimes(_Section):
     baseline_run: str
 
 
+class FeaturesF3(_Section):
+    version: str
+    extras_dir: str
+    option_mom_minutes: list[int]
+    pc_change_minutes: int
+    extra_features: list[str]
+
+
 class Research(_Section):
     implied_c: float
     next_session_minutes: int
@@ -339,6 +347,7 @@ class Phase1Config(_Section):
     monitoring: Monitoring
     validation_gates: ValidationGates
     research: Research
+    features_f3: FeaturesF3
     pit: Pit
     validation: Validation
     dq: DataQuality

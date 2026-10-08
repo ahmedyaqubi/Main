@@ -10,7 +10,7 @@ import polars as pl
 from qqq1dte.core.calendar import TradingCalendar
 from qqq1dte.core.config import Phase1Config, load_config
 from qqq1dte.core.pit import AsOfReader
-from qqq1dte.features.defs import Ctx, FeatureValue, registry
+from qqq1dte.features.defs import Ctx, FeatureFn, FeatureValue, registry
 
 __all__ = ["FEATURE_NAMES", "Ctx", "FeatureValue", "compute_at", "compute_session"]
 
@@ -27,11 +27,15 @@ SNAPSHOT_SCHEMA: dict[str, pl.DataType] = {
 }
 
 
-def compute_at(reader: AsOfReader, ctx: Ctx) -> dict[str, FeatureValue]:
-    """All features at ctx.T. The reader's cutoff must be ctx.T."""
+def compute_at(
+    reader: AsOfReader, ctx: Ctx, features: Mapping[str, FeatureFn] | None = None
+) -> dict[str, FeatureValue]:
+    """All features (default: the configured registry) at ctx.T. The reader's cutoff must be
+    ctx.T."""
     if reader.cutoff != ctx.T:
         raise ValueError(f"reader cutoff {reader.cutoff} != prediction time {ctx.T}")
-    return {name: fn(reader, ctx) for name, fn in registry(ctx.cfg).items()}
+    fns = registry(ctx.cfg) if features is None else features
+    return {name: fn(reader, ctx) for name, fn in fns.items()}
 
 
 def compute_session(
@@ -40,11 +44,16 @@ def compute_session(
     cal: TradingCalendar,
     cfg: Phase1Config,
     timestamps: Sequence[datetime] | None = None,
+    features: Mapping[str, FeatureFn] | None = None,
+    version: str | None = None,
 ) -> pl.DataFrame:
-    """Long-format feature snapshots for a session's prediction timestamps."""
+    """Long-format feature snapshots for a session's prediction timestamps (`features` /
+    `version` select another feature set, e.g. the f3 extras)."""
     rows = []
     for t in timestamps if timestamps is not None else cal.prediction_timestamps(session):
-        values = compute_at(AsOfReader(tables, t), Ctx(T=t, session=session, cal=cal, cfg=cfg))
+        values = compute_at(
+            AsOfReader(tables, t), Ctx(T=t, session=session, cal=cal, cfg=cfg), features
+        )
         for name, fv in values.items():
             rows.append(
                 {
@@ -54,7 +63,7 @@ def compute_session(
                     "value": fv.value,
                     "missing_reason": fv.missing_reason,
                     "available_at": fv.available_at,
-                    "feature_version": cfg.features.version,
+                    "feature_version": version or cfg.features.version,
                 }
             )
     return pl.DataFrame(rows, schema=SNAPSHOT_SCHEMA)
