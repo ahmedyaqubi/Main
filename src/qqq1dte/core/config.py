@@ -248,6 +248,14 @@ class Regimes(_Section):
     baseline_run: str
 
 
+class Research(_Section):
+    implied_c: float
+    next_session_minutes: int
+    lift_quantiles: list[float]
+    ablation_targets: list[str]
+    feature_groups: dict[str, list[str]]
+
+
 class ValidationGates(_Section):
     min_folds_better_share: float
     min_folds_positive_share: float
@@ -330,6 +338,7 @@ class Phase1Config(_Section):
     promotion: Promotion
     monitoring: Monitoring
     validation_gates: ValidationGates
+    research: Research
     pit: Pit
     validation: Validation
     dq: DataQuality

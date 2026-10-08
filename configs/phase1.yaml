@@ -104,6 +104,22 @@ regimes:                             # M14 (spec §9, OD-9); thresholds fit per 
     gbm_m2: calibration-e19b6c392dd0
   baseline_run: sensitivity-1097416fc6c0   # M12 run: mechanical baseline trades (named models)
 
+research:                            # M19R research iteration 1 (diagnostics D1-D3)
+  implied_c: 1.0e6                   # D1 benchmark logistic: effectively unregularised
+  next_session_minutes: 390          # D1: trading minutes of the expiry session (D+1)
+  lift_quantiles: [0.9, 0.98, 0.99]  # D2: top decile, top 2%, top 1% (plus all deciles)
+  ablation_targets: [A_up, A_dn, C_call, C_put]
+  feature_groups:                    # D3: pre-declared, every f2 feature in exactly one group
+    price_path: [vwap_dist, ret_since_prev_close, dist_prev_high, dist_prev_low, or_position,
+                 overnight_gap, range_atr]
+    momentum: [ret_5m, ret_15m, ret_30m, ret_60m, mom_accel]
+    volatility: [rv_30m, vix_prev_close, straddle_move, atm_spread_pct]
+    cross_asset: [spy_qqq_rel_15m, soxx_ret_15m, megacap_ret_15m, uup_ret_60m, ief_ret_60m,
+                  shy_ret_60m]
+    options_flow: [put_call_imbalance]
+    volume: [rel_volume]
+    calendar: [minutes_since_open, day_of_week, cal_days_to_expiry, macro_event_today]
+
 validation_gates:                    # M19: spec §11 numbers (gates 6, 10, 13, 15, 16)
   min_folds_better_share: 0.70       # gate 6
   min_folds_positive_share: 0.60     # gate 10
