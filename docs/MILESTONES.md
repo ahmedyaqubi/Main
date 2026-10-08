@@ -356,7 +356,7 @@ Stage-2 results (`reports/research/m19r_experiments.md`; runs E1 `experiment-d87
   The 6-trial Stage-2 budget is used up.
 - **Closed 2026-10-08 (owner):** no configuration passes gates 6 and 12; the tail rules show no cost-adjusted edge. The closing report is `reports/research/m19r_closing.md`. Descriptive statistics of the trade definition (pre-holdout, no model) come from `scripts/m19r_label_stats.py`: unconditional win rate 25–28% vs breakeven about 0.41; mean net −$5.05 to −$5.27 per trade; median entry spread $0.02 (0.82% of premium). M19 stays FAIL, M20 stays blocked, and the holdout stays locked. Open follow-ups (new data, a trade-definition ADR, a different strategy class) are under "Later"; none has been started.
 
-## M19S — Phase 1b trade-definition study (ADR-0012) — IN PROGRESS (Step 1 code done; runs pending from committed code)
+## M19S — Phase 1b trade-definition study (ADR-0012) — CLOSED 2026-10-08: kill rule fired at Step 1 (code ea64d76, CI green: https://github.com/ahmedyaqubi/Main/actions/runs/37746323813)
 Depends on: M19R (closed); ADR-0012 ACCEPTED 2026-10-08 (n_trials 35 at acceptance; budget ≤ 7 new trials, cap 42)
 Step 1 acceptance (model-free screen + Â; 1 screen run + 2 counted refits):
 - [x] Study label engine for T0–T5. Covers option bracket, time exit, QQQ bracket and the 2-strikes-ITM selection, all point-in-time.
@@ -368,10 +368,19 @@ Step 1 acceptance (model-free screen + Â; 1 screen run + 2 counted refits):
   - The smoke run (7 sessions, uncommitted code, not registered) reproduces the stored L2 option labels exactly for T0, and the stored A_up / A_dn exactly from ret_90 (`scripts/m19s_build_labels.py --verify-t0`). The full build runs from committed code.
 - [x] Screen logic: `backtesting/screen.py`. Covers a*, Â, coverage, the shared paired bootstrap, guards, the advance rule and the live-like policy / drawdown. Tests in `tests/test_study1b_screen.py`, with exact synthetic answers and the bootstrap identical to `session_bootstrap_ci`.
 - Note: the edge-margin sensitivity (D2) needs calibrated direction probabilities, so it is reported in Step 2, not Step 1 (rule 6).
-- [ ] A labels at h = 45 and 150; Model 2 refits at those horizons with the frozen M9 grid point per fold (registered, counted)
-- [ ] Screen per ADR-0012 D2: coverage-conditional a*(c), Â(c) on test blocks, paired-bootstrap Δ(c), guards, advance rule, sensitivity and distribution reports; registered run; report `reports/research/m19s_step1.md`
-- [ ] Advance or kill decision recorded here
-Step 2 (≤ 4 configurations) is planned only after Step 1, and needs the D5 second-source choice first.
+- [x] A labels at h = 45 and 150; Model 2 refits at those horizons with the frozen M9 grid point per fold. Registered and counted: `refit-ea7b11495e8a` (h = 45), `refit-2a1e8c58a334` (h = 150). Test AUCs are 0.48–0.59, and several folds kept only 1–8 trees.
+- [x] Full label build from ea64d76: 577,152 study trades over 756 pre-holdout sessions, registered. The T0 and A checks match exactly on 76 sessions.
+- [x] Screen per ADR-0012 D2: run `screen-667eb0490979`, report `reports/research/m19s_step1.md`. n_trials went 35 → 38 (cap 42).
+- [x] **Decision: the kill rule fires. No definition qualifies, so the long-premium direction line is closed.**
+  - Every cell has a negative Δ point estimate.
+    - The best is T1a at 20% coverage: Δ −0.013, LB −0.049 (a* 0.570 vs Â 0.557).
+    - At 100% coverage, Δ ranges from −0.050 (T1a, T1b) to −0.107 (T2).
+    - Every 5% cell is also barred by the 150-session floor (71–127 sessions).
+  - Â never exceeds 0.557 at any horizon or coverage. The cheapest definitions need a* of about 0.57–0.58, and T0 / T2 need 0.61–0.65.
+  - Model-free per side (c = 100%): put a* is 0.50–0.53 against a down-move base rate of 0.47. Call a* is 0.58–0.64 against an up-move base rate of 0.53.
+  - The deadband sensitivity (3 / 5 / 10 bp) changes no ranking.
+  - Every definition's mean net per trade is negative at every coverage: −$1.47 to −$16.15.
+Step 2 is not run (kill rule), and the holdout stays locked. The remaining options per ADR-0012 Consequences are new data, a defined-risk-structure ADR, or a different strategy class. Each needs an owner decision.
 
 ## M20 — Live market data in PAPER mode — TODO
 Depends on: M19 PASS (or owner ADR)
