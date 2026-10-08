@@ -248,6 +248,33 @@ class Regimes(_Section):
     baseline_run: str
 
 
+class Replay(_Section):
+    n_replays: int
+    inject_at_session: int
+    seed: int
+    feature_shift_sd: float
+    win_loss_flip: float
+    max_delay_sessions: int
+    max_false_alarm_replays: int
+
+
+class Monitoring(_Section):
+    window_sessions: int
+    regime_window_sessions: int
+    psi_bins: int
+    psi_eps: float
+    psi_null_draws: int
+    psi_null_seed: int
+    psi_warn_quantile: float
+    psi_paper_only_quantile: float
+    calib_z_warn: float
+    calib_z_disable: float
+    min_trades: int
+    journal_run: str
+    reference_folds: list[int]
+    replay: Replay
+
+
 class Promotion(_Section):
     min_folds_better_share: float
     min_folds_positive_share: float
@@ -285,6 +312,7 @@ class Phase1Config(_Section):
     regimes: Regimes
     journal: Journal
     promotion: Promotion
+    monitoring: Monitoring
     pit: Pit
     validation: Validation
     dq: DataQuality

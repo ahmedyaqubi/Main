@@ -104,6 +104,32 @@ regimes:                             # M14 (spec §9, OD-9); thresholds fit per 
     gbm_m2: calibration-e19b6c392dd0
   baseline_run: sensitivity-1097416fc6c0   # M12 run: mechanical baseline trades (named models)
 
+monitoring:                          # M18 drift monitoring (spec Phase 1Q, gate 18)
+  window_sessions: 10                # rolling window for PSI / calibration / expectancy
+  regime_window_sessions: 20         # rolling window for regime-cell frequency
+  psi_bins: 10                       # reference-quantile bins
+  psi_eps: 1.0e-4                    # floor for empty bins
+  # PSI thresholds are calibrated to no-drift noise (owner, M18 option A): quantiles of the
+  # monitor's PSI over random windows drawn from the reference period itself
+  psi_null_draws: 5000
+  psi_null_seed: 20261011
+  psi_warn_quantile: 0.99
+  psi_paper_only_quantile: 0.999
+  calib_z_warn: 2.0                  # |observed - predicted| in session-clustered SE units
+  calib_z_disable: 3.0
+  min_trades: 20                     # expectancy monitor needs this many trades in the window
+  # regime frequency only ever WARNs (above its null psi_warn_quantile)
+  journal_run: journal-4a7a186908c7  # stored predictions monitored (M16)
+  reference_folds: [1, 2, 3, 4]      # reference period: these folds' test blocks
+  replay:                            # gate-18 replay (M18 Q4)
+    n_replays: 20
+    inject_at_session: 30
+    seed: 20261010
+    feature_shift_sd: 1.0
+    win_loss_flip: 0.5               # share of WIN outcomes turned into LOSS after injection
+    max_delay_sessions: 10
+    max_false_alarm_replays: 1
+
 promotion:                           # M17: Phase 1P gates mapped to spec §11 numbers (owner Q1)
   min_folds_better_share: 0.70       # gate 6: better than Model 0 in >= 70% of folds
   min_folds_positive_share: 0.60     # gate 10: positive expectancy in >= 60% of folds

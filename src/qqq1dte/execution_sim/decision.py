@@ -7,6 +7,8 @@ Per side (CALL = C_call, PUT = C_put), at prediction time T with selection at T_
    have a raw score >= this side's raw score (else INSUFFICIENT_CALIBRATION_SUPPORT);
 4. calibrated_p - p_breakeven > decision.edge_margin (else BELOW_BREAKEVEN_MARGIN);
 5. EV after costs at the moderate entry fill > 0 (else NEGATIVE_EV).
+Drift (M18): drift_state DISABLED -> NO_TRADE DRIFT_DISABLED before anything else; PAPER_ONLY
+leaves the decision unchanged but flags it DRIFT_PAPER_ONLY (Phase 1 has no live mode).
 A listed regime cell is NO_TRADE REGIME_BLOCKED (gate 13 mechanism). If both sides qualify the
 higher EV wins; an exact tie is NO_TRADE SIDE_TIE. Position limits (BLOCKED_POSITION_OPEN) are
 applied by the backtest engine, separately from these reasons.
@@ -31,6 +33,9 @@ BELOW_BREAKEVEN_MARGIN = "BELOW_BREAKEVEN_MARGIN"
 NEGATIVE_EV = "NEGATIVE_EV"
 INSUFFICIENT_CALIBRATION_SUPPORT = "INSUFFICIENT_CALIBRATION_SUPPORT"
 SIDE_TIE = "SIDE_TIE"
+DRIFT_DISABLED = "DRIFT_DISABLED"
+DRIFT_PAPER_ONLY = "DRIFT_PAPER_ONLY"
+DRIFT_STATES = ("OK", "WARN", "PAPER_ONLY", "DISABLED")
 SIDE_NAME = {"C": "CALL", "P": "PUT"}
 MULTIPLIER = 100
 
@@ -67,6 +72,7 @@ class DecisionOutcome:
     ev_put: float | None = None
     margin_call: float | None = None
     margin_put: float | None = None
+    flags: tuple[str, ...] = ()
 
 
 def _size(cfg: Phase1Config) -> float:
@@ -106,23 +112,51 @@ def _side(s: SideInput, cfg: Phase1Config) -> tuple[float | None, float | None, 
 
 
 def decide(
-    call: SideInput, put: SideInput, cfg: Phase1Config, regime_cell: str | None = None
+    call: SideInput,
+    put: SideInput,
+    cfg: Phase1Config,
+    regime_cell: str | None = None,
+    drift_state: str = "OK",
 ) -> DecisionOutcome:
     for s in (call, put):
         if s.p is not None and not isinstance(s.p, CalibratedProbability):
             raise TypeError("decisions accept only CalibratedProbability, never raw scores")
+    if drift_state not in DRIFT_STATES:
+        raise ValueError(f"unknown drift state {drift_state!r}")
+    if drift_state == "DISABLED":
+        return DecisionOutcome("NO_TRADE", (DRIFT_DISABLED,))
+    out = _decide(call, put, cfg, regime_cell)
+    if drift_state == "PAPER_ONLY":
+        return DecisionOutcome(
+            out.decision,
+            out.reasons,
+            out.ev_call,
+            out.ev_put,
+            out.margin_call,
+            out.margin_put,
+            (DRIFT_PAPER_ONLY,),
+        )
+    return out
+
+
+def _decide(
+    call: SideInput, put: SideInput, cfg: Phase1Config, regime_cell: str | None
+) -> DecisionOutcome:
     if call.p is None or put.p is None:
         return DecisionOutcome("NO_TRADE", (UNCALIBRATED,))
     if regime_cell is not None and regime_cell in cfg.decision.blocked_regime_cells:
         return DecisionOutcome("NO_TRADE", (REGIME_BLOCKED,))
     ev_c, m_c, r_c = _side(call, cfg)
     ev_p, m_p, r_p = _side(put, cfg)
-    base = {"ev_call": ev_c, "ev_put": ev_p, "margin_call": m_c, "margin_put": m_p}
+
+    def out(decision: str, reasons: tuple[str, ...]) -> DecisionOutcome:
+        return DecisionOutcome(decision, reasons, ev_c, ev_p, m_c, m_p)
+
     if r_c is not None and r_p is not None:
-        return DecisionOutcome("NO_TRADE", (f"CALL:{r_c}", f"PUT:{r_p}"), **base)
+        return out("NO_TRADE", (f"CALL:{r_c}", f"PUT:{r_p}"))
     if r_c is None and r_p is None:
         assert ev_c is not None and ev_p is not None
         if ev_c == ev_p:
-            return DecisionOutcome("NO_TRADE", (SIDE_TIE,), **base)
-        return DecisionOutcome("CALL" if ev_c > ev_p else "PUT", (), **base)
-    return DecisionOutcome("CALL" if r_c is None else "PUT", (), **base)
+            return out("NO_TRADE", (SIDE_TIE,))
+        return out("CALL" if ev_c > ev_p else "PUT", ())
+    return out("CALL" if r_c is None else "PUT", ())
