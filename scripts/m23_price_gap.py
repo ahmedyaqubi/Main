@@ -35,6 +35,7 @@ os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
 
 import databento as db
 import polars as pl
+import requests
 import yaml
 from dotenv import load_dotenv
 
@@ -51,7 +52,9 @@ ROOT = Path(__file__).resolve().parents[1]
 S0: dict[str, Any] = yaml.safe_load((ROOT / "configs" / "m23_step0.yaml").read_text("utf-8"))
 OUT: Path = ROOT / str(S0["out_dir"])
 ET = ZoneInfo("America/New_York")
-RETRY = RetryPolicy(retry_on=(db.BentoServerError,), tries=6, backoff_s=5.0)
+RETRY = RetryPolicy(
+    retry_on=(db.BentoServerError, requests.exceptions.ConnectionError), tries=6, backoff_s=5.0
+)
 REPORT = ROOT / "reports" / "research" / "m23_price_quote.md"
 # Underlyings priced in Step 0 (owner, 2026-10-09: add the SPY comparison). SPY's band uses SPX
 # close / 10 as a storage-scope proxy only; it never enters a trade or W.
