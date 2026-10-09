@@ -7,6 +7,9 @@ Last updated 2026-10-08. Keep this with the project; review it when M19T/M20 fin
 |---|---|---|---|
 | M2/M4 (2026-10-05) | QQQ underlying + 1DTE/2DTE options history (Databento, usage-based) | ≈ $13.26 | no |
 | M19T (2026-10-08) | expiry-day options 2023–2026, holdout-period storage, 2020–2023 extension, QQQ daily bars | $10.18 | no |
+| M19T (2026-10-08) | OCC #53847 adjusted-strike supplement | $0.08 | no |
+| M23 (2026-10-09) | SPX vs SPY entry-quote comparison sample | $0.07 | no |
+| M23 (2026-10-09) | SPX/SPXW 2013–2026: entry/exit quote windows + definitions | ≈ $10.64 | no |
 
 These were **pay-per-request** downloads. They created no subscription. Nothing renews.
 

@@ -509,7 +509,11 @@ Step 0 (data; no trial):
   - Cboe SPX customer fee: $0.45 ($0.36 below a $1 premium).
   - Surcharge applicability not verified; kept as a disclosed config allowance.
   - Config: `configs/m23_step0.yaml` → `costs_ibkr_spx`. SPX stays (R1).
-- [ ] Owner approves the exact quote (cap $50, R8); then download, clean (M4 rules extended to SPX roots), and write a coverage report with the minimum detectable effect per cell (R5)
+- [x] **Exact quote and purchase (2026-10-09):** exact price **$10.642887** for 9,959 requests (`scripts/m23_fetch.py`; definitions $4.24, entry $5.31, exit $1.09).
+  - The owner approved $10.64, then $10.65 after the rounding guard stopped the first run: the quoted figure had been rounded below the true total. The fetch script now quotes unrounded totals with an "approve up to" figure rounded up to the cent.
+  - **Downloaded:** all 9,959 files (4,073 definitions, 3,617 entry, 2,269 exit) in `data/raw/databento/m23/`. Spend ≈ $10.64; 3 interrupted files were re-fetched, adding at most about $0.003.
+  - The final part ran as a detached process (`download.log`), because the 2-hour background limit and a broken desktop terminal integration blocked the other routes.
+- [ ] Clean (M4 rules extended to SPX roots) and write the coverage report, with the minimum detectable effect per cell (R5)
 - [ ] Owner supplies the broker SPX commission (R3)
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
