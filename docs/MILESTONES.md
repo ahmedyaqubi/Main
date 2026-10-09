@@ -489,6 +489,10 @@ Step 0 (data; no trial):
   - **Family ledger (ADR-0013 D6):** budget 2 trials (screen plus one re-screen). Spent 1. Remaining: 0. A KILL forbids the re-screen, and the family is closed.
     - Holdout access: none. Data spend: $10.26.
     - n_trials on the shared window is now **39**. That raises the bar for any later family.
+  - **Cost-sensitivity note (2026-10-09, descriptive, no new trial):** the KILL used $0.65 + $0.05 per contract (≈ IBKR, the owner's broker).
+    - At a broker with $0 equity-option commissions, mid-fill means would rise by about $2.60 per spread trade, and most cells would read AMBIGUOUS.
+    - Conservative-fill results stay clearly negative.
+    - See `reports/research/phase1_synthesis.md` §4.
 
 ## M23 — Phase 2: SPX longer-dated defined-risk premium (ADR-0014, ACCEPTED) — STEP 0 IN PROGRESS
 Depends on: Phase 1 closed (`reports/research/phase1_synthesis.md`). ADR-0014 accepted 2026-10-08 with R1–R9. Budget: 1 screen + at most 1 re-screen. n_trials is reported next to Phase 1's 39.
@@ -500,7 +504,11 @@ Step 0 (data; no trial):
   - **Price quotes (`scripts/m23_price_gap.py`, 1-in-19 weekday-balanced sample):** SPX full scope ≈ $10.54 (`reports/research/m23_price_quote.md`); SPY ≈ $5.90 (`m23_price_quote_spy.md`).
     - Corrected during the session: a 1-in-20 sample was weekday-biased, and the holdout boundary was first printed with Phase 1's 6 months instead of 12.
   - **SPX vs SPY comparison sample:** $0.0659, owner approved (`scripts/m23_compare_sample.py`, `reports/research/m23_spx_vs_spy.md`). **Owner chose SPX (R1 confirmed).**
-- [ ] Cboe SPX index-option fee (R3) fetched with its source
+- [x] **Costs (R3), owner's broker IBKR Canada:**
+  - Commission: $0.65 per contract (tiered; $0.50 / $0.25 at low premiums; $1 minimum per order).
+  - Cboe SPX customer fee: $0.45 ($0.36 below a $1 premium).
+  - Surcharge applicability not verified; kept as a disclosed config allowance.
+  - Config: `configs/m23_step0.yaml` → `costs_ibkr_spx`. SPX stays (R1).
 - [ ] Owner approves the exact quote (cap $50, R8); then download, clean (M4 rules extended to SPX roots), and write a coverage report with the minimum detectable effect per cell (R5)
 - [ ] Owner supplies the broker SPX commission (R3)
 
@@ -527,7 +535,7 @@ Acceptance:
 
 ## Later (out-of-scope ideas parked here)
 - **SPY 0DTE/1DTE short premium (owner question, 2026-10-09): parked.**
-  - Why: M19T lost even at the mid fill after commissions. SPY's tighter spreads can't beat the mid, and commissions and credits match QQQ's.
+  - Why: M19T lost even at the mid fill after IBKR-like commissions. SPY's tighter spreads can't beat the mid. At a $0-commission broker the mid-fill argument weakens (see the M19T cost-sensitivity note), but the conservative-fill result still binds.
   - No untouched SPY daily-expiry history exists: daily expirations only began in late 2022, inside the window already used.
   - Revisit only if M23 finds a premium at longer tenors. Then: one pre-registered trial on forward data.
 - **Full strike-band tick NBBO for the M2 sample week (owner note, 2026-10-05).** Re-pull `cmbp-1` for 2025-03-11→14 over the full band (D+1/D+2 expiries, 424 contracts/day): priced at $11.20, ~75 GB uncompressed / ~25 GB on disk. Run `uv run python scripts/m2_fetch_sample.py --days <day> --download` one day per run (each day can exceed 1 h at slow transfer rates), or use Databento's batch API. Useful if later work (fill modelling in M12, quote-age/latency studies) needs tick data beyond ATM ± 5.

@@ -16,4 +16,9 @@ spx_close_csv: data/raw/cboe/SPX_History.csv  # R2/R6: Cboe daily SPX closes (fr
 spx_close_url: "https://cdn-api.cboe.com/api/global/us_indices/daily_prices/SPX_History.csv"
 sample_every: 19                          # price every 19th session (coprime with 5: rotates weekdays), then extrapolate
 cap_usd: 50.0                             # R8
+costs_ibkr_spx:                           # R3 (owner: IBKR Canada), USD per contract per side
+  commission: {premium_lt_0_05: 0.25, premium_lt_0_10: 0.50, otherwise: 0.65, min_per_order: 1.00}
+  cboe_spx_fee: {premium_lt_1: 0.36, otherwise: 0.45}   # Cboe fee schedule eff. 2026-10-01
+  regulatory_allowance: 0.05             # ORF/OCC/CAT, cents per contract (allowance)
+  surcharge_allowance: 0.0               # SPX surcharges: retail applicability not verified
 out_dir: data/raw/databento/m23

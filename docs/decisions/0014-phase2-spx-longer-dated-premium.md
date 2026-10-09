@@ -195,6 +195,19 @@
   - **Fees:** Cboe's published SPX fees, fetched in Step 0 with their source.
   - Both go into config before Step 1. The screen decides at 1.0× costs; a descriptive row
     shows 1.5×.
+  - **Broker set (owner, 2026-10-09): IBKR Canada.** Costs per SPX contract per side, USD:
+    - **Commission:** IBKR tiered, ≤ 10,000 contracts a month: $0.65 at premium ≥ $0.10,
+      $0.50 at $0.05–0.10, $0.25 below $0.05; minimum $1.00 per order (per leg of a combo).
+    - **Exchange fee (Cboe SPX customer):** $0.45 at premium ≥ $1, $0.36 below $1 (schedule
+      effective 2026-10-01).
+    - **Regulatory fees (ORF/OCC/CAT):** cents per contract; included as a config allowance.
+    - **Not verified:** whether the Cboe SPX index-license or execution surcharges apply to
+      retail customers. Step 1 treats them as an explicit allowance in config, disclosed.
+    - **Sources:**
+      - interactivebrokers.ca/en/pricing/commissions-options.php (read 2026-10-09);
+      - cboe.com/us/options/membership/fee_schedule/cboe/ and Cboe_FeeSchedule.pdf.
+    - **Why SPX at IBKR:** at these rates SPX is cheaper all-in than SPY (M23 comparison). At
+      a $0-equity-option broker (for example Questrade), SPY would have been cheaper.
 - **R4 (Q4), cells:** L1–L4 as drafted.
 - **R5 (Q5), power:**
   - The 30-DTE tenor is kept. Power comes from more history (R7), not from changing tenor.

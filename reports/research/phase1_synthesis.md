@@ -65,8 +65,16 @@ recommendation.**
   between mid and the conservative price could be better than the conservative case, but M19T
   is negative even at the mid.
 - **Fill and cost model.** It assumes $0.65 commission plus $0.05 fees per contract per side
-  and a 5-second latency. A cheaper broker narrows the costs but does not flip any M19T cell:
-  each is negative at the mid even before fills are worsened.
+  and a 5-second latency. That matches IBKR Canada, the owner's broker.
+  - **Correction (2026-10-09):** the M19T KILL depends on this cost assumption. At a broker
+    with $0 commissions on equity options, costs fall from about $2.80 to about $0.20 per
+    spread. Every cell's mid-fill mean would rise by about $2.60 per trade ($5.20 per condor).
+    That is an approximate shift, not a recomputation.
+    - S1's mid-fill mean would go from −$2.40 to about +$0.20.
+    - Most cells would read AMBIGUOUS rather than KILL.
+  - **The realistic-fill conclusion is unaffected:** every cell stays clearly negative (about
+    −$12 to −$31 per session after the shift). So there is still no evidence of an edge.
+  - The earlier wording "negative even at the mid" holds only at IBKR-like costs.
 - **Data scope.**
   - No historical open interest or trade prints; OI was on disk for only 5 sessions.
   - No tick data beyond one sample week.
