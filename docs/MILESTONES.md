@@ -513,7 +513,26 @@ Step 0 (data; no trial):
   - The owner approved $10.64, then $10.65 after the rounding guard stopped the first run: the quoted figure had been rounded below the true total. The fetch script now quotes unrounded totals with an "approve up to" figure rounded up to the cent.
   - **Downloaded:** all 9,959 files (4,073 definitions, 3,617 entry, 2,269 exit) in `data/raw/databento/m23/`. Spend ≈ $10.64; 3 interrupted files were re-fetched, adding at most about $0.003.
   - The final part ran as a detached process (`download.log`), because the 2-hour background limit and a broken desktop terminal integration blocked the other routes.
-- [ ] Clean (M4 rules extended to SPX roots) and write the coverage report, with the minimum detectable effect per cell (R5)
+- [x] **Cleaned and covered (2026-10-09):** `scripts/m23_build_data.py`, then `scripts/m23_coverage.py` → `reports/research/m23_data_coverage.md`.
+  - Raw store `data/raw/m23_store`, cleaned into `data/clean/m23`.
+  - M4 cleaning functions unchanged, with an SPX config copy per root: no QQQ strike adjustment, no QQQ excluded session.
+  - **Totals:** 3,399 sessions, 10,785,872 quotes, **36 rejected**. Conservation held in every session.
+  - The holdout (after 2025-10-02) is cleaned but not read: development sessions 3,148.
+  - **Entry (10:00 ET):** OK in 94.0% (L1), 95.2% (L2), 99.4% (L3) and 99.5% (L4) of sessions.
+    - The rest are NO_QUALIFYING. AT_BAND_EDGE is 0% and NO_EXPIRY is 0%.
+  - **Exit:** a usable exit ask exists for 12,169 of 12,174 OK entries (5 legs not stored). 17 / 4 entries cross into the holdout.
+  - **§4.9 gates at Phase 1 thresholds** (spread ≤ max($0.05, 5% of mid)):
+    - **pass in only 80.5% / 37.7% / 56.2% / 18.5%** of OK entries for L1 / L2 / L3 / L4;
+    - every failure is SPREAD_TOO_WIDE;
+    - picked-leg spreads are 0.30–0.85 points, 1–9% of mid.
+  - **R5, MDE upper bound** (α 0.05, power 80%, sigma ≤ W × 50, n_eff = sessions ÷ median hold):
+    - L1/L2: $149 per trade (n_eff 157), i.e. 0.50 / 0.31 of the median credit;
+    - L3/L4: $66 (n_eff 787), i.e. 0.21 / 0.14.
+  - Tests first: `tests/test_longdated.py` (W rule, expiry choice, exit session, MDE), for `execution_sim/longdated.py`.
+- [ ] **Owner decisions before Step 1:**
+  - SPX §4.9 thresholds (ADR amendment);
+  - root choice when SPX and SPXW share an expiry date (the report used SPXW);
+  - acceptance of the R5 power.
 - [ ] Owner supplies the broker SPX commission (R3)
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
