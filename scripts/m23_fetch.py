@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -101,7 +102,8 @@ def main() -> int:
     for r, c in zip(plan.priced, plan.costs, strict=True):
         by[r.path.parent.name] += c
     print(
-        f"EXACT: {len(reqs)} requests, to download {len(plan.priced)} (${plan.total_usd:.2f}: "
+        f"EXACT: {len(reqs)} requests, to download {len(plan.priced)} (${plan.total_usd:.6f}; "
+        f"approve up to ${math.ceil(plan.total_usd * 100) / 100:.2f}: "
         + ", ".join(f"{k} ${v:.2f}" for k, v in sorted(by.items()))
         + f"), on disk {len(plan.already_present)}, unresolved {len(plan.unresolved)}; "
         f"cap ${gap.S0['cap_usd']:.0f}",
