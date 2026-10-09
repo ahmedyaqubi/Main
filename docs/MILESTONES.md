@@ -493,7 +493,14 @@ Step 0 (data; no trial):
 ## M23 — Phase 2: SPX longer-dated defined-risk premium (ADR-0014, ACCEPTED) — STEP 0 IN PROGRESS
 Depends on: Phase 1 closed (`reports/research/phase1_synthesis.md`). ADR-0014 accepted 2026-10-08 with R1–R9. Budget: 1 screen + at most 1 re-screen. n_trials is reported next to Phase 1's 39.
 Step 0 (data; no trial):
-- [ ] Verify SPX/SPXW coverage in Databento OPRA: start date, roots, strike grid, quote quality. Price the R9 data scope (free). Verify the Cboe daily SPX history (R6) and Cboe SPX fees (R3). Price-check XSP (R1).
+- [x] **Coverage and price checks (2026-10-08/09), all free unless stated:**
+  - **Databento OPRA.PILLAR:** SPX, SPXW and XSP are covered from 2013-04-01 (definitions and cbbo-1m).
+  - **Cboe daily SPX history (R6):** free, closes only, 1975 → present. The download band uses the previous close, not a same-day range.
+  - **Listing universe:** from free symbology resolution: 1,050,018 SPX/SPXW contracts and 569,158 SPY contracts.
+  - **Price quotes (`scripts/m23_price_gap.py`, 1-in-19 weekday-balanced sample):** SPX full scope ≈ $10.54 (`reports/research/m23_price_quote.md`); SPY ≈ $5.90 (`m23_price_quote_spy.md`).
+    - Corrected during the session: a 1-in-20 sample was weekday-biased, and the holdout boundary was first printed with Phase 1's 6 months instead of 12.
+  - **SPX vs SPY comparison sample:** $0.0659, owner approved (`scripts/m23_compare_sample.py`, `reports/research/m23_spx_vs_spy.md`). **Owner chose SPX (R1 confirmed).**
+- [ ] Cboe SPX index-option fee (R3) fetched with its source
 - [ ] Owner approves the exact quote (cap $50, R8); then download, clean (M4 rules extended to SPX roots), and write a coverage report with the minimum detectable effect per cell (R5)
 - [ ] Owner supplies the broker SPX commission (R3)
 
@@ -519,6 +526,10 @@ Acceptance:
 - [ ] No controls that place or route orders
 
 ## Later (out-of-scope ideas parked here)
+- **SPY 0DTE/1DTE short premium (owner question, 2026-10-09): parked.**
+  - Why: M19T lost even at the mid fill after commissions. SPY's tighter spreads can't beat the mid, and commissions and credits match QQQ's.
+  - No untouched SPY daily-expiry history exists: daily expirations only began in late 2022, inside the window already used.
+  - Revisit only if M23 finds a premium at longer tenors. Then: one pre-registered trial on forward data.
 - **Full strike-band tick NBBO for the M2 sample week (owner note, 2026-10-05).** Re-pull `cmbp-1` for 2025-03-11→14 over the full band (D+1/D+2 expiries, 424 contracts/day): priced at $11.20, ~75 GB uncompressed / ~25 GB on disk. Run `uv run python scripts/m2_fetch_sample.py --days <day> --download` one day per run (each day can exceed 1 h at slow transfer rates), or use Databento's batch API. Useful if later work (fill modelling in M12, quote-age/latency studies) needs tick data beyond ATM ± 5.
 - Overnight-hold variant of 1DTE (if OD-2 = intraday-only), with gap/theta/assignment labels
 - Extending Stage 1 history before 2022-11 (OD-1 option b)

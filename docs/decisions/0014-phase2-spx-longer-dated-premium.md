@@ -178,6 +178,14 @@
 - **R1 (Q1), instrument: SPX** (roots SPX and SPXW).
   - Results are reported per contract and per $ of max risk.
   - Step 0 also prices XSP liquidity checks for free (quote metadata only, no purchase).
+  - **Confirmed after the SPX vs SPY comparison (owner, 2026-10-09, "option 2"): SPX.**
+    - Evidence (`reports/research/m23_spx_vs_spy.md`): 30 development sessions, entry quotes
+      only, $0.0659 approved and spent.
+    - On bid–ask alone, SPY is about 30% cheaper relative to the credit (7 DTE 8.1% vs 11.5%;
+      30 DTE 13.7% vs 18.3%).
+    - Per-contract commissions reverse that at equal dollar risk: about 1–2% of the credit for
+      SPX versus about 10% for a $1 SPY spread, at illustrative rates. The SPX index fee is not
+      yet verified (R3).
 - **R2 (Q2), width W scales with the index:** W = 0.5% × the previous session's SPX close,
   rounded to the nearest listed strike step, minimum 10 points.
   - The previous close is known before entry, so W is point-in-time.

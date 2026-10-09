@@ -1,0 +1,19 @@
+# M23 Step 0 (ADR-0014, ACCEPTED): SPX data scope and price quote. Data only, no trial.
+# Storage scope only: what is downloaded never decides a trade (the AT_BAND_EDGE rule guards it).
+
+dataset: OPRA.PILLAR
+parents: ["SPX.OPT", "SPXW.OPT"]          # R1
+xsp_parent: "XSP.OPT"                     # R1: liquidity price-check only, never downloaded here
+start: "2013-04-01"                       # R7: earliest OPRA.PILLAR coverage (verified 2026-10-08)
+last_session: "2026-10-02"
+holdout_months: 12                        # D3: project holdout = last 12 months (storage only)
+target_dte: [7, 30]                       # D4 cells
+band_pad: {7: 0.10, 30: 0.20}             # strikes within prev close x (1 +- pad), per target
+entry_window: ["09:57", "10:01"]          # ET; entry T = 10:00, T_e = T + latency, quote age <= 60 s
+exit_window: ["15:41", "15:46"]           # ET; exit 15:45 + latency, exit quote age <= 5 min
+early_close_exit_window: ["12:41", "12:46"]   # close - 15 min on 13:00 closes
+spx_close_csv: data/raw/cboe/SPX_History.csv  # R2/R6: Cboe daily SPX closes (free)
+spx_close_url: "https://cdn-api.cboe.com/api/global/us_indices/daily_prices/SPX_History.csv"
+sample_every: 19                          # price every 19th session (coprime with 5: rotates weekdays), then extrapolate
+cap_usd: 50.0                             # R8
+out_dir: data/raw/databento/m23
