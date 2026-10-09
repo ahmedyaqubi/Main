@@ -490,6 +490,13 @@ Step 0 (data; no trial):
     - Holdout access: none. Data spend: $10.26.
     - n_trials on the shared window is now **39**. That raises the bar for any later family.
 
+## M23 — Phase 2: SPX longer-dated defined-risk premium (ADR-0014, ACCEPTED) — STEP 0 IN PROGRESS
+Depends on: Phase 1 closed (`reports/research/phase1_synthesis.md`). ADR-0014 accepted 2026-10-08 with R1–R9. Budget: 1 screen + at most 1 re-screen. n_trials is reported next to Phase 1's 39.
+Step 0 (data; no trial):
+- [ ] Verify SPX/SPXW coverage in Databento OPRA: start date, roots, strike grid, quote quality. Price the R9 data scope (free). Verify the Cboe daily SPX history (R6) and Cboe SPX fees (R3). Price-check XSP (R1).
+- [ ] Owner approves the exact quote (cap $50, R8); then download, clean (M4 rules extended to SPX roots), and write a coverage report with the minimum detectable effect per cell (R5)
+- [ ] Owner supplies the broker SPX commission (R3)
+
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:
