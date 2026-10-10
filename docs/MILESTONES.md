@@ -576,7 +576,7 @@ Step 0 (data; no trial):
   - Reopening needs a new ADR.
   - Summary: `reports/research/phase1_synthesis.md` §7. Lessons: `docs/LESSONS_LEARNED.md`.
 
-## M24 — Fill feasibility (ADR-0015 mission; docs/ROADMAP.md) — TODO
+## M24 — Fill feasibility (ADR-0015 mission; docs/ROADMAP.md) — DONE (2026-10-10): NOT PROMISING
 Depends on: ADR-0015 ACCEPTED (2026-10-10).
 - No orders and no strategy trial.
 - QQQ + SPY near-the-money options, 0–30 DTE, trade prints, about 20 development sessions.
@@ -584,7 +584,22 @@ Depends on: ADR-0015 ACCEPTED (2026-10-10).
 - Priced exactly before any purchase.
 - A "promising" threshold is fixed in the plan before the result.
 
-Next after M24: one ETF idea from the shortlist (its own ADR, holdout lock, test share).
+- [x] **Plan approved; tests first:** `execution_sim/fill_feasibility.py`, `tests/test_fill_feasibility.py` (5).
+- [x] **Data:** exact quote $28.510015, owner pre-approved up to $30; 40 trade-print files downloaded (`scripts/m24_price_fill_study.py`, `scripts/m24_fetch.py`).
+  - 20 development sessions, 2023-03-29 → 2026-01-20; QQQ holdout untouched.
+- [x] **Study:** `scripts/m24_fill_study.py` → `reports/research/m24_fill_feasibility.md`. About 1.13M hypothetical orders.
+  - Only prints inside the bid-ask in force are counted (conservative).
+  - Hand check: 5/5 match.
+- [x] **Pre-declared verdict: NOT PROMISING.** Buy at mid within 5 min, pooled:
+  - through 36.2% [34.1, 38.3] (passes the ≥ 25% bar);
+  - touch 50.6% [49.0, 52.3] (passes the ≥ 50% bar);
+  - but the cost of "limit at mid, chase to the ask after 5 min" is **1.35 half-spreads [1.15, 1.57]** (bar ≤ 0.50): worse than paying the ask at once.
+- [x] **Reading (descriptive):**
+  - Mid fills tend to happen when the price is moving against the order: after a buy fill, the mid is typically 2–4 half-spreads lower 5 min later.
+  - When the order doesn't fill, the price has usually moved away, so chasing costs more than the spread.
+  - Only 0DTE is slightly better than paying the ask (0.86–0.94).
+  - So for 0–2 DTE QQQ options, the conservative fill (pay the spread) used in Phase 1/2 is a fair or even mild cost assumption. Patient limit orders don't recover it.
+- **Next:** one ETF idea from the shortlist (its own ADR, 12-month holdout locked before looking, declared test share). Options ideas are deprioritised under ADR-0015 / the M24 threshold.
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)

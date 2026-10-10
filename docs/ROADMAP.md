@@ -9,6 +9,12 @@ Mission and rules: ADR-0015 (PROPOSED). Owner constraints:
 
 Background: `reports/research/phase1_synthesis.md`, `docs/LESSONS_LEARNED.md`.
 
+## M24 result (2026-10-10): NOT PROMISING
+- `reports/research/m24_fill_feasibility.md`: buy limits at mid fill often, but mostly when the
+  price is moving against the order.
+- "Limit at mid, then chase" cost **1.35 half-spreads**, worse than paying the ask.
+- Options ideas are deprioritised. The next study is an ETF idea.
+
 ## Next study: M24, fill feasibility (no orders, no strategy trial)
 **Question:** when a retail limit order is placed **at or near the mid** of QQQ, SPY or SPX
 options, how often does it fill within a few minutes, and at what price relative to the mid?
