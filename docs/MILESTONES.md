@@ -529,10 +529,11 @@ Step 0 (data; no trial):
     - L1/L2: $149 per trade (n_eff 157), i.e. 0.50 / 0.31 of the median credit;
     - L3/L4: $66 (n_eff 787), i.e. 0.21 / 0.14.
   - Tests first: `tests/test_longdated.py` (W rule, expiry choice, exit session, MDE), for `execution_sim/longdated.py`.
-- [ ] **Owner decisions before Step 1:**
-  - SPX §4.9 thresholds (ADR amendment);
-  - root choice when SPX and SPXW share an expiry date (the report used SPXW);
-  - acceptance of the R5 power.
+- [x] **Owner decisions before Step 1 (2026-10-09), ADR-0014 R10–R12:**
+  - **R10:** the SPX liquidity gate is each leg's spread ≤ 15% of mid. Amended the same day to drop a 2.00-point cap, which bound mostly through the index level.
+  - **R11:** SPXW on shared expiry dates.
+  - **R12:** power accepted; the 7-DTE cells are the primary test.
+- [ ] Step 1 plan (owner approval), then code with tests first, then the one registered screen
 - [ ] Owner supplies the broker SPX commission (R3)
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)

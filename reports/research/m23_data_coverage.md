@@ -1,6 +1,6 @@
 # M23 Step 0: SPX data coverage (ADR-0014)
 
-Generated 2026-10-09 18:48 UTC by `scripts/m23_coverage.py`, code dc184d54b5fa. Development sessions 2013-04-01 → 2025-10-02 (3148); the holdout (after 2025-10-02) was cleaned but not read.
+Generated 2026-10-10 00:35 UTC by `scripts/m23_coverage.py`, code 554b4aba69c3. Development sessions 2013-04-01 → 2025-10-02 (3148); the holdout (after 2025-10-02) was cleaned but not read.
 
 **Data only:** entry-time quotes and exit-quote availability. No exit price, P&L or outcome; no trial registered.
 
@@ -26,6 +26,15 @@ Generated 2026-10-09 18:48 UTC by `scripts/m23_coverage.py`, code dc184d54b5fa. 
 - short:SPREAD_TOO_WIDE: 6665 (54.6%)
 
 Exit problems (OK entries whose exit is in development data): OK 12169, NOT_STORED 5.
+
+R10 rule (owner, 2026-10-09; entry data only): each leg's spread <= 15% of its mid (no point cap; R10 amended); the other §4.9 gates are unchanged.
+
+| cell | OK entries | pass R10 | fail: spread | fail: other gates |
+|---|---|---|---|---|
+| L1 | 2958 | 99.8% | 0.2% | 0.0% |
+| L2 | 2998 | 89.4% | 10.6% | 0.0% |
+| L3 | 3129 | 93.1% | 6.9% | 0.0% |
+| L4 | 3131 | 76.8% | 23.2% | 0.0% |
 
 ## 2. Picked-leg spreads (all OK entries; median by year), SPX points
 
