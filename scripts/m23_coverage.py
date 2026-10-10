@@ -214,6 +214,9 @@ def main() -> int:  # noqa: PLR0912, PLR0915 (linear report)
                 "gate_fails": ";".join(fails),
                 "spread_abs": statistics.median(a for a, _ in spreads),
                 "spread_pct": statistics.median(b for _, b in spreads),
+                "max_leg_pct": max(b for _, b in spreads),
+                "max_leg_abs": max(a for a, _ in spreads),
+                "other_fails": ";".join(f for f in fails if "SPREAD_TOO_WIDE" not in f),
                 "step": min(p["step"] for p in picks.values()),
                 "credit": sum(p["credit"] for p in picks.values()),
                 "hold": len([s for s in all_sessions if d < s <= ex]) if ex else None,
@@ -295,6 +298,10 @@ def main() -> int:  # noqa: PLR0912, PLR0915 (linear report)
         for f in filter(None, (v or "").split(";")):
             fail_counts[f.split(":")[0] + ":" + f.split(":")[1]] += 1
     n_ok = df.filter(pl.col("status") == OK).height
+    spread_ok = (pl.col("max_leg_pct") <= S0["spx_gate"]["max_spread_pct"]) & (
+        pl.col("max_leg_abs") <= S0["spx_gate"]["max_spread_abs"]
+    )
+    pass_r10 = spread_ok & (pl.col("other_fails") == "")
     out += [
         "",
         "§4.9 failures across OK entries (all cells; one entry can fail several):",
@@ -311,6 +318,20 @@ def main() -> int:  # noqa: PLR0912, PLR0915 (linear report)
             ).most_common()
         )
         + ".",
+        "",
+        "R10 rule (owner, 2026-10-09; entry data only): each leg's spread <= "
+        f"{S0['spx_gate']['max_spread_pct']:.0%} of its mid and <= "
+        f"{S0['spx_gate']['max_spread_abs']:.2f} points; the other §4.9 gates are unchanged.",
+        "",
+        "| cell | OK entries | pass R10 | fail: spread | fail: other gates |",
+        "|---|---|---|---|---|",
+        *[
+            f"| {cell} | {g.height} | {pct(g.filter(pass_r10).height, g.height)} "
+            f"| {pct(g.filter(~spread_ok).height, g.height)} "
+            f"| {pct(g.filter(pl.col('other_fails') != '').height, g.height)} |"
+            for cell in CELLS
+            if (g := df.filter((pl.col('cell') == cell) & (pl.col('status') == OK))).height
+        ],
         "",
         "## 2. Picked-leg spreads (all OK entries; median by year), SPX points",
         "",

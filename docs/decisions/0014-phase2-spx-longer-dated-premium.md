@@ -227,6 +227,33 @@
     - entry-session quotes for the target expiries;
     - exit-session quotes for the contracts that can be held.
 
+## Step-0 resolutions (owner, 2026-10-09; after `reports/research/m23_data_coverage.md`)
+Disclosure: chosen after seeing entry-time quote widths and coverage. No exit price, P&L or
+outcome had been computed.
+
+- **R10, SPX liquidity gate.** It replaces the §4.9 spread gate for this project only:
+  - each leg's quoted spread must be ≤ 15% of its mid and ≤ 2.00 SPX points;
+  - the other gates are unchanged: two-sided quote, quote age ≤ 60 s, size ≥ 1, and min-bid on
+    short legs only (R1 of ADR-0013 carried over);
+  - it is applied after selection, with no fallback.
+  - **Why:** the conservative fill already charges the full spread, so the gate only has to
+    exclude broken or unfillable quotes. At the Phase 1 thresholds (spread ≤ max($0.05, 5% of
+    mid), calibrated on QQQ in M4), 19.5–81.5% of SPX entries failed on normal spreads
+    (0.30–0.85 points, 1–9% of mid).
+  - Pass rates under R10 are in the coverage report.
+  - Values: `configs/m23_step0.yaml` → `spx_gate`; they move to the Step-1 config.
+- **R11, root on a shared expiry date:** when SPX (AM) and SPXW (PM) list the same expiry date,
+  the SPXW contracts are used. Positions close on the session before expiry, so settlement style
+  never enters a label.
+- **R12, power accepted.**
+  - Outcome-free MDE upper bounds, per trade: about $149 (L1/L2; 0.50 / 0.31 of the median
+    credit) and about $66 (L3/L4; 0.21 / 0.14).
+  - **The 7-DTE cells are the primary test.** The 30-DTE cells are expected to be AMBIGUOUS
+    unless the effect is large.
+  - No cells are added or changed.
+  - The Step-1 report adds the realised CI width per cell, so an AMBIGUOUS outcome reads as
+    "insufficient data", not as "no effect".
+
 ## Consequences
 - **New code:**
   - DQ support for SPX roots and the strike grid;
