@@ -18,7 +18,7 @@ sample_every: 19                          # price every 19th session (coprime wi
 cap_usd: 50.0                             # R8
 spx_gate:                                 # R10 (owner, 2026-10-09): replaces the QQQ spread gate for SPX
   max_spread_pct: 0.15                    # per leg, of its mid
-  max_spread_abs: 2.00                    # per leg, SPX points (sanity cap)
+  max_spread_abs: null                    # R10 amended (owner, 2026-10-09): no point cap
 costs_ibkr_spx:                           # R3 (owner: IBKR Canada), USD per contract per side
   commission: {premium_lt_0_05: 0.25, premium_lt_0_10: 0.50, otherwise: 0.65, min_per_order: 1.00}
   cboe_spx_fee: {premium_lt_1: 0.36, otherwise: 0.45}   # Cboe fee schedule eff. 2026-10-01

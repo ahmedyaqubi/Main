@@ -298,8 +298,9 @@ def main() -> int:  # noqa: PLR0912, PLR0915 (linear report)
         for f in filter(None, (v or "").split(";")):
             fail_counts[f.split(":")[0] + ":" + f.split(":")[1]] += 1
     n_ok = df.filter(pl.col("status") == OK).height
+    cap = S0["spx_gate"]["max_spread_abs"]
     spread_ok = (pl.col("max_leg_pct") <= S0["spx_gate"]["max_spread_pct"]) & (
-        pl.col("max_leg_abs") <= S0["spx_gate"]["max_spread_abs"]
+        pl.lit(cap is None) | (pl.col("max_leg_abs") <= (cap or 0.0))
     )
     pass_r10 = spread_ok & (pl.col("other_fails") == "")
     out += [
@@ -320,8 +321,13 @@ def main() -> int:  # noqa: PLR0912, PLR0915 (linear report)
         + ".",
         "",
         "R10 rule (owner, 2026-10-09; entry data only): each leg's spread <= "
-        f"{S0['spx_gate']['max_spread_pct']:.0%} of its mid and <= "
-        f"{S0['spx_gate']['max_spread_abs']:.2f} points; the other §4.9 gates are unchanged.",
+        f"{S0['spx_gate']['max_spread_pct']:.0%} of its mid"
+        + (
+            f" and <= {S0['spx_gate']['max_spread_abs']:.2f} points"
+            if S0["spx_gate"]["max_spread_abs"]
+            else " (no point cap; R10 amended)"
+        )
+        + "; the other §4.9 gates are unchanged.",
         "",
         "| cell | OK entries | pass R10 | fail: spread | fail: other gates |",
         "|---|---|---|---|---|",

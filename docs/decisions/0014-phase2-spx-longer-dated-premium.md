@@ -232,7 +232,7 @@ Disclosure: chosen after seeing entry-time quote widths and coverage. No exit pr
 outcome had been computed.
 
 - **R10, SPX liquidity gate.** It replaces the §4.9 spread gate for this project only:
-  - each leg's quoted spread must be ≤ 15% of its mid and ≤ 2.00 SPX points;
+  - each leg's quoted spread must be ≤ 15% of its mid;
   - the other gates are unchanged: two-sided quote, quote age ≤ 60 s, size ≥ 1, and min-bid on
     short legs only (R1 of ADR-0013 carried over);
   - it is applied after selection, with no fallback.
@@ -241,6 +241,12 @@ outcome had been computed.
     mid), calibrated on QQQ in M4), 19.5–81.5% of SPX entries failed on normal spreads
     (0.30–0.85 points, 1–9% of mid).
   - Pass rates under R10 are in the coverage report.
+  - **Amended (owner, 2026-10-09), still on entry data only:** the first version also capped
+    the spread at 2.00 points. That cap bound mostly through the index level, not quote quality:
+    - in 2022–25, 18–29% of entries failed on the cap alone, against 2–6% in 2017–19;
+    - picked legs cost more as SPX rose, and the 90th-percentile spread reached 7–8 points;
+    - it would have tilted the screen toward older sessions.
+    So the point cap was dropped and only the relative limit is kept.
   - Values: `configs/m23_step0.yaml` → `spx_gate`; they move to the Step-1 config.
 - **R11, root on a shared expiry date:** when SPX (AM) and SPXW (PM) list the same expiry date,
   the SPXW contracts are used. Positions close on the session before expiry, so settlement style
