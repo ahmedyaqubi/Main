@@ -494,7 +494,7 @@ Step 0 (data; no trial):
     - Conservative-fill results stay clearly negative.
     - See `reports/research/phase1_synthesis.md` §4.
 
-## M23 — Phase 2: SPX longer-dated defined-risk premium (ADR-0014, ACCEPTED) — STEP 0 IN PROGRESS
+## M23 — Phase 2: SPX longer-dated defined-risk premium (ADR-0014, ACCEPTED) — STEP 1 DONE: AMBIGUOUS (L2 KILL), NO ADVANCE
 Depends on: Phase 1 closed (`reports/research/phase1_synthesis.md`). ADR-0014 accepted 2026-10-08 with R1–R9. Budget: 1 screen + at most 1 re-screen. n_trials is reported next to Phase 1's 39.
 Step 0 (data; no trial):
 - [x] **Coverage and price checks (2026-10-08/09), all free unless stated:**
@@ -543,7 +543,31 @@ Step 0 (data; no trial):
   - **Leakage review:** 1 finding, fixed test-first. The expiry was chosen only from the downloaded contracts, so an expiry missing at T_e could be silently replaced by another tenor.
     - Now the expiry comes from the point-in-time listing: earlier-day symbology plus definitions known at T_e.
     - If it wasn't stored, the row is UNRESOLVED_DATA `EXPIRY_NOT_STORED`, never a substitute.
-- [ ] Step 1 run from committed code: labels (`--register`), then the registered screen `screen_2a`, a hand check, CI, ledger
+- [x] **Step 1 run from committed code ecb58ef (2026-10-09/10): family outcome AMBIGUOUS. L2 is KILL; L1, L3 and L4 are AMBIGUOUS; no cell ADVANCES.**
+  - **Labels:** `scripts/m23_build_labels.py --register` (detached process), registered as label dataset `data/labels/study2a`. 3,148 rows per cell; OK trades: L1 2,935, L2 2,661, L3 2,912, L4 2,402.
+    - EXPIRY_NOT_STORED 0, NO_EXPIRY 0, UNRESOLVED 5 (exit ask missing). The latest exit read is 2025-10-02 (holdout untouched).
+  - **Screen:** registered run `screen_2a-6d739884dd04` (n_trials 39 → 40) → `reports/research/m23_step1_screen.md`. Not rerun, because a rerun would be a second trial.
+  - **Results:** mean net per trade, $, 95% CI from the moving-block bootstrap:
+
+    | cell | conservative fill | mid fill | outcome |
+    |---|---|---|---|
+    | L1 | −176.85 [−287.71, −66.26] | +69.64 [−16.00, +153.56] | AMBIGUOUS |
+    | L2 | −457.12 [−552.83, −358.50] | −103.91 [−169.44, −37.27] | **KILL** |
+    | L3 | −111.87 [−157.84, −70.53] | +33.63 [−2.70, +66.82] | AMBIGUOUS |
+    | L4 | −181.88 [−223.01, −144.76] | −10.51 [−43.22, +19.36] | AMBIGUOUS |
+
+    No guard barred any cell.
+  - **Descriptive reading:**
+    - At realistic fills every cell loses, with CIs entirely below 0.
+    - At mid fills, the put spreads are slightly positive but their CIs include 0, and the condors are negative.
+    - The gap between conservative and mid fills is about $246 (L1) and $145 (L3) per trade, against median credits of about $300. Bid–ask friction on SPX consumes most of the premium.
+    - The realised loss share exceeds the break-even loss share in every cell (L1 0.297 vs 0.187; L3 0.356 vs 0.251).
+    - Precision matched the Step-0 MDE bounds (realised 95% CI widths $221 / $194 / $87 / $78).
+  - **Verification:** 12 sampled OK trades (3 per cell) recomputed by hand from the cleaned quotes: 0 mismatches. CI green on ecb58ef: https://github.com/ahmedyaqubi/Main/actions/runs/38014456549
+  - **Family ledger (ADR-0014 D6):** budget 2 (screen plus at most one re-screen); spent 1; the re-screen stays available.
+    - Holdout access: none. Data spend: $10.64 + $0.07 sample.
+    - n_trials on the overlapping window: **40**.
+  - **Open (owner):** D5 allows one re-screen after ≥ 250 new development sessions, but D3 keeps forward data out of development until a cell ADVANCES. In practice no new development data can arrive, so the family is effectively **PARKED** unless the owner amends that by ADR.
 - [ ] Owner supplies the broker SPX commission (R3)
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)

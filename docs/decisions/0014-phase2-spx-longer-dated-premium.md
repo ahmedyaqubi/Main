@@ -260,6 +260,17 @@ outcome had been computed.
   - The Step-1 report adds the realised CI width per cell, so an AMBIGUOUS outcome reads as
     "insufficient data", not as "no effect".
 
+## Outcome (2026-10-10)
+- Step 1 screen `screen_2a-6d739884dd04` (code ecb58ef; n_trials 39 → 40): **family
+  AMBIGUOUS**. L2 is KILL; L1, L3 and L4 are AMBIGUOUS; no cell ADVANCES. Report:
+  `reports/research/m23_step1_screen.md`.
+- Every cell is clearly negative at the conservative fill. At the mid fill, the put cells' CIs
+  include 0.
+- No holdout request (D7 requires an ADVANCE).
+- **Re-screen versus PARK (owner):** D5 allows one re-screen after ≥ 250 new development
+  sessions. D3 keeps forward data for confirmation only, until an ADVANCE. As written, no new
+  development data can arrive, so the family is effectively PARKED unless that is amended by ADR.
+
 ## Consequences
 - **New code:**
   - DQ support for SPX roots and the strike grid;
