@@ -1,6 +1,9 @@
 # ADR-0014: Phase 2, longer-dated defined-risk index premium (SPX), model-free screen first
 
-- Status: **ACCEPTED** 2026-10-08 by the owner ("agree to all, go ahead and proceed"), with
+- Status: **PARKED** 2026-10-10 by the owner, after Step 1 (family AMBIGUOUS, L2 KILL, no ADVANCE).
+  - Under D3 no new development data can arrive, so the D5 re-screen cannot happen.
+  - The SPX holdout stays locked. Reopening needs a new ADR.
+- Accepted: 2026-10-08 by the owner ("agree to all, go ahead and proceed"), with
   resolutions R1–R9 below. Drafted 2026-10-08 at the owner's request, after Phase 1 was closed
   (`reports/research/phase1_synthesis.md`).
   - Purchases still need the owner's approval of the exact Step-0 quote (R8).

@@ -494,7 +494,7 @@ Step 0 (data; no trial):
     - Conservative-fill results stay clearly negative.
     - See `reports/research/phase1_synthesis.md` §4.
 
-## M23 — Phase 2: SPX longer-dated defined-risk premium (ADR-0014, ACCEPTED) — STEP 1 DONE: AMBIGUOUS (L2 KILL), NO ADVANCE
+## M23 — Phase 2: SPX longer-dated defined-risk premium (ADR-0014) — PARKED (2026-10-10): AMBIGUOUS, L2 KILL, NO ADVANCE
 Depends on: Phase 1 closed (`reports/research/phase1_synthesis.md`). ADR-0014 accepted 2026-10-08 with R1–R9. Budget: 1 screen + at most 1 re-screen. n_trials is reported next to Phase 1's 39.
 Step 0 (data; no trial):
 - [x] **Coverage and price checks (2026-10-08/09), all free unless stated:**
@@ -569,6 +569,22 @@ Step 0 (data; no trial):
     - n_trials on the overlapping window: **40**.
   - **Open (owner):** D5 allows one re-screen after ≥ 250 new development sessions, but D3 keeps forward data out of development until a cell ADVANCES. In practice no new development data can arrive, so the family is effectively **PARKED** unless the owner amends that by ADR.
 - [ ] Owner supplies the broker SPX commission (R3)
+
+- [x] **PARKED (owner, 2026-10-10).**
+  - Step 1 was AMBIGUOUS (L2 KILL), and under ADR-0014 D3 no new development data can arrive (forward data is held back until an ADVANCE). So the D5 re-screen cannot happen.
+  - The SPX holdout (2025-10-03 → 2026-10-02) stays locked and unread.
+  - Reopening needs a new ADR.
+  - Summary: `reports/research/phase1_synthesis.md` §7. Lessons: `docs/LESSONS_LEARNED.md`.
+
+## M24 — Fill feasibility (ADR-0015 mission; docs/ROADMAP.md) — TODO
+Depends on: ADR-0015 ACCEPTED (2026-10-10).
+- No orders and no strategy trial.
+- QQQ + SPY near-the-money options, 0–30 DTE, trade prints, about 20 development sessions.
+- The reference mid comes from QQQ 1-minute quotes already on disk.
+- Priced exactly before any purchase.
+- A "promising" threshold is fixed in the plan before the result.
+
+Next after M24: one ETF idea from the shortlist (its own ADR, holdout lock, test share).
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)

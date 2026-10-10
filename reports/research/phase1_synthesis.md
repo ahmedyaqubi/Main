@@ -1,7 +1,7 @@
-# Phase 1 synthesis: QQQ 0–1DTE options, M1–M19T
+# Phase 1 and Phase 2 synthesis: QQQ 0–1DTE options (M1–M19T) and SPX 7–30DTE spreads (M23)
 
-Drafted 2026-10-08. Sources: `docs/MILESTONES.md`, ADR-0001 to ADR-0013, and the reports cited
-below. **This is a summary of evidence, not a claim about future performance. It is not a trading
+Drafted 2026-10-08; Phase 2 added 2026-10-10. Sources: `docs/MILESTONES.md`, ADR-0001 to
+ADR-0014, and the reports cited below. Lessons and gotchas: `docs/LESSONS_LEARNED.md`. **This is a summary of evidence, not a claim about future performance. It is not a trading
 recommendation.**
 
 ## 1. Bottom line
@@ -19,6 +19,10 @@ recommendation.**
     plus costs).
 - **Trials:** 39 registered configurations on the shared data window. Every one counts towards
   multiple-testing corrections, including failed and abandoned runs.
+- **Phase 2 (M23, SPX 7–30DTE defined-risk spreads, 2013–2025):** AMBIGUOUS, with one cell
+  KILL and no ADVANCE; now PARKED.
+  - Every cell lost money at realistic fills.
+  - The trial count is now **40** (the windows overlap). See §7.
 
 ## 2. What was tested
 
@@ -28,6 +32,7 @@ recommendation.**
 | Research iteration | M19R | Move size versus implied volatility; direction features; tail-score trade rules | 35 | Move-size skill is almost entirely what option prices already imply (Model 2 vs implied-move benchmark ≈ 0). Best direction bucket win rate 0.40–0.42 vs break-even 0.412. Tail rules: mean net +$0.57 [−7.25, +8.43] and +$2.27 [−7.71, +11.99] per trade | **No validated edge** |
 | Long-premium trade definitions | M19S (ADR-0012) | Change the trade shape (time exits, underlying stops, deeper strikes, longer holds) so a direction signal could pay | 38 | Model accuracy Â ≤ 0.557 against required accuracy a* ≥ 0.57 in every cell; mean net −$1.47 to −$16.15 per trade | **KILL**, line closed |
 | Defined-risk short premium | M19T (ADR-0013) | Sell $1 put spreads and iron condors (0DTE / 1DTE), model-free, held to 15:50 on the expiry day | 39 | All 6 cells KILL: mean net per session −$14 to −$36 (conservative fill); upper bound at the mid fill < 0 in every cell | **KILL**, family closed |
+| SPX longer-dated defined-risk premium | M23 (ADR-0014) | Sell SPX put spreads and iron condors at 7 and 30 DTE, width 0.5% of the index, held to the session before expiry, model-free | 40 | Conservative fill −$112 to −$457 per trade, CIs below 0 in every cell; mid fill: puts +$34 / +$70 with CIs including 0, condors negative (L2 KILL) | **AMBIGUOUS**, PARKED |
 
 ## 3. Why it fails: the common mechanics
 - **Prices already carry the information.**
@@ -121,6 +126,41 @@ recommendation.**
    - fresh or forward data where possible.
 3. **Don't start forward collection or paid live data** until a family advances.
 
+## 7. Phase 2: SPX longer-dated spreads (M23, ADR-0014)
+- **Question:** does selling SPX put spreads and iron condors at 7 and 30 days to expiry earn
+  money after realistic costs?
+  - Width: 0.5% of the index. Entry: 10:00 ET daily. Exit: 15:45 on the session before
+    expiry.
+  - Costs: IBKR Canada commission plus the Cboe fee.
+  - Development data: 2013-04-01 → 2025-10-02.
+- **Data:** about $10.71 of Databento data (2013–2026 entry and exit quote windows, plus a
+  comparison sample).
+  - The SPX holdout (2025-10-03 → 2026-10-02) was stored but never read.
+- **Result** (registered run `screen_2a-6d739884dd04`, code ecb58ef): family **AMBIGUOUS**.
+  Mean net per trade, with moving-block bootstrap 95% CIs:
+
+  | cell | conservative fill | mid fill | outcome |
+  |---|---|---|---|
+  | L1 (30-DTE put) | −$177 [−288, −66] | +$70 [−16, +154] | AMBIGUOUS |
+  | L2 (30-DTE condor) | −$457 [−553, −359] | −$104 [−169, −37] | **KILL** |
+  | L3 (7-DTE put) | −$112 [−158, −71] | +$34 [−3, +67] | AMBIGUOUS |
+  | L4 (7-DTE condor) | −$182 [−223, −145] | −$11 [−43, +19] | AMBIGUOUS |
+
+- **Why:** the same mechanics as Phase 1, at longer tenors.
+  - The bid–ask gap between conservative and mid fills was about $246 (L1) and $145 (L3) per
+    trade, against median credits of about $300.
+  - Realised loss frequency was above break-even in every cell.
+- **Verification:**
+  - 12 hand-recomputed trades matched.
+  - The leakage review found one issue, fixed before the run (an expiry could have been
+    silently substituted).
+  - CI green.
+- **Status: PARKED.** ADR-0014 keeps forward data out of development until a cell ADVANCES,
+  so the one allowed re-screen cannot happen.
+- **The combined lesson** (`docs/LESSONS_LEARNED.md`): option prices were fair, and costs and
+  fills decided every result. The bid–ask spread was the largest cost.
+- **Next direction:** `docs/ROADMAP.md`, which puts a fill-feasibility study first.
+
 ## References
 - **Validation:** `reports/validation/m19_gates.md` (M19, run `final_validation-b060967f6104`).
 - **Research iteration (M19R):** `reports/research/m19r_diagnostics.md`, `m19r_experiments.md`,
@@ -128,6 +168,8 @@ recommendation.**
 - **Trade-definition study (M19S):** `reports/research/m19s_step1.md` (run `screen-667eb0490979`).
 - **Short premium (M19T):** `reports/research/m19t_price_quote.md`, `m19t_data_coverage.md`,
   `m19t_step1_screen.md` (run `screen_1c-9c607f3c96e7`).
+- **SPX spreads (M23):** `reports/research/m23_price_quote.md`, `m23_spx_vs_spy.md`,
+  `m23_data_coverage.md`, `m23_step1_screen.md` (run `screen_2a-6d739884dd04`).
 - **Spec and decisions:**
   - spec: `docs/PHASE_1_SPEC.md`;
   - holdout: ADR-0011;
