@@ -533,7 +533,17 @@ Step 0 (data; no trial):
   - **R10:** the SPX liquidity gate is each leg's spread ≤ 15% of mid. Amended the same day to drop a 2.00-point cap, which bound mostly through the index level.
   - **R11:** SPXW on shared expiry dates.
   - **R12:** power accepted; the 7-DTE cells are the primary test.
-- [ ] Step 1 plan (owner approval), then code with tests first, then the one registered screen
+- [x] **Step 1 plan approved (2026-10-09). Code done, tests first:**
+  - **Config:** `study_2a` in `configs/phase1.yaml`.
+  - **Engine:** `labels/longspread.py` (open/close, R10 gate, SPXW preference, IBKR + Cboe costs by premium, no path check).
+  - **Expiry choice:** `execution_sim/longdated.select_stored_expiry`.
+  - **Screen additions:** `backtesting/premium_screen.py` (moving-block weights, independent periods, `guards_2a`, `family_outcome(max_advance)`).
+  - **Scripts:** `scripts/m23_build_labels.py`, `scripts/m23_step1.py`, with a dry run on synthetic labels only.
+  - **Tests:** `tests/test_longspread_labels.py` (10), `tests/test_premium_screen_blocks.py` (6), `tests/test_longdated.py` (5).
+  - **Leakage review:** 1 finding, fixed test-first. The expiry was chosen only from the downloaded contracts, so an expiry missing at T_e could be silently replaced by another tenor.
+    - Now the expiry comes from the point-in-time listing: earlier-day symbology plus definitions known at T_e.
+    - If it wasn't stored, the row is UNRESOLVED_DATA `EXPIRY_NOT_STORED`, never a substitute.
+- [ ] Step 1 run from committed code: labels (`--register`), then the registered screen `screen_2a`, a hand check, CI, ledger
 - [ ] Owner supplies the broker SPX commission (R3)
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)

@@ -163,6 +163,43 @@ study_1c:                            # ADR-0013 (M19T): Phase 1c defined-risk sh
   n_trials_at_acceptance: 38
   max_new_trials: 2                  # D6: the screen + at most one re-screen
 
+study_2a:                            # ADR-0014 (M23): SPX longer-dated defined-risk premium
+  labels_dir: study2a                # data/labels/study2a/<cell>/session=<D>.parquet
+  start: "2013-04-01"                # R7
+  dev_end: "2025-10-02"              # D3: project holdout after this (12 months)
+  cells:                             # D4 / R4, frozen at acceptance; condor = both sides
+    L1: {target_dte: 30, structure: put,    x: 0.20}
+    L2: {target_dte: 30, structure: condor, x: 0.15}
+    L3: {target_dte: 7,  structure: put,    x: 0.20}
+    L4: {target_dte: 7,  structure: condor, x: 0.15}
+  root_preference: [SPXW, SPX]       # R11: SPXW on a shared expiry date / strike
+  width_share: 0.005                 # R2: W = 0.5% of the previous Cboe close
+  width_grid: 5.0
+  width_min: 10.0
+  entry_time: "10:00"                # D2 (ET); T_e = T + fills.latency_s
+  exit_time: "15:45"                 # D2: session before expiry
+  early_exit_offset_min: 15          # close - 15 min on early closes
+  max_spread_pct: 0.15               # R10 (amended): per leg, of its mid; no point cap
+  commission_tiers: [[0.05, 0.25], [0.10, 0.50]]   # R3 IBKR tiered: premium below -> $/contract
+  commission_default: 0.65
+  cboe_fee_threshold: 1.0            # R3 Cboe SPX customer fee (eff. 2026-10-01)
+  cboe_fee_below: 0.36
+  cboe_fee: 0.45
+  regulatory_allowance: 0.05         # ORF/OCC/CAT allowance per contract
+  surcharge_allowance: 0.0           # SPX surcharges: retail applicability unverified (disclosed)
+  cost_sensitivity: 1.5              # descriptive row only
+  spx_close_csv: data/raw/cboe/SPX_History.csv   # R2/R6
+  block_multiple: 2.0                # D5: moving-block length = 2 x the cell's median hold
+  lower_bound_level: 0.95            # D5 ADVANCE: one-sided, conservative fill
+  kill_level: 0.95                   # D5 KILL: two-sided, mid fill
+  min_entries: 300                   # D5 guards
+  min_independent_periods: 24
+  min_years: 3.0
+  max_advance: 1
+  rescreen_min_new_sessions: 250
+  n_trials_at_acceptance: 39
+  max_new_trials: 2                  # D6
+
 research:                            # M19R research iteration 1 (diagnostics D1-D3)
   implied_c: 1.0e6                   # D1 benchmark logistic: effectively unregularised
   next_session_minutes: 390          # D1: trading minutes of the expiry session (D+1)

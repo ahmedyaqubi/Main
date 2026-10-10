@@ -45,3 +45,20 @@ def mde_upper_bound(
         return math.inf
     z = NormalDist().inv_cdf(1 - alpha) + NormalDist().inv_cdf(power)
     return z * (pnl_range / 2) / math.sqrt(n_eff)
+
+
+def select_stored_expiry(
+    listed_before: set[date],
+    known_today: set[date],
+    stored: set[date],
+    d: date,
+    target_dte: int,
+    sessions: set[date],
+) -> tuple[str, date | None]:
+    """D2 point-in-time expiry choice (M23 leakage review). The candidates are expiries listed
+    on an earlier day plus those whose definitions are known at T_e today. The chosen expiry
+    is never replaced: if its contracts were not stored, the result is EXPIRY_NOT_STORED."""
+    e = choose_expiry(listed_before | known_today, d, target_dte, sessions)
+    if e is None:
+        return "NO_EXPIRY", None
+    return ("OK", e) if e in stored else ("EXPIRY_NOT_STORED", e)

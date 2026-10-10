@@ -96,11 +96,15 @@ def cell_outcome(lb_conservative: float, ub_mid: float, barred: list[str]) -> st
     return AMBIGUOUS
 
 
-def family_outcome(results: list[CellResult], cfg: Phase1Config) -> tuple[str, list[str]]:
+def family_outcome(
+    results: list[CellResult], cfg: Phase1Config, max_advance: int | None = None
+) -> tuple[str, list[str]]:
+    """`max_advance` defaults to ADR-0013's `study_1c.max_advance`; ADR-0014 passes its own."""
     adv = [r for r in results if r.outcome == ADVANCE]
     if adv:
         ranked = sorted(adv, key=lambda r: (-r.lb_conservative, -r.n_recent, r.cell))
-        return ADVANCE, [r.cell for r in ranked[: cfg.study_1c.max_advance]]
+        limit = cfg.study_1c.max_advance if max_advance is None else max_advance
+        return ADVANCE, [r.cell for r in ranked[:limit]]
     if results and all(r.outcome == KILL for r in results):
         return KILL, []
     return AMBIGUOUS, []
@@ -131,3 +135,41 @@ def era_driven(session_net: Arr, era: npt.NDArray[np.str_]) -> bool:
         if len(rest) and np.sign(rest.mean()) != pooled:
             return True
     return False
+
+
+# ADR-0014 (M23) ---------------------------------------------------------------------------------
+def moving_block_weights(
+    n_sessions: int, block: int, reps: int, seed: int
+) -> npt.NDArray[np.int64]:
+    """Circular moving-block bootstrap as per-session counts: each resample concatenates
+    ceil(n / block) blocks of `block` consecutive sessions (wrapping around), truncated to n."""
+    rng = np.random.default_rng(seed)
+    k = -(-n_sessions // block)
+    out = np.zeros((reps, n_sessions), dtype=np.int64)
+    offsets = np.arange(block)
+    for i in range(reps):
+        idx = ((rng.integers(0, n_sessions, size=k)[:, None] + offsets) % n_sessions).ravel()
+        np.add.at(out[i], idx[:n_sessions], 1)
+    return out
+
+
+def independent_periods(entry_index: npt.NDArray[np.int64], hold: int) -> int:
+    """Greedy count of non-overlapping holding periods among sorted entry session indices."""
+    count, free_at = 0, None
+    for i in entry_index:
+        if free_at is None or i >= free_at:
+            count += 1
+            free_at = int(i) + hold
+    return count
+
+
+def guards_2a(n_entries: int, n_independent: int, years: float, cfg: Phase1Config) -> list[str]:
+    s = cfg.study_2a
+    out = []
+    if n_entries < s.min_entries:
+        out.append("FEW_ENTRIES")
+    if n_independent < s.min_independent_periods:
+        out.append("FEW_INDEPENDENT_PERIODS")
+    if years < s.min_years:
+        out.append("FEW_YEARS")
+    return out

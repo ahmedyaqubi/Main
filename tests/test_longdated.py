@@ -11,6 +11,7 @@ from qqq1dte.execution_sim.longdated import (
     choose_expiry,
     exit_session,
     mde_upper_bound,
+    select_stored_expiry,
     width_from_close,
 )
 
@@ -62,3 +63,15 @@ def test_mde_upper_bound() -> None:
     assert mde_upper_bound(2000.0, 100) == pytest.approx(z * 1000.0 / 10.0)
     assert mde_upper_bound(2000.0, 25, alpha=0.05, power=0.8) == pytest.approx(z * 1000.0 / 5.0)
     assert math.isinf(mde_upper_bound(2000.0, 0))
+
+
+def test_expiry_not_stored_is_unresolved_not_substituted() -> None:
+    d = date(2024, 6, 3)
+    e7, e30 = date(2024, 6, 10), date(2024, 6, 21)
+    s = set(SESSIONS)
+    # E30 was listed before D (known at T_e) but not stored: never substitute E7
+    assert select_stored_expiry({e7, e30}, set(), {e7}, d, 18, s) == ("EXPIRY_NOT_STORED", e30)
+    assert select_stored_expiry({e7, e30}, set(), {e7, e30}, d, 18, s) == ("OK", e30)
+    # an expiry known only from today's definitions (available by T_e) counts as listed
+    assert select_stored_expiry(set(), {e7}, {e7}, d, 7, s) == ("OK", e7)
+    assert select_stored_expiry(set(), set(), set(), d, 7, s) == ("NO_EXPIRY", None)

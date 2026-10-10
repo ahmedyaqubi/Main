@@ -313,6 +313,46 @@ class Study1c(_Section):
     max_new_trials: int
 
 
+class LongCell(_Section):
+    target_dte: int
+    structure: str  # "put" | "condor"
+    x: float
+
+
+class Study2a(_Section):
+    labels_dir: str
+    start: date
+    dev_end: date
+    cells: dict[str, LongCell]
+    root_preference: list[str]
+    width_share: float
+    width_grid: float
+    width_min: float
+    entry_time: time
+    exit_time: time
+    early_exit_offset_min: int
+    max_spread_pct: float
+    commission_tiers: list[tuple[float, float]]  # (premium below, $ per contract)
+    commission_default: float
+    cboe_fee_threshold: float
+    cboe_fee_below: float
+    cboe_fee: float
+    regulatory_allowance: float
+    surcharge_allowance: float
+    cost_sensitivity: float
+    spx_close_csv: str
+    block_multiple: float
+    lower_bound_level: float
+    kill_level: float
+    min_entries: int
+    min_independent_periods: int
+    min_years: float
+    max_advance: int
+    rescreen_min_new_sessions: int
+    n_trials_at_acceptance: int
+    max_new_trials: int
+
+
 class Research(_Section):
     implied_c: float
     next_session_minutes: int
@@ -406,6 +446,7 @@ class Phase1Config(_Section):
     research: Research
     study_1b: Study1b
     study_1c: Study1c
+    study_2a: Study2a
     features_f3: FeaturesF3
     pit: Pit
     validation: Validation
