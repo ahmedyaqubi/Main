@@ -601,6 +601,20 @@ Depends on: ADR-0015 ACCEPTED (2026-10-10).
   - So for 0–2 DTE QQQ options, the conservative fill (pay the spread) used in Phase 1/2 is a fair or even mild cost assumption. Patient limit orders don't recover it.
 - **Next:** one ETF idea from the shortlist (its own ADR, 12-month holdout locked before looking, declared test share). Options ideas are deprioritised under ADR-0015 / the M24 threshold.
 
+## M25 — ETF trend following, one pre-registered rule (ADR-0016) — IN PROGRESS
+Depends on: ADR-0016 ACCEPTED (2026-10-10). Budget: 1 of ADR-0015's 10 tests; data $0.
+- [x] **ADR-0016 accepted.**
+  - Amendment A1 (2026-10-13): internal data checks plus SPY vs Shiller, replacing the blocked Stooq cross-check.
+  - Exception E1 (2026-10-13): QQQ's 2005 and 2014 dividend counts, confirmed by SEC N-30B-2 and Nasdaq records. Decided after seeing the result, disclosed.
+- [x] **Data (free):** Tiingo SPY/QQQ/TLT/GLD, FRED DTB3, Shiller `ie_data.xls` (`scripts/m25_fetch.py`).
+  - `scripts/m25_verify_data.py` → `reports/research/m25_data_check.md`: **PASS**, development rows only.
+- [x] **Code, tests first:** `ingestion/etf_data.py`, `strategies/trend.py` (whole shares, cash account, dividends to cash), `validation/etf_checks.py`; tests in `test_etf_data.py`, `test_trend.py`, `test_etf_checks.py`.
+- [x] **`scripts/m25_screen.py`:**
+  - registers the dataset and the run before computing;
+  - `--dry-run-report` uses synthetic prices with no database (dry run OK);
+  - 123 development months (Sep 2005 → Nov 2015). The December 2015 period ends at the 2016-01-04 open, in the holdout, so it is excluded.
+- [ ] Commit (owner OK) → registered run from the commit → hand check of 3 months → CI → report.
+
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:

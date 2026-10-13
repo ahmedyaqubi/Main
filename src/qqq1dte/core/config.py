@@ -353,6 +353,30 @@ class Study2a(_Section):
     max_new_trials: int
 
 
+class StudyEtfTrend(_Section):
+    tickers: list[str]
+    weight: float
+    lookback_months: int
+    data_start: date
+    dev_returns_start: date
+    dev_end: date
+    holdout_end: date
+    account_usd: float
+    commission_per_share: float
+    commission_min: float
+    commission_max_pct: float
+    spread_bps: float
+    cost_sensitivity: float
+    block_months: int
+    lower_bound_level: float
+    kill_level: float
+    min_months: int
+    raw_dir: str
+    fred_series: str
+    check_days: int
+    max_check_diff: float
+
+
 class Research(_Section):
     implied_c: float
     next_session_minutes: int
@@ -447,6 +471,7 @@ class Phase1Config(_Section):
     study_1b: Study1b
     study_1c: Study1c
     study_2a: Study2a
+    study_etf_trend: StudyEtfTrend
     features_f3: FeaturesF3
     pit: Pit
     validation: Validation
