@@ -11,6 +11,7 @@ dividend-adjusted close; every value at day i uses closes up to day i only.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date
 
 _NEUTRAL = 50.0
 
@@ -77,3 +78,11 @@ def trade_indices(entry: Sequence[bool], exit_: Sequence[bool]) -> list[tuple[in
         out.append((i, j))
         i = j + 1
     return out
+
+
+def period_trades(
+    idx: Sequence[tuple[int, int]], dates: Sequence[date], start: date, end: date
+) -> list[tuple[int, int]]:
+    """ADR-0019 H1: trades whose entry signal close is on or after `start` and whose sale
+    open (the session after the exit signal) is on or before `end`."""
+    return [(i, j) for i, j in idx if dates[i] >= start and dates[j + 1] <= end]

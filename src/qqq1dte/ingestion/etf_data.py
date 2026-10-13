@@ -66,3 +66,11 @@ def dev_only(df: pl.DataFrame, dev_end: date, requested_end: date | None = None)
             f"requested data to {requested_end}, after the development end {dev_end} (ADR-0016 D3)"
         )
     return df.filter(pl.col("date") <= dev_end)
+
+
+def with_holdout(df: pl.DataFrame, holdout_end: date, adr_ref: str) -> pl.DataFrame:
+    """Rows up to `holdout_end`, holdout included: only under an accepted holdout ADR, whose
+    reference must be given (and logged by the caller through `HoldoutGuard`)."""
+    if not adr_ref.strip():
+        raise HoldoutLockedError("holdout rows need an accepted holdout ADR reference")
+    return df.filter(pl.col("date") <= holdout_end)

@@ -12,6 +12,7 @@ from qqq1dte.ingestion.etf_data import (
     dev_only,
     parse_fred,
     parse_tiingo,
+    with_holdout,
 )
 
 TIINGO = [
@@ -49,3 +50,11 @@ def test_holdout_lock() -> None:
     with pytest.raises(HoldoutLockedError):
         dev_only(df, date(2015, 12, 31), requested_end=date(2016, 1, 4))
     assert dev_only(pl.DataFrame(schema=df.schema), date(2015, 12, 31)).height == 0
+
+
+def test_with_holdout_requires_an_adr_reference() -> None:
+    df = pl.DataFrame({"date": [date(2015, 12, 31), date(2016, 1, 4), date(2026, 10, 1)]})
+    with pytest.raises(HoldoutLockedError):
+        with_holdout(df, date(2026, 9, 30), adr_ref="")
+    out = with_holdout(df, date(2026, 9, 30), adr_ref="ADR-0019")
+    assert out["date"].to_list() == [date(2015, 12, 31), date(2016, 1, 4)]

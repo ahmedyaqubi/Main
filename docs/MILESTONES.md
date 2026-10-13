@@ -670,6 +670,14 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - the loss limit was breached on 6 trades (worst day −6.5%);
   - versus buy-and-hold (approximate): CAGR 6.4% vs 9.1%, Sharpe 0.58 vs 0.41, maximum drawdown 15% vs 55%.
 - **Next (ADR-0018 D5, ADR-0015 D4):** a holdout ADR (owner), with one access to SPY 2016-01 → 2026-09, the same statistic and threshold, and no changes. Then a paper-only ADR. ADR-0015 ledger: 3 of 10 tests, $28.51 of $100.
+- [x] **ADR-0019 (holdout) accepted 2026-10-13.** Amendment A1, made before any access: the Shiller file ends 2023-09, so check (e) covers 2016-01 → 2023-09 only.
+- [x] **`scripts/m27_holdout.py`:**
+  - one access only: it refuses if the access was already logged under ADR-0019 or a holdout run exists;
+  - it registers the run with touches_final_holdout and logs through `HoldoutGuard` **before** reading;
+  - data checks run first;
+  - `etf_data.with_holdout` requires an ADR reference; `pullback.period_trades` assigns trades to periods (tests first);
+  - dry run on synthetic prices OK.
+- [ ] Commit (owner OK) → the one holdout run from the commit → independent rebuild of every holdout trade → CI → report.
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)

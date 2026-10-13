@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 import pytest
 
-from qqq1dte.strategies.pullback import rsi_wilder, signals, sma, trade_indices
+from qqq1dte.strategies.pullback import (
+    period_trades,
+    rsi_wilder,
+    signals,
+    sma,
+    trade_indices,
+)
 
 
 def test_rsi_wilder_hand_case() -> None:
@@ -46,3 +54,11 @@ def test_trade_indices() -> None:
     assert trade_indices(entry, exit_) == [(1, 2), (5, 6)]
     # an exit signal on the last close has no next open -> the trade is dropped
     assert trade_indices([True, False, False], [False, False, True]) == []
+
+
+def test_period_trades_by_entry_signal_and_sale() -> None:
+    d = [date(2015, 12, 28) + timedelta(days=k) for k in range(10)]  # 12-28 .. 01-06
+    idx = [(0, 2), (3, 4), (5, 7), (8, 8)]
+    # (0, 2): signal 12-28 (before the start) -> out; (3, 4): signal 12-31 -> out;
+    # (5, 7): signal 01-02, sale open d[8] = 01-05 -> in; (8, 8): sale open d[9] = 01-06 > end
+    assert period_trades(idx, d, date(2016, 1, 1), date(2016, 1, 5)) == [(5, 7)]
