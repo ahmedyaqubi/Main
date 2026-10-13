@@ -84,3 +84,12 @@ study.
   effective sample is the number of independent holding periods (M23 R12).
 - **Register from committed code only.** Dirty-tree runs create catalogue rows tied to "-dirty"
   commits that later need cleaning (M19T incident).
+
+## M27 holdout (2026-10-13)
+- **Before any one-shot access, check that every external reference series is complete** in each
+  month compared, not just that the month labels exist. Shiller's final month was a single
+  day's close; it stopped the first holdout access and needed ADR-0020.
+- **A pass at the 95% line can be a coin flip.** Report the lower bound's sensitivity to the
+  bootstrap seed and block length next to the pre-registered result, so a borderline PASS
+  isn't read as strong evidence.
+

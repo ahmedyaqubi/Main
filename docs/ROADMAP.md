@@ -105,4 +105,7 @@ examined. Odds are my honest prior, given what we found and the owner's constrai
   - Mean +0.18% per trade, lower bound −0.015%. The idea stops as pre-registered.
 - **M27** (2026-10-13): RSI(2) pullback on SPY (ADR-0018) development screen **ADVANCE**.
   - Mean +0.54% per trade, lower bound +0.30%, 175 trades. Next: a holdout ADR (owner).
+- **M27 holdout** (2026-10-13; ADR-0019/0020): **PASS, borderline.**
+  - Mean +0.27% per trade, lower bound +0.010%, 91 trades. Above 0 under only about half of other bootstrap seeds (descriptive).
+  - Next: a paper-only ADR (owner).
 - **Spent:** $28.51 of $100; **3 of 10 tests used.**

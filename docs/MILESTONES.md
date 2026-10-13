@@ -646,7 +646,7 @@ Depends on: ADR-0017 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (2 
   - **Loss limit:** 10 trades contained a day below −3%; the worst day was −8.8%.
 - **Per ADR-0017 D5:** the idea stops, with no variants and no holdout access. A narrow miss is still a miss. ADR-0015 ledger: 2 of 10 tests, $28.51 of $100.
 
-## M27 — Pullback buying on SPY, Connors RSI(2), one pre-registered rule (ADR-0018) — DEVELOPMENT SCREEN DONE (2026-10-13): **ADVANCE**; holdout needs an owner ADR
+## M27 — Pullback buying on SPY, Connors RSI(2), one pre-registered rule (ADR-0018) — DONE (2026-10-13): development ADVANCE; holdout **PASS (borderline, with the disclosed ADR-0020 exception)**
 Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 of 10 after); data $0.
 - [x] **ADR-0018 accepted.** The assistant advised pausing before idea #3; the owner chose to proceed (disclosed in the ADR).
 - [x] **Data:** M26's SPY files and check reused.
@@ -681,7 +681,22 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - The only failure was Shiller's final month 2023-09, a single day's close, not a monthly average (`reports/research/m27_holdout_stop_adr0019.md`).
   - All other checks passed.
 - [x] **ADR-0020 accepted:** that one month is excluded, and the result stays confirmatory. Decided blind to the result; it overrides ADR-0019 H2's descriptive-only clause (disclosed).
-- [ ] Commit (owner OK) → the one rerun under ADR-0020 → independent rebuild of every holdout trade → CI → report.
+- [x] **Holdout run** `screen_pullback_holdout-7e393c248e95` from code c5f65ca (ADR-0020 access; n_trials 41 → 42 on 2016–2026) → `reports/research/m27_holdout.md`.
+  - Data checks PASS (2023-09 Shiller excluded by ADR-0020).
+- [x] **Outcome: PASS (borderline).** Mean net excess +0.271% per trade; one-sided lower bound **+0.010%**; 95% interval [−0.031%, +0.611%]; 91 trades (guard 60).
+  - **The edge is about half the development figure** (+0.541%).
+- [x] **Independent rebuild:** all 91 holdout trades reproduced with 0 mismatches; the development trades recomputed here are 175 and +0.541%, identical to the development run.
+- **Fragility (descriptive, computed after the result; the decision used the pre-registered seed):**
+  - **Other seeds:** across 100 other bootstrap seeds the lower bound has a median of +0.0003% and ranges from −0.017% to +0.019%; it is above 0 for 51% of them.
+  - **Other block lengths:** block 6 gives +0.005%, block 24 +0.044%.
+  - **The combined-count bound (42 trials) is −0.184%.**
+  - In plain terms, this is a coin-flip-level pass at the 95% line.
+- **Descriptive:**
+  - signal-close timing +0.422%; gross +0.368%; at 2× costs +0.172%;
+  - win share 68%; worst trade −4.5%; 3 loss-limit days (worst −4.4%);
+  - weak years 2018, 2022 and 2023;
+  - versus buy-and-hold (approximate): CAGR 5.3% vs 15.2%, Sharpe 0.48 vs 0.75, maximum drawdown 10% vs 34%.
+- **Next (ADR-0019 H6):** a paper-only ADR (owner): 60+ sessions, paper orders only, position size and settlement rules.
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
