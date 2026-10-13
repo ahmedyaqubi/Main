@@ -377,6 +377,30 @@ class StudyEtfTrend(_Section):
     max_check_diff: float
 
 
+class StudyTom(_Section):
+    ticker: str
+    data_start: date
+    dev_end: date
+    holdout_end: date
+    entry_from_end: int
+    exit_day: int
+    account_usd: float
+    commission_per_share: float
+    commission_min: float
+    commission_max_pct: float
+    slippage_bps: float
+    cost_sensitivity: float
+    block_trades: int
+    lower_bound_level: float
+    kill_level: float
+    min_trades: int
+    excluded_year: int
+    era_split: date
+    loss_day_limit: float
+    raw_dir: str
+    fred_series: str
+
+
 class Research(_Section):
     implied_c: float
     next_session_minutes: int
@@ -472,6 +496,7 @@ class Phase1Config(_Section):
     study_1c: Study1c
     study_2a: Study2a
     study_etf_trend: StudyEtfTrend
+    study_tom: StudyTom
     features_f3: FeaturesF3
     pit: Pit
     validation: Validation

@@ -625,6 +625,18 @@ Depends on: ADR-0016 ACCEPTED (2026-10-10). Budget: 1 of ADR-0015's 10 tests; da
   - **Δ at 2× costs:** +0.08. Costs are not the issue.
 - **Per ADR-0016 D5:** the idea stops, with no variants and no holdout access. ADR-0015 ledger: 1 of 10 tests, $28.51 of $100.
 
+## M26 — Turn-of-month on SPY, one pre-registered rule (ADR-0017) — IN PROGRESS
+Depends on: ADR-0017 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (2 of 10 after); data $0.
+- [x] **ADR-0017 accepted.** Exception E1 (2026-10-13): the 2004 special dividend and 1990s fee-driven dividend gaps, confirmed in SPY's SEC N-30D reports. Decided after seeing the result, disclosed.
+- [x] **Data (free):** Tiingo SPY from 1993-01-29 and FRED DTB3 under `data/raw/tom` (`scripts/m26_fetch.py`).
+  - `scripts/m26_verify_data.py` → `reports/research/m26_data_check.md`: **PASS** with E1; 0 of 93 ex-dividend dates fall in a holding window.
+- [x] **Code, tests first:** `strategies/tom.py` (calendar windows; whole shares; cash account) and `tests/test_tom.py` (3); `study_tom` config.
+- [x] **`scripts/m26_screen.py`:**
+  - registers the dataset and the run before computing;
+  - `--dry-run-report` uses synthetic prices with no database (dry run OK);
+  - 274 development trades, 1993-02-25 → 2015-12-03.
+- [ ] Commit (owner OK) → registered run from the commit → hand check of 3 trades → CI → report.
+
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:
