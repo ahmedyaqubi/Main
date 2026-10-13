@@ -54,11 +54,12 @@ from qqq1dte.validation.etf_checks import (
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "reports" / "research" / "m27_holdout.md"
-ADR = "ADR-0019"
+ADR = "ADR-0020"  # the second and last access (ADR-0020); the first was ADR-0019
 RUN_KIND = "screen_pullback_holdout"
 HOLD_START = date(2016, 1, 1)  # ADR-0018 D3 / ADR-0019 H1
 MIN_TRADES = 60  # ADR-0019 H3
 SHILLER_P_END, SHILLER_D_END = "2023-09", "2023-06"  # ADR-0019 A1: the Yale file ends here
+SHILLER_PARTIAL = "2023-09"  # ADR-0020 E1: the final month is one day's close, not an average
 FULL_DIV_YEARS = range(2016, 2026)  # H2 (d)
 DEV_REFERENCE = (175, 0.00541)  # ADR-0018 run screen_pullback-287844c815ca
 
@@ -123,7 +124,7 @@ def data_checks(
         month=pl.col("date").dt.strftime("%Y-%m")
     )
     avg = dict(spy.group_by("month").agg(pl.col("close").mean()).iter_rows())
-    months = sorted(m for m in avg if "2016-01" <= m <= SHILLER_P_END)
+    months = sorted(m for m in avg if "2016-01" <= m <= SHILLER_P_END and m != SHILLER_PARTIAL)
     p = dict(zip(sh["month"].to_list(), sh["P"].to_list(), strict=True))
     dd = dict(zip(sh["month"].to_list(), sh["D"].to_list(), strict=True))
     pv = shiller_violations(months, avg, p, scale=10.0, tol=SHILLER_TOL)
@@ -142,7 +143,8 @@ def data_checks(
     if dv:
         fails.append(f"(e) Shiller dividends: {len(dv)} months outside ±10%, e.g. {dv[:5]}")
     notes.append(f"(d) dividends per year 2016-2025: {[divs.get(y, 0) for y in FULL_DIV_YEARS]}")
-    notes.append(f"(e) Shiller: {len(months)} price months (2016-01 → {SHILLER_P_END}), "
+    notes.append(f"(e) Shiller: {len(months)} price months (2016-01 → {SHILLER_P_END}, "
+                 f"{SHILLER_PARTIAL} excluded by ADR-0020 E1), "
                  f"{len(pv)} outside ±1%; {checked} dividend months (→ {SHILLER_D_END}), "
                  f"{len(dv)} outside ±10%. After {SHILLER_P_END}: internal checks only "
                  "(A1).")  # fmt: skip
@@ -240,7 +242,7 @@ def main() -> int:  # noqa: PLR0912, PLR0915 (linear pipeline)
         if engine is not None:
             HoldoutGuard(s.dev_end, engine).check(
                 hold_sessions, run_id=run_id, adr_ref=ADR,
-                justification="M27 gate 2: one holdout confirmation of the ADR-0018 rule",
+                justification="M27 gate 2 rerun under ADR-0020 (Shiller partial-month exception)",
             )  # fmt: skip
             raw = ROOT / s.raw_dir
             rows = json.loads((raw / "tiingo" / f"{s.ticker}.json").read_text("utf-8"))
@@ -329,6 +331,12 @@ def main() -> int:  # noqa: PLR0912, PLR0915 (linear pipeline)
         "access.**",
         "",
         f"## Outcome: **{outcome}**",
+        "",
+        "**Process disclosure (ADR-0020):** the first access (run "
+        "`screen_pullback_holdout-b47cc1560348`, ADR-0019) stopped at a data check on Shiller's "
+        "partial final month 2023-09 before any strategy statistic was computed. ADR-0020 "
+        "excluded that one month and, overriding ADR-0019 H2's descriptive-only clause, kept "
+        "this result confirmatory. The decision was made blind to the result.",
         "",
         f"- Mean net excess return per trade (after costs, above T-bills): **{p(net.mean())}**",
         f"- One-sided {s.lower_bound_level:.0%} lower bound: **{p(lb)}** (PASS needs > 0)",

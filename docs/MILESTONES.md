@@ -677,7 +677,11 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - data checks run first;
   - `etf_data.with_holdout` requires an ADR reference; `pullback.period_trades` assigns trades to periods (tests first);
   - dry run on synthetic prices OK.
-- [ ] Commit (owner OK) → the one holdout run from the commit → independent rebuild of every holdout trade → CI → report.
+- [x] **First access** (run `screen_pullback_holdout-b47cc1560348`, code 59882ec, logged under ADR-0019): **STOP at the H2 data checks**. No strategy statistic was computed.
+  - The only failure was Shiller's final month 2023-09, a single day's close, not a monthly average (`reports/research/m27_holdout_stop_adr0019.md`).
+  - All other checks passed.
+- [x] **ADR-0020 accepted:** that one month is excluded, and the result stays confirmatory. Decided blind to the result; it overrides ADR-0019 H2's descriptive-only clause (disclosed).
+- [ ] Commit (owner OK) → the one rerun under ADR-0020 → independent rebuild of every holdout trade → CI → report.
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
