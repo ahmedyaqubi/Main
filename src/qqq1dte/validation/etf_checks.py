@@ -80,3 +80,23 @@ def shiller_violations(
         return []
     med = statistics.median(ratios.values())
     return [(m, r / med - 1) for m, r in ratios.items() if abs(r / med - 1) > tol]
+
+
+def open_ratio_violations(df: pl.DataFrame, tol: float) -> list[tuple[date, float]]:
+    """ADR-0018 D2: the open must carry the same adjustment as that day's close."""
+    d = df.sort("date").with_columns(
+        diff=(pl.col("adj_open") / pl.col("open")) / (pl.col("adj_close") / pl.col("close")) - 1
+    )
+    return [(r, x) for r, x in d.select("date", "diff").iter_rows() if abs(x) > tol]
+
+
+def open_gaps(df: pl.DataFrame, threshold: float) -> list[tuple[date, float]]:
+    """ADR-0018 D2: opens more than `threshold` away from the previous close."""
+    d = df.sort("date")
+    o, c, dates = d["open"].to_list(), d["close"].to_list(), d["date"].to_list()
+    out = []
+    for i in range(1, len(dates)):
+        g = o[i] / c[i - 1] - 1
+        if abs(g) > threshold:
+            out.append((dates[i], g))
+    return out

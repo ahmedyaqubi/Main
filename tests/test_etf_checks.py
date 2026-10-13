@@ -11,6 +11,8 @@ from qqq1dte.validation.etf_checks import (
     completeness,
     dividend_counts,
     jump_scan,
+    open_gaps,
+    open_ratio_violations,
     shiller_violations,
 )
 
@@ -59,3 +61,15 @@ def test_shiller_ratio_and_dividends() -> None:
     shiller_p = {"2005-01": 1200.0, "2005-02": 1210.0, "2005-03": 1250.0}  # March is 5% off
     v = shiller_violations(months, spy_avg, shiller_p, scale=10.0, tol=0.01)
     assert [m for m, _ in v] == ["2005-03"]
+
+
+def test_open_checks() -> None:
+    df = pl.DataFrame({
+        "date": D,
+        "open": [100.0, 101.0, 80.0, 50.0], "close": [100.0, 100.0, 100.0, 100.0],
+        "adj_open": [99.0, 99.99, 79.2, 60.0], "adj_close": [99.0, 99.0, 99.0, 99.0],
+    })  # fmt: skip
+    # ratios: day 4 adj_open/open = 1.2 vs adj_close/close = 0.99 -> violation
+    assert [v[0] for v in open_ratio_violations(df, tol=0.0005)] == [D[3]]
+    # gaps: day 3 opens at 80 after a close of 100 (-20%); day 4 at 50 (-50%)
+    assert [g[0] for g in open_gaps(df, 0.15)] == [D[2], D[3]]

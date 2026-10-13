@@ -646,6 +646,18 @@ Depends on: ADR-0017 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (2 
   - **Loss limit:** 10 trades contained a day below −3%; the worst day was −8.8%.
 - **Per ADR-0017 D5:** the idea stops, with no variants and no holdout access. A narrow miss is still a miss. ADR-0015 ledger: 2 of 10 tests, $28.51 of $100.
 
+## M27 — Pullback buying on SPY, Connors RSI(2), one pre-registered rule (ADR-0018) — IN PROGRESS
+Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 of 10 after); data $0.
+- [x] **ADR-0018 accepted.** The assistant advised pausing before idea #3; the owner chose to proceed (disclosed in the ADR).
+- [x] **Data:** M26's SPY files and check reused.
+  - The added open-price check, `scripts/m27_verify_opens.py` → `reports/research/m27_open_check.md`: **PASS**, with 0 adjustment mismatches; the largest opening gap was 8.3%.
+- [x] **Code, tests first:** `strategies/pullback.py` (Wilder RSI, SMA, causal signals, trade indices) and `tests/test_pullback.py` (5); open checks in `validation/etf_checks.py` (+1 test); `study_pullback` config.
+- [x] **`scripts/m27_screen.py`:**
+  - registers the run before computing;
+  - `--dry-run-report` uses synthetic prices with no database (dry run OK);
+  - includes the descriptive signal-close row.
+- [ ] Commit (owner OK) → registered run from the commit → hand check of 3 trades → CI → report.
+
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:

@@ -401,6 +401,34 @@ class StudyTom(_Section):
     fred_series: str
 
 
+class StudyPullback(_Section):
+    ticker: str
+    data_start: date
+    dev_end: date
+    holdout_end: date
+    rsi_period: int
+    rsi_entry: float
+    sma_trend: int
+    sma_exit: int
+    account_usd: float
+    commission_per_share: float
+    commission_min: float
+    commission_max_pct: float
+    slippage_bps: float
+    cost_sensitivity: float
+    block_trades: int
+    lower_bound_level: float
+    kill_level: float
+    min_trades: int
+    excluded_year: int
+    era_split: date
+    loss_day_limit: float
+    open_ratio_tol: float
+    open_gap: float
+    raw_dir: str
+    fred_series: str
+
+
 class Research(_Section):
     implied_c: float
     next_session_minutes: int
@@ -497,6 +525,7 @@ class Phase1Config(_Section):
     study_2a: Study2a
     study_etf_trend: StudyEtfTrend
     study_tom: StudyTom
+    study_pullback: StudyPullback
     features_f3: FeaturesF3
     pit: Pit
     validation: Validation
