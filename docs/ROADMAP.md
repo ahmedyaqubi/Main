@@ -103,4 +103,6 @@ examined. Odds are my honest prior, given what we found and the owner's constrai
     variants.
 - **M26** (2026-10-13): turn-of-month on SPY (ADR-0017) development screen **AMBIGUOUS** (narrow).
   - Mean +0.18% per trade, lower bound −0.015%. The idea stops as pre-registered.
-- **Spent:** $28.51 of $100; **2 of 10 tests used.**
+- **M27** (2026-10-13): RSI(2) pullback on SPY (ADR-0018) development screen **ADVANCE**.
+  - Mean +0.54% per trade, lower bound +0.30%, 175 trades. Next: a holdout ADR (owner).
+- **Spent:** $28.51 of $100; **3 of 10 tests used.**

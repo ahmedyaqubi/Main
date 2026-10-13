@@ -646,7 +646,7 @@ Depends on: ADR-0017 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (2 
   - **Loss limit:** 10 trades contained a day below −3%; the worst day was −8.8%.
 - **Per ADR-0017 D5:** the idea stops, with no variants and no holdout access. A narrow miss is still a miss. ADR-0015 ledger: 2 of 10 tests, $28.51 of $100.
 
-## M27 — Pullback buying on SPY, Connors RSI(2), one pre-registered rule (ADR-0018) — IN PROGRESS
+## M27 — Pullback buying on SPY, Connors RSI(2), one pre-registered rule (ADR-0018) — DEVELOPMENT SCREEN DONE (2026-10-13): **ADVANCE**; holdout needs an owner ADR
 Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 of 10 after); data $0.
 - [x] **ADR-0018 accepted.** The assistant advised pausing before idea #3; the owner chose to proceed (disclosed in the ADR).
 - [x] **Data:** M26's SPY files and check reused.
@@ -656,7 +656,20 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - registers the run before computing;
   - `--dry-run-report` uses synthetic prices with no database (dry run OK);
   - includes the descriptive signal-close row.
-- [ ] Commit (owner OK) → registered run from the commit → hand check of 3 trades → CI → report.
+- [x] **Registered run** `screen_pullback-287844c815ca` from code 8f2bedf (n_trials 3 → 4 on the 1993–2015 window) → `reports/research/m27_dev_screen.md`.
+- [x] **Outcome: ADVANCE.** Mean net excess +0.541% per trade; one-sided lower bound **+0.300%**; 95% interval [+0.248%, +0.859%]; 175 trades (guard 150).
+- [x] **Verification:**
+  - **Independent rebuild:** separate code built from the raw files reproduced all 175 trades (dates and net) with 0 mismatches.
+  - **Opens look genuine:** realistic gap sizes; opens equal to the previous close are common only in 1993–94 (9 trades).
+  - **Multiplicity (descriptive):** the lower bound is +0.23% adjusted for this mission's 3 tests, and +0.14% for all 43 trials; 0 of 2,000 bootstrap means ≤ 0.
+- **Descriptive:**
+  - gross +0.641%; at 2× costs +0.441%; without 2008 (no trades) +0.541%;
+  - 1993–2007 +0.581% (117) vs 2008–2015 +0.462% (58); by era, 1993–2000 +0.84%, 2003–2007 +0.14%, 2009–2015 +0.46%;
+  - the signal-close timing gives +0.581%, so next-open execution costs about 0.04%;
+  - win share 74.9%; worst trade −9.4% (2011); median hold 3 sessions; 8 trades a year;
+  - the loss limit was breached on 6 trades (worst day −6.5%);
+  - versus buy-and-hold (approximate): CAGR 6.4% vs 9.1%, Sharpe 0.58 vs 0.41, maximum drawdown 15% vs 55%.
+- **Next (ADR-0018 D5, ADR-0015 D4):** a holdout ADR (owner), with one access to SPY 2016-01 → 2026-09, the same statistic and threshold, and no changes. Then a paper-only ADR. ADR-0015 ledger: 3 of 10 tests, $28.51 of $100.
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
