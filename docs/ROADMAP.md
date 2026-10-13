@@ -101,4 +101,6 @@ examined. Odds are my honest prior, given what we found and the owner's constrai
 - **M25** (2026-10-13): ETF trend following (ADR-0016) development screen **AMBIGUOUS**.
   - Δ Sharpe +0.10, 95% interval [−0.54, +0.56]. The idea stops as pre-registered, with no
     variants.
-- **Spent:** $28.51 of $100; **1 of 10 tests used.**
+- **M26** (2026-10-13): turn-of-month on SPY (ADR-0017) development screen **AMBIGUOUS** (narrow).
+  - Mean +0.18% per trade, lower bound −0.015%. The idea stops as pre-registered.
+- **Spent:** $28.51 of $100; **2 of 10 tests used.**

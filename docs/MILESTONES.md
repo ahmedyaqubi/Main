@@ -625,7 +625,7 @@ Depends on: ADR-0016 ACCEPTED (2026-10-10). Budget: 1 of ADR-0015's 10 tests; da
   - **Δ at 2× costs:** +0.08. Costs are not the issue.
 - **Per ADR-0016 D5:** the idea stops, with no variants and no holdout access. ADR-0015 ledger: 1 of 10 tests, $28.51 of $100.
 
-## M26 — Turn-of-month on SPY, one pre-registered rule (ADR-0017) — IN PROGRESS
+## M26 — Turn-of-month on SPY, one pre-registered rule (ADR-0017) — DONE (2026-10-13): AMBIGUOUS (narrowly), idea stopped
 Depends on: ADR-0017 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (2 of 10 after); data $0.
 - [x] **ADR-0017 accepted.** Exception E1 (2026-10-13): the 2004 special dividend and 1990s fee-driven dividend gaps, confirmed in SPY's SEC N-30D reports. Decided after seeing the result, disclosed.
 - [x] **Data (free):** Tiingo SPY from 1993-01-29 and FRED DTB3 under `data/raw/tom` (`scripts/m26_fetch.py`).
@@ -635,7 +635,16 @@ Depends on: ADR-0017 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (2 
   - registers the dataset and the run before computing;
   - `--dry-run-report` uses synthetic prices with no database (dry run OK);
   - 274 development trades, 1993-02-25 → 2015-12-03.
-- [ ] Commit (owner OK) → registered run from the commit → hand check of 3 trades → CI → report.
+- [x] **Registered run** `screen_tom-2ab55d9ec62b` from code 832f7f1 (n_trials 2 → 3 on the 1993–2015 window) → `reports/research/m26_dev_screen.md`.
+- [x] **Hand check, 3/3:** independent code reproduced the trades entered 1998-08-28, 2008-09-29 and 2011-07-28 exactly (calendar positions, shares, costs, net excess).
+- [x] **Outcome: AMBIGUOUS.** Mean net excess +0.182% per trade; one-sided lower bound **−0.015%**; 95% interval [−0.057%, +0.413%]; 274 trades.
+  - **Descriptive:**
+    - gross +0.281%; costs 0.099% per trade; at 2× costs +0.082%; without 2008 +0.205%;
+    - 1993–2007 +0.215% (179 trades) vs 2008–2015 +0.120% (95 trades);
+    - SPY's mean daily return was 0.083% on held days vs 0.031% on other days.
+  - **Versus buy-and-hold (approximate):** CAGR 4.7% vs 9.0%; Sharpe 0.28 vs 0.41; maximum drawdown 18% vs 55%.
+  - **Loss limit:** 10 trades contained a day below −3%; the worst day was −8.8%.
+- **Per ADR-0017 D5:** the idea stops, with no variants and no holdout access. A narrow miss is still a miss. ADR-0015 ledger: 2 of 10 tests, $28.51 of $100.
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
