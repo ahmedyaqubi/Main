@@ -124,9 +124,11 @@ From development sessions only, with **no signal computed**:
 - round-trip cost share of the D2 contract per ticker, at 10:00–12:00 and 15:30;
 - the underlying move needed to break even over each setup's holding window;
 - share of sessions passing the D2 loss cap;
-- **required edge:** from the spread of per-trade option returns already published in
-  `reports/labels/summary.md`, the mean net return per trade each setup would need to reach
-  ADVANCE at its expected number of trades.
+- **required edge:** the mean net return per trade each setup would need to reach ADVANCE at
+  its expected number of trades, given how widely per-trade option returns vary.
+  - The variation is taken from existing development backtest output (M11/M12 trades), which
+    was computed without these setups' signals. *Not yet located:* `reports/labels/summary.md`
+    holds outcome frequencies only, so M28 must find or recompute it, on development sessions.
 
 Rules fixed now:
 - **A setup whose median break-even move exceeds the 75th percentile of the ticker's absolute
