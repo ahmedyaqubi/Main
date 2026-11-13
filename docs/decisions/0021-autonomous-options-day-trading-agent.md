@@ -1,10 +1,12 @@
 # ADR-0021: New mission: an autonomous options day-trading agent on a few tickers (long calls and puts first)
 
-- Status: **PROPOSED**, revision 2 (2026-11-13). Drafted by the assistant at the owner's request
+- Status: **PROPOSED**, revision 3 (2026-11-13). Drafted by the assistant at the owner's request
   ("re-strategize this whole idea for options day trading; calls and puts mainly, spreads as
   back-up; start with a small funded account"; then "only a few tickers"). **Not in force until
   the owner accepts it and answers OQ1–OQ7.**
 - Revision 2 follows the assistant's own review of revision 1 (see "Review of revision 1").
+- Revision 3 records the owner's answers to OQ1 and OQ7 (2026-11-13): six tickers; a per-trade
+  loss cap of the cost of 1 to 2 contracts.
 - Supersedes, if accepted: the ADR-0015 mission statement, for all work after M27.
   - ADR-0015's constraints Q1–Q8, budget and gates stay in force except where this ADR says so.
   - **Every hard rule in `CLAUDE.md` stays in force, rule 1 included.** This ADR authorises
@@ -32,8 +34,8 @@
     access.
 
 ## Mission
-> Build an **autonomous, rule-based agent** that day-trades **long calls and puts on at most
-> four tickers**, entering only on **pre-registered setups**, and only if a setup's edge
+> Build an **autonomous, rule-based agent** that day-trades **long calls and puts on six
+> tickers**, entering only on **pre-registered setups**, and only if a setup's edge
 > **survives ask/bid fills and commissions**, is confirmed on **untouched data** and in **paper
 > trading**. The agent improves only through **gated promotion** of new rules. Spreads are a
 > later stage, unlocked by account size and their own evidence.
@@ -47,30 +49,24 @@ that follows large enough to pay for the option at the ask, the exit at the bid,
 commissions?*
 
 ## Decision
-### D1. Tickers (at most four, chosen by cost, never by backtest returns)
-- **Fixed:** QQQ (data owned) and SPY.
-- **Up to two more**, chosen in M28 from this candidate list, fixed now: **IWM, NVDA, TSLA,
-  AAPL**.
-- **Selection rule (frozen):** from a small quote sample on random development sessions (as
-  the M23 comparison sample), with **no signal and no return computed**, rank candidates by the
-  median round-trip cost of the D2 contract as a share of its premium. The two cheapest are
-  added if, for each:
-  - the share is no more than 1.5× QQQ's;
-  - the premium fits the OQ1 loss cap on at least half of the sampled sessions.
-  Fewer than two may qualify. The list is then closed.
-- **Why a fixed short list:** every extra ticker is another chance to find a pattern by luck.
-  Choosing by cost keeps the choice independent of the result.
-- **What extra tickers add, honestly:** SPY moves almost together with QQQ, so it adds little
-  independent evidence and must never be held at the same time as QQQ (D3). Single stocks add
-  independent evidence but bring earnings days and wider spreads.
+### D1. Tickers (fixed by the owner, 2026-11-13; never changed by backtest returns)
+- **QQQ, SPY, IWM, NVDA, TSLA, AAPL.** QQQ's data is owned; the other five are purchased.
+  - Revision 2 proposed adding at most two of the last four, ranked by cost. The owner chose
+    to add all four. The list is now closed.
+- **Cost still gates each ticker, by the D5 rules fixed in advance:** a ticker whose
+  break-even move is too large for a setup is dropped for that setup, with the reason logged.
+- **What the extra tickers add, honestly:** SPY and IWM move largely with QQQ, so they add
+  little independent evidence. The single stocks add independent evidence but bring earnings
+  days and wider spreads. Six tickers do not mean six times the evidence.
 - **Single stocks:** sessions on or next to the company's earnings date are excluded, from a
   dated, sourced calendar file (as `configs/reference/macro_calendar.csv`). If no
   point-in-time source can be verified, single stocks are dropped (rule 9).
-- *Uncertainty flagged:* which of the candidates list daily expirations, and since when, is
-  to be verified in M28. The contract rule (D2) works with daily or weekly expirations.
+- *Uncertainty flagged:* which tickers list daily expirations, and since when, is to be
+  verified in M28. The contract rule (D2) works with daily or weekly expirations.
 
 ### D2. Contract (frozen)
-- **Structure:** one long call (up signal) or one long put (down signal). One contract.
+- **Structure:** one long call (up signal) or one long put (down signal). Research uses one
+  contract; returns are a share of premium, so the result is the same for two.
 - **Entry and exit the same session.** No position is held overnight.
 - **Expiry:** the nearest listed expiration at least one session away (1DTE where expirations
   are daily; up to 5 sessions for weekly-only names). 0DTE is excluded: the premium is small,
@@ -83,9 +79,11 @@ commissions?*
   descriptive rows.
 - **Costs:** `costs.commission_per_contract` and `costs.fees_per_contract`, re-read from the
   broker's schedule in M28 (OQ2).
-- **Loss cap at entry:** if premium plus commissions exceeds the OQ1 cap, the trade is
-  NO_TRADE (`PREMIUM_OVER_CAP`). The full premium is the worst case; a stop does not protect
-  against a gap.
+- **Loss cap at entry (owner, OQ1):** the most one trade may lose is the cost of the
+  contracts bought, 1 to 2 contracts. For entries this replaces ADR-0015's 3%-a-day figure.
+  - A dollar ceiling per trade is still needed so that an unusually expensive contract is
+    NO_TRADE (`PREMIUM_OVER_CAP`); it is set from the account size (OQ1, still open).
+  - ADR-0015's 20% total cap is unchanged.
 - **Cash account:** a purchase uses settled cash only. Premium spent in a session may not
   exceed the settled balance at the open.
 
@@ -160,8 +158,9 @@ Registered before any statistic is computed, in two steps inside the same run:
 
 ### D7. Budget and multiple testing
 - **Tests:** at most **3** of ADR-0015's remaining 7 (3 of 10 used). Unused tests stay unused.
-- **Data:** the QQQ history cost about $13; each added ticker is expected to cost a similar
-  amount. This is an estimate. Each purchase is quoted to the cent and approved first, within
+- **Data:** the QQQ history cost about $13. If each of the five added tickers costs a similar
+  amount, the total is about $65 of the remaining $71.49, which leaves almost nothing for
+  forward data (OQ6). This is an estimate, and single stocks may differ. Each purchase is quoted to the cent and approved first, within
   the remaining $71.49.
 - **Decision level:** one-sided 1 − 0.05/3 ≈ **98.3%** for ADVANCE (Bonferroni over this
   ADR's tests; OQ5). The bound at the full recorded count (42 + tests run) is reported beside
@@ -171,7 +170,7 @@ Registered before any statistic is computed, in two steps inside the same run:
 - **QQQ: 2026-04-03 → 2026-10-02** (ADR-0011), recorded as never read. M28 verifies that
   `final_test_access_log` holds no QQQ access before anything relies on this.
 - **Every other ticker: 2025-10-03 → 2026-10-02**, locked before its data is first examined
-  (ADR-0015 D4). The M28 quote sample is drawn from development sessions only.
+  (ADR-0015 D4).
 - **One access**, by a separate owner ADR, covering the advanced setups together, with the
   same statistic and level.
 - **Power is limited and stated now:** 6 to 12 months. A holdout result under 40 trades is
@@ -200,10 +199,11 @@ Registered before any statistic is computed, in two steps inside the same run:
 - Paper stages follow only by the paper-only ADR.
 
 ## Open questions for the owner (answers are recorded here before acceptance)
-- **OQ1. Account size and per-trade loss cap.** ADR-0015 says under $5,000 and 3% a day
-  (about $150). A long option can lose its whole premium, and a next-day at-the-money contract
-  on these tickers may cost more than $150. Choose: (a) keep 3% as the most one trade may cost,
-  accepting that many sessions will be NO_TRADE; or (b) a larger stated per-trade cap.
+- **OQ1. Account size and per-trade loss cap. PARTLY ANSWERED (owner, 2026-11-13):** "I'm ok
+  with the cost of 1 to 2 options contracts." Recorded in D2.
+  - **Still open:** the starting account size in dollars, and whether the agent buys 1 or 2
+    contracts. With the 20% total cap, a $5,000 account stops after about $1,000 of losses,
+    which could be as few as two or three full-premium losses.
 - **OQ2. Broker and account type.** Still IBKR Canada, cash account? *Uncertainty flagged:*
   same-day reuse of option sale proceeds, and how the pre-2027 day-trade rule applies, must be
   confirmed with the broker.
@@ -213,8 +213,8 @@ Registered before any statistic is computed, in two steps inside the same run:
 - **OQ5. Decision level.** 98.3% (D7) or another pre-declared level?
 - **OQ6. Forward data.** Approve starting forward collection for the chosen tickers, so
   sessions after 2026-10-02 exist for confirmation? Cost to be quoted.
-- **OQ7. Tickers.** Accept the candidate list (IWM, NVDA, TSLA, AAPL), or name others
-  **before** M28 starts? After that the list is closed.
+- **OQ7. Tickers. ANSWERED (owner, 2026-11-13):** add IWM, NVDA, TSLA and AAPL to QQQ and
+  SPY. Recorded in D1.
 
 ## Review of revision 1 (assistant's own QA, 2026-11-13)
 Errors corrected:
@@ -236,7 +236,8 @@ Design weaknesses corrected:
   development and 13 in the holdout, and its signal was the same as the half-hour setup's.
   Dropped.
 - **Two reserved slots invited idea-shopping.** Reduced to one; tests cut from 5 to 3.
-- **QQQ only** did not match the owner's aim. Rev 2 adds a cost-ranked list capped at four.
+- **QQQ only** did not match the owner's aim. Rev 2 added a cost-ranked list capped at four;
+  rev 3 fixes six tickers by the owner's choice.
 - **No check that the tests could pass.** D5 now computes the required edge first.
 
 Weaknesses that remain:
@@ -245,9 +246,9 @@ Weaknesses that remain:
   stop the mission there.
 - **Pooling mixes unlike instruments.** Index ETFs and single stocks may behave differently;
   the per-ticker rows are descriptive and cannot rescue a failed pooled test.
-- **SPY adds little** beyond QQQ.
+- **SPY and IWM add little** beyond QQQ.
 - **Several numbers are judgements:** the 30-minute range, the 12:00 cutoff, the 75% line,
-  the 1.5× cost limit, the 60- and 40-trade guards. They are fixed in advance, not derived.
+  the 60- and 40-trade guards. They are fixed in advance, not derived.
 - **This ADR mixes a mission, a study design and an autonomy roadmap.** Earlier ADRs kept
   these separate. If accepted, the per-setup details move to their own study ADRs.
 - **Nothing here has been run.** No data was read in drafting or reviewing it.
