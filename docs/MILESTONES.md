@@ -704,10 +704,12 @@ Report for steps 1–3: `reports/research/m28_steps1_3.md`.
 Acceptance:
 - [x] Step 1: `study_options_day` config block with every frozen ADR parameter, validated, with tests (`tests/test_options_day_config.py`)
 - [x] Step 2: both brokers' fee pages read. One contract costs $1.00 per side at IBKR Canada (order minimum) and $0.99 at Webull Canada. Neither broker serves history for expired options. **IBKR chosen provisionally:** Webull documents no data-only key, and its API is not confirmed for Canadian accounts
-  - [ ] Still to verify before the recorder is built: what IBKR's Read-Only API setting blocks; programmatic paper access; option day-trade rules for the owner's account; that the account is Canadian
+  - [ ] Still to verify before the recorder is built: what IBKR's Read-Only API setting blocks; programmatic paper access; option day-trade rules for the owner's account
+  - [x] The account is Canadian (owner, 2026-11-14)
 - [x] Step 3, expirations: IWM Tuesday/Thursday expirations date from April 2024 (verified). NVDA/TSLA/AAPL schedules **not verified** (sec.gov refused the download); the purchased definition files will show them
 - [ ] Step 3, earnings calendar: source identified (SEC 8-K Item 2.02) but **not verified**
-- [ ] Step 3, literature: **S1 does not match the paper it cites** (the paper trades the direction of the first 5-minute candle at 09:35, not a 30-minute range break). **Blocked on the owner:** adopt the paper's rule, or keep S1 with a corrected attribution. S2's paper could not be downloaded
+- [x] Step 3, literature, S1: the cited paper trades the direction of the first 5-minute candle at 09:35, not a 30-minute range break. **Owner adopted the paper's rule (ADR-0021 amendment A1, 2026-11-14)**; config and tests updated
+- [ ] Step 3, literature, S2: the paper could not be downloaded; to confirm before S2's test is registered
 - [ ] Step 4: QQQ quotes verified present and complete; `final_test_access_log` shows no QQQ holdout access (rule 9)
 - [ ] Step 5: data for SPY, IWM, NVDA, TSLA, AAPL priced to the cent and approved before purchase
 - [ ] Step 6: cost map (tests first): cost share, break-even move, share of sessions under the $500 ceiling, required edge per setup

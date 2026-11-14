@@ -430,20 +430,20 @@ class StudyPullback(_Section):
 
 
 class OrbSetup(_Section):
-    """ADR-0021 D3, S1: opening-range breakout."""
+    """ADR-0021 amendment A1, S1: the Zarattini & Aziz opening-range rule."""
 
-    range_start: time
-    range_end: time
-    signal_from: time
-    signal_until: time
+    candle_start: time
+    candle_end: time
+    entry_time: time
+    target_r_multiple: float = Field(gt=0)
     exit_time: time
 
     @model_validator(mode="after")
     def _ordered(self) -> Self:
-        t = [self.range_start, self.range_end, self.signal_from, self.signal_until, self.exit_time]
-        if not (t[0] < t[1] <= t[2] < t[3] < t[4]):
-            raise ValueError("orb times must run range_start < range_end <= signal_from < "
-                             "signal_until < exit_time")  # fmt: skip
+        if not self.candle_start < self.candle_end <= self.entry_time < self.exit_time:
+            raise ValueError(
+                "orb times must run candle_start < candle_end <= entry_time < exit_time"
+            )
         return self
 
 

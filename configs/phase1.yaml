@@ -292,12 +292,12 @@ study_options_day:                   # ADR-0021 (accepted 2026-11-14): long call
   total_loss_cap: 0.20               # ADR-0015 D3, unchanged
   decision_fill: CONSERVATIVE        # D2: buy at the ask, sell at the bid
   kill_fill: OPTIMISTIC              # D6 KILL is judged at the mid
-  orb:                               # D3 S1: opening-range breakout
-    range_start: "09:30"
-    range_end: "10:00"
-    signal_from: "10:00"             # first 1-minute close beyond the range, first break only
-    signal_until: "12:00"
-    exit_time: "15:45"               # or earlier: a 1-minute close back at the range midpoint
+  orb:                               # A1 S1: Zarattini & Aziz (2023), first 5-minute candle
+    candle_start: "09:30"            # direction = sign of the underlying's move over the candle;
+    candle_end: "09:35"              #   no trade when it is flat
+    entry_time: "09:35"              # declared exception to schedule.first (09:45)
+    target_r_multiple: 10.0          # exit when the underlying has moved 10x the stop distance
+    exit_time: "15:50"               # otherwise; stop = the candle's low (call) or high (put)
   half_hour:                         # D3 S2: sign of previous close -> signal_time
     signal_time: "10:00"
     entry_time: "15:30"              # declared exception to schedule.last_new_entry

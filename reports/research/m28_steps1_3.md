@@ -11,8 +11,7 @@ summaries are never counted as verified.
 
 ## Step 2. Broker (ADR-0021 OQ2 rule)
 
-**Assumption to confirm with the owner: the account is Canadian** (ADR-0015 says "IBKR
-Canada"). Every fee below is for a Canadian client. A US account would change them.
+**The account is Canadian (owner, 2026-11-14).** Every fee below is for a Canadian client. A US account would change them.
 
 ### Fees for one US-listed option contract
 | | IBKR Canada | Webull Canada |
@@ -90,7 +89,9 @@ PDF read):
 - ADR-0021 disclosed only the 5-versus-30-minute difference. The rule itself is different.
 - The paper's sample ends 2023-02, one month before this project's QQQ data begins, so the
   whole development window is outside its sample.
-- **Options for the owner (an amendment to ADR-0021 either way):**
+- **Decided (owner, 2026-11-14): option (a), adopt the paper's rule.** Recorded as ADR-0021
+  amendment A1; config and tests updated.
+- The options that were offered:
   - **(a) Adopt the paper's rule.** Entry at 09:35 is before spec `schedule.first` (09:45),
     a new declared exception, and option spreads are widest just after the open; the cost
     map would show whether that kills it.

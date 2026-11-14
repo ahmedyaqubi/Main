@@ -47,10 +47,11 @@ def test_contract_and_account_limits() -> None:
     assert CFG.trade.contracts == 1 and CFG.trade.max_open_positions == 1
 
 
-def test_setups_are_frozen_as_in_d3() -> None:
+def test_setups_are_frozen_as_in_d3_and_amendment_a1() -> None:
     o, h = S.orb, S.half_hour
-    assert (o.range_start, o.range_end) == (time(9, 30), time(10, 0))
-    assert (o.signal_from, o.signal_until, o.exit_time) == (time(10, 0), time(12, 0), time(15, 45))
+    assert (o.candle_start, o.candle_end, o.entry_time) == (time(9, 30), time(9, 35), time(9, 35))
+    assert o.target_r_multiple == 10.0
+    assert o.exit_time == CFG.trade.forced_exit_time == time(15, 50)
     assert (h.signal_time, h.entry_time, h.exit_time) == (time(10, 0), time(15, 30), time(15, 50))
 
 
@@ -89,7 +90,7 @@ def test_setup_times_must_be_ordered_and_inside_the_session_rules() -> None:
     with pytest.raises(ValidationError, match="forced_exit_time"):
         Phase1Config.model_validate(late)
     backwards = copy.deepcopy(RAW)
-    backwards["study_options_day"]["orb"]["signal_until"] = "09:45"
+    backwards["study_options_day"]["orb"]["entry_time"] = "09:34"  # inside the candle
     with pytest.raises(ValidationError):
         Phase1Config.model_validate(backwards)
 

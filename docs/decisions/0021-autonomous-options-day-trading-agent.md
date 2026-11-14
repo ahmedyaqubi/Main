@@ -266,6 +266,51 @@ called profits (rule 12).
 - **OQ7. Tickers. ANSWERED (owner, 2026-11-13):** add IWM, NVDA, TSLA and AAPL to QQQ and
   SPY. Recorded in D1.
 
+## Amendment A1 (owner, 2026-11-14: "adopt the paper's rule, yes account is Canadian")
+Made before any data was read or any signal computed. The D3 table above is left as accepted;
+for S1 this amendment replaces it.
+
+**Why:** M28 step 3 read the paper S1 cites (Zarattini & Aziz, "Can Day Trading Really Be
+Profitable?", full PDF) and found S1 was a different rule, not only a longer range
+(`reports/research/m28_steps1_3.md`). The owner chose the paper's rule.
+
+**S1 as amended (frozen):**
+| | rule |
+|---|---|
+| Candle | the underlying's first 5 minutes, 09:30–09:35 ET |
+| Direction | candle up → call; candle down → put; flat → NO_TRADE (`FLAT_FIRST_CANDLE`) |
+| Entry | 09:35, the D2 contract at the quote in force |
+| Stop | the first minute the underlying is at or below the candle's low (call), or at or above its high (put) |
+| Target | the first minute the underlying has moved 10× the stop distance in the trade's direction, the stop distance being entry price minus the candle's low (call) or the candle's high minus entry price (put) |
+| Otherwise | `trade.forced_exit_time` (15:50) |
+
+**Differences from the paper that remain, declared:**
+- **Options, not shares.** The paper trades QQQ and TQQQ shares sized to risk 1% of capital.
+  Here one option contract is bought; stop and target are read on the underlying.
+- **Six tickers.** The paper tests QQQ (and TQQQ) only. Applying the rule to the other five is
+  this project's extension, not the paper's finding.
+- **Prices.** The paper uses trade candles and assumes no spread and no slippage. Here the
+  underlying is measured at the mid of 1-minute quotes, and option fills are ask and bid.
+- **Exit.** The paper exits at the close; here 15:50.
+- **Entry before the spec's first entry time.** 09:35 is earlier than `schedule.first`
+  (09:45): a declared exception for S1 only. Option spreads are widest just after the open;
+  the D5 cost map decides whether S1 survives that.
+- **One position at a time (D3)** still applies: when several tickers signal at 09:35, only
+  the one with the lowest cost share trades.
+
+**What the paper reports** (QQQ, 2016-01 → 2023-02, 1,795 trades): win rate 24%; average gain
+0.13 of the stop distance per trade; commission $0.0005 a share. Its sample ends one month
+before this project's data begins. D5's "largest effect reported in its source paper" is this
+0.13 figure.
+
+**D4 for S1 is unchanged in substance** (who pays, why it may persist), with one addition to
+"why it may fail here": three losing trades in four are expected by design, so the option's
+spread is paid most often on losers.
+
+**Also recorded:** the account is Canadian (OQ2). Broker: **IBKR, provisionally**, by the OQ2
+rule; three IBKR items remain to be verified before the recorder is built (the report lists
+them). Fees used: `study_options_day.broker_fees`.
+
 ## Review of revision 1 (assistant's own QA, 2026-11-13)
 Errors corrected:
 - **Contradicted a frozen definition.** Rev 1 chose "the first in-the-money strike" while
