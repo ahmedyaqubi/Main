@@ -1,12 +1,15 @@
 # ADR-0021: New mission: an autonomous options day-trading agent on a few tickers (long calls and puts first)
 
-- Status: **PROPOSED**, revision 3 (2026-11-13). Drafted by the assistant at the owner's request
+- Status: **PROPOSED**, revision 4 (2026-11-14). Drafted by the assistant at the owner's request
   ("re-strategize this whole idea for options day trading; calls and puts mainly, spreads as
   back-up; start with a small funded account"; then "only a few tickers"). **Not in force until
   the owner accepts it and answers OQ1–OQ7.**
 - Revision 2 follows the assistant's own review of revision 1 (see "Review of revision 1").
 - Revision 3 records the owner's answers to OQ1 and OQ7 (2026-11-13): six tickers; a per-trade
   loss cap of the cost of 1 to 2 contracts.
+- Revision 4 records the owner's input of 2026-11-14: broker is IBKR or Webull, with paid live
+  data on either; the system must learn from history, from its own trades, and from watching
+  the market when it does not trade (new D10).
 - Supersedes, if accepted: the ADR-0015 mission statement, for all work after M27.
   - ADR-0015's constraints Q1–Q8, budget and gates stay in force except where this ADR says so.
   - **Every hard rule in `CLAUDE.md` stays in force, rule 1 included.** This ADR authorises
@@ -78,7 +81,8 @@ commissions?*
   configured latency, rounded against the trader (spec §6). Moderate and mid fills are
   descriptive rows.
 - **Costs:** `costs.commission_per_contract` and `costs.fees_per_contract`, re-read from the
-  broker's schedule in M28 (OQ2).
+  official schedules of **both** IBKR and Webull in M28. Results are reported under each; the
+  decision uses the more expensive of the two until the broker is chosen (OQ2).
 - **Loss cap at entry (owner, OQ1):** the most one trade may lose is the cost of the
   contracts bought, 1 to 2 contracts. For entries this replaces ADR-0015's 3%-a-day figure.
   - A dollar ceiling per trade is still needed so that an unusually expensive contract is
@@ -180,18 +184,50 @@ Registered before any statistic is computed, in two steps inside the same run:
 | stage | what the agent does | authorised by |
 |---|---|---|
 | 1 | research: D5–D8 | this ADR |
+| 1b | recorder: reads live quotes for the six tickers and stores them, every session; computes shadow signals (D10). **Market-data access only; no order permission, no order code** | this ADR, once OQ2 names the broker and a data-only connection is verified (rule 9) |
 | 2 | paper executor: runs the frozen setups unattended, journals every decision, 60+ sessions | a **paper-only ADR** (ADR-0015 D4.3) |
 | 3 | monitor: compares paper results with the backtest range; halts on drift, data failure, or a loss cap | same paper-only ADR |
 | 4 | small live account, one contract | a **separate ADR that amends hard rule 1**; the owner's decision alone |
 | 5 | spreads | account size and approval level (OQ4), **and** a spread study of its own; M19T and M23 found none that survived |
 
-- **"Learning" means gated promotion only.** A new or changed rule reaches the agent only
-  after D6, D8 and stage 2. The agent never adjusts its own parameters from live or paper
-  results.
+- **How the agent learns is fixed in D10.** A new or changed trading rule reaches the agent
+  only through its promotion gate.
 - **Loss caps in code from stage 2:** 3% of the account per day, 20% total; hitting 20% stops
   everything pending review (ADR-0015 D3).
 
-### D10. Milestones
+### D10. Learning (owner requirement, 2026-11-14)
+The system learns from three sources. What it may change by itself depends on how much
+evidence each source can give.
+
+| source | what is recorded | what it teaches |
+|---|---|---|
+| History | the D5–D8 studies | whether a setup has an edge at all |
+| Its own trades (paper, later live) | every decision, order, fill and exit, against what the model expected | real fill prices and costs; whether results stay inside the backtest range |
+| Watching without trading (the **shadow book**) | every session, for every ticker: each setup's signal, the trade it would have taken, why it did not trade, and what happened next; the same for candidate rules not yet promoted | what the frozen rules miss; whether NO_TRADE reasons are costing or saving money; how a candidate behaves on data nobody has tuned to |
+
+**What changes automatically, and what does not:**
+- **Automatic, with a log entry:** estimates of fills and costs; halts and stricter limits.
+  These can only make the agent trade less or more cautiously.
+- **Automatic, proposal only:** the system may draft a new candidate rule or a change to an
+  existing one, with its reason (ADR-0015 D1), from anything it observes.
+- **Never automatic:** entry or exit rules, tickers, sizing and loss caps. A candidate
+  becomes a trading rule only by: pre-registration → shadow book for a pre-declared number of
+  sessions with a pre-declared pass line → the owner's approval.
+
+**Why trading rules are not retuned from recent results:** a setup trades at most once a day
+per ticker. A few weeks of wins or losses is almost all noise, and a system that adjusts to
+it loses what the testing was for.
+
+**Why the shadow book matters most:** forward sessions are data that no one has examined. A
+candidate that passes there has passed the cleanest test this project can run, and the
+record costs nothing beyond the live data subscription. It also replaces most of the paid
+forward data in OQ6.
+
+**Rules that stay in force:** every shadow and live value carries `available_at` (rule 2);
+every candidate is a registered trial and counts in n_trials (D7); shadow results are never
+called profits (rule 12).
+
+### D11. Milestones
 - **M28:** data verification, ticker selection, cost map and feasibility, literature check
   (not a trial).
 - **M29–M30:** one screen each for the setups that survive D5.
@@ -204,15 +240,23 @@ Registered before any statistic is computed, in two steps inside the same run:
   - **Still open:** the starting account size in dollars, and whether the agent buys 1 or 2
     contracts. With the 20% total cap, a $5,000 account stops after about $1,000 of losses,
     which could be as few as two or three full-premium losses.
-- **OQ2. Broker and account type.** Still IBKR Canada, cash account? *Uncertainty flagged:*
-  same-day reuse of option sale proceeds, and how the pre-2027 day-trade rule applies, must be
-  confirmed with the broker.
+- **OQ2. Broker and account type. PARTLY ANSWERED (owner, 2026-11-14):** IBKR or Webull;
+  live data is paid on Webull and can be on IBKR.
+  - **Still open:** which one. M28 decides by a rule fixed now: the broker must offer (i) a
+    data-only connection, (ii) a paper account reachable by program, and (iii) option day
+    trades in the owner's account type; among those that do, the lower modelled round-trip
+    cost wins.
+  - *Uncertainty flagged, none of it verified:* each broker's option fees for the owner's
+    country; whether either live subscription includes historical quotes for expired option
+    contracts (the assistant expects not); same-day reuse of option sale proceeds; how the
+    pre-2027 day-trade rule applies.
 - **OQ3. Market-hours time.** ADR-0015 Q4 says none. Stage 2 onward then needs an agent
   running unattended during the session. Confirm that is intended.
 - **OQ4. Spread trigger.** Which account size and approval level unlock stage 5?
 - **OQ5. Decision level.** 98.3% (D7) or another pre-declared level?
-- **OQ6. Forward data.** Approve starting forward collection for the chosen tickers, so
-  sessions after 2026-10-02 exist for confirmation? Cost to be quoted.
+- **OQ6. Forward data.** The owner's live subscription can supply it through the stage 1b
+  recorder at no extra data cost. Approve stage 1b? Paid forward pulls would then be needed
+  only for sessions between 2026-10-02 and the recorder's first day, cost to be quoted.
 - **OQ7. Tickers. ANSWERED (owner, 2026-11-13):** add IWM, NVDA, TSLA and AAPL to QQQ and
   SPY. Recorded in D1.
 

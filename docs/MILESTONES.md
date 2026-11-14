@@ -698,7 +698,7 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - versus buy-and-hold (approximate): CAGR 5.3% vs 15.2%, Sharpe 0.48 vs 0.75, maximum drawdown 10% vs 34%.
 - **Next (ADR-0019 H6):** a paper-only ADR (owner): 60+ sessions, paper orders only, position size and settlement rules.
 
-## M28 — Options day-trading agent: data, ticker selection and cost map (ADR-0021 rev 3) — NOT STARTED: ADR-0021 is **PROPOSED**, awaiting the owner
+## M28 — Options day-trading agent: data, ticker selection and cost map (ADR-0021 rev 4) — NOT STARTED: ADR-0021 is **PROPOSED**, awaiting the owner
 Depends on: ADR-0021 ACCEPTED, with OQ1–OQ7 answered. Not a trial.
 Acceptance (draft, fixed when the ADR is accepted):
 - [ ] QQQ 1-minute quotes and next-expiry option quotes verified present and complete for the development sessions (rule 9)
@@ -706,6 +706,7 @@ Acceptance (draft, fixed when the ADR is accepted):
 - [ ] Expiration schedules of SPY, IWM, NVDA, TSLA, AAPL verified; their data priced to the cent and approved before purchase (ADR-0021 D1, D7)
 - [ ] Cost share and break-even move per ticker and setup; required edge per setup; setups dropped by the D5 rules listed
 - [ ] S1–S2 details checked against their published sources before any signal is computed
+- [ ] Broker chosen by the ADR-0021 OQ2 rule: IBKR and Webull fee schedules read from official pages; data-only connection, programmatic paper account and historical option-quote coverage each verified or marked unavailable
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
