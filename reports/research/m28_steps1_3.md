@@ -44,13 +44,34 @@ summaries are never counted as verified.
   needs three years of minute bid and ask quotes.
 - So the five new tickers must be bought (step 5), as expected.
 
-### Outcome: **IBKR, provisionally**
+### Outcome: **IBKR**
 - Under the rule, Webull does not currently qualify: no data-only key is documented, and
   API access for a Canadian account is unconfirmed. IBKR has the documented read-only switch.
-- It is provisional because three IBKR items are not yet verified from a primary source:
-  what Read-Only API blocks, programmatic paper access, and day-trade rules for the owner's
-  account. They are checked before the recorder is built. If any fails, the broker question
-  reopens.
+- It was provisional pending three IBKR items. They were checked the same day (follow-up
+  below): two verified, one verified in substance with a stated gap.
+
+### Follow-up, 2026-11-14: the three open IBKR points
+Read on IBKR's own pages (interactivebrokers.com campus lesson "Installing & Configuring TWS
+for the API", TWS API documentation, and interactivebrokers.ca "Configuring Your Account").
+
+| point | finding | status |
+|---|---|---|
+| What Read-Only API blocks | "The setting 'Read-Only' is enabled by default and will block all API orders. It must be unchecked to allow any orders from the API." The settings reference: "true indicates modifications cannot be made through the API." | **verified** that it blocks orders. That market data still flows with it on is **not stated** on any page read; it is confirmed only by testing on the owner's own TWS, which is the recorder's first check |
+| Paper account reachable by program | "Paper accounts are compatible to use with the TWS API." Default ports: TWS 7496 live / 7497 paper; IB Gateway 4001 live / 4002 paper. A paper account needs the live account approved and funded | **verified** |
+| Option day trades in a Canadian cash account | "Full payment is required for all call and put purchases." "Cash from the sale of options is available one business day after the trade date." The USD 25,000 day-trading minimum is stated for **margin** accounts only ("accounts that remain subject to existing Pattern Day Trading regulations", during a "PDT rule phase-out period") | **verified** for the settlement rule. No page read says in so many words that a cash account may day-trade options without a count limit; the pages impose only the settled-cash limit |
+
+Consequences:
+- **The broker choice stands: IBKR.** Read-Only API is on by default, so the recorder runs
+  with IBKR's own order block in place, in addition to this project having no order code.
+- **The ADR's cash rule matches IBKR's:** premium spent in a session may not exceed settled
+  cash, and sale proceeds return the next business day. With $5,000 and at most $500 per
+  trade, settlement does not bind at one position at a time.
+- **Two cautions for the recorder, both from IBKR's pages:**
+  - Market data by API needs an IBKR Pro account, USD 500 of equity plus the subscription
+    cost, and "Market Data API" enabled.
+  - A paper session "will not receive market data if it is sharing data from a live user
+    which is used to login to Client Portal" at the same time.
+- **Still not verified:** the monthly price of IBKR's US options data feed.
 
 ## Step 3. Expirations, earnings calendar, literature
 
