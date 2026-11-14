@@ -273,6 +273,60 @@ study_pullback:                      # ADR-0018 (M27): Connors RSI(2) on SPY, on
   raw_dir: data/raw/tom
   fred_series: DTB3
 
+study_options_day:                   # ADR-0021 (accepted 2026-11-14): long calls/puts, day trades
+  tickers: [QQQ, SPY, IWM, NVDA, TSLA, AAPL]   # D1: fixed by the owner; the list is closed
+  single_stocks: [NVDA, TSLA, AAPL]  # D1: earnings sessions excluded
+  earnings_exclusion_sessions: 1     # D1: the earnings session and this many on each side
+  dev_end:                           # D8: last development session per ticker
+    QQQ: "2026-04-02"                #   ADR-0011 holdout after it
+    SPY: "2025-10-02"                #   others: 12 months locked (ADR-0015 D4)
+    IWM: "2025-10-02"
+    NVDA: "2025-10-02"
+    TSLA: "2025-10-02"
+    AAPL: "2025-10-02"
+  holdout_end: "2026-10-02"
+  min_sessions_to_expiry: 1          # D2: nearest expiration at least one session away (no 0DTE)
+  max_sessions_to_expiry: 5          # D2: weekly-only names
+  account_usd: 5000.0                # owner, OQ1
+  max_premium_usd: 500.0             # D2: per trade, commissions included -> PREMIUM_OVER_CAP
+  total_loss_cap: 0.20               # ADR-0015 D3, unchanged
+  decision_fill: CONSERVATIVE        # D2: buy at the ask, sell at the bid
+  kill_fill: OPTIMISTIC              # D6 KILL is judged at the mid
+  orb:                               # A1 S1: Zarattini & Aziz (2023), first 5-minute candle
+    candle_start: "09:30"            # direction = sign of the underlying's move over the candle;
+    candle_end: "09:35"              #   no trade when it is flat
+    entry_time: "09:35"              # declared exception to schedule.first (09:45)
+    target_r_multiple: 10.0          # exit when the underlying has moved 10x the stop distance
+    exit_time: "15:50"               # otherwise; stop = the candle's low (call) or high (put)
+  half_hour:                         # D3 S2: sign of previous close -> signal_time
+    signal_time: "10:00"
+    entry_time: "15:30"              # declared exception to schedule.last_new_entry
+    exit_time: "15:50"
+  max_tests: 3                       # D7: of ADR-0015's remaining 7
+  family_alpha: 0.05                 # D7: ADVANCE level = 1 - family_alpha / max_tests (98.3%)
+  step_a_level: 0.95                 # D6 Step A, one-sided
+  kill_level: 0.95                   # D6 KILL, two-sided
+  min_trades: 60                     # D6 ADVANCE guard
+  holdout_min_trades: 40             # D8: fewer -> descriptive only
+  max_advance: 2                     # D6
+  bootstrap_reps: 20000              # D6: session bootstrap (2,000 let the seed decide M27)
+  breakeven_move_percentile: 0.75    # D5 drop rule
+  n_trials_recorded: 42              # D7: reports/research/m27_holdout.md
+  data_budget_usd: 71.49             # D7: what is left of ADR-0015's $100
+  broker_fees:                       # D2: official pages read 2026-11-14 (reports/research/m28_steps1_3.md)
+    ibkr_canada:                     # interactivebrokers.ca, US options, tiered, <= 10,000/month
+      commission_per_contract: 0.65  # premium >= $0.10
+      min_per_order: 1.00            # binds for one contract
+      occ_clearing_per_contract: 0.025
+      cat_per_contract: 0.0003
+      sec_fee_rate_on_sales: 0.0000206   # sells only; ORF varies by exchange and is NOT included
+    webull_canada:                   # webull.ca, after the 3-month promotion
+      commission_per_contract: 0.99
+      min_per_order: 0.0             # none stated
+      occ_clearing_per_contract: 0.025   # ASSUMED equal to IBKR's: the page says only "may apply"
+      cat_per_contract: 0.0003           # ASSUMED, as above
+      sec_fee_rate_on_sales: 0.0000206   # ASSUMED, as above
+
 research:                            # M19R research iteration 1 (diagnostics D1-D3)
   implied_c: 1.0e6                   # D1 benchmark logistic: effectively unregularised
   next_session_minutes: 390          # D1: trading minutes of the expiry session (D+1)
