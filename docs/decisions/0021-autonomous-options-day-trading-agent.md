@@ -1,6 +1,6 @@
 # ADR-0021: New mission: an autonomous options day-trading agent on a few tickers (long calls and puts first)
 
-- Status: **PROPOSED**, revision 4 (2026-11-14). Drafted by the assistant at the owner's request
+- Status: **PROPOSED**, revision 5 (2026-11-14). Drafted by the assistant at the owner's request
   ("re-strategize this whole idea for options day trading; calls and puts mainly, spreads as
   back-up; start with a small funded account"; then "only a few tickers"). **Not in force until
   the owner accepts it and answers OQ1–OQ7.**
@@ -10,6 +10,8 @@
 - Revision 4 records the owner's input of 2026-11-14: broker is IBKR or Webull, with paid live
   data on either; the system must learn from history, from its own trades, and from watching
   the market when it does not trade (new D10).
+- Revision 5 records the owner's answers of 2026-11-14: the recorder is approved; the account
+  is $5,000; one contract per trade.
 - Supersedes, if accepted: the ADR-0015 mission statement, for all work after M27.
   - ADR-0015's constraints Q1–Q8, budget and gates stay in force except where this ADR says so.
   - **Every hard rule in `CLAUDE.md` stays in force, rule 1 included.** This ADR authorises
@@ -68,8 +70,8 @@ commissions?*
   verified in M28. The contract rule (D2) works with daily or weekly expirations.
 
 ### D2. Contract (frozen)
-- **Structure:** one long call (up signal) or one long put (down signal). Research uses one
-  contract; returns are a share of premium, so the result is the same for two.
+- **Structure:** one long call (up signal) or one long put (down signal). **One contract per
+  trade** (owner, 2026-11-14).
 - **Entry and exit the same session.** No position is held overnight.
 - **Expiry:** the nearest listed expiration at least one session away (1DTE where expirations
   are daily; up to 5 sessions for weekly-only names). 0DTE is excluded: the premium is small,
@@ -83,11 +85,13 @@ commissions?*
 - **Costs:** `costs.commission_per_contract` and `costs.fees_per_contract`, re-read from the
   official schedules of **both** IBKR and Webull in M28. Results are reported under each; the
   decision uses the more expensive of the two until the broker is chosen (OQ2).
-- **Loss cap at entry (owner, OQ1):** the most one trade may lose is the cost of the
-  contracts bought, 1 to 2 contracts. For entries this replaces ADR-0015's 3%-a-day figure.
-  - A dollar ceiling per trade is still needed so that an unusually expensive contract is
-    NO_TRADE (`PREMIUM_OVER_CAP`); it is set from the account size (OQ1, still open).
-  - ADR-0015's 20% total cap is unchanged.
+- **Loss cap at entry (owner, OQ1):** the most one trade may lose is the cost of its one
+  contract. For entries this replaces ADR-0015's 3%-a-day figure.
+  - **Account: $5,000.** ADR-0015's 20% total cap is unchanged: trading stops for review after
+    $1,000 of losses.
+  - **Dollar ceiling per trade: $500 (10% of the account), proposed by the assistant and not
+    yet confirmed (OQ1).** A contract costing more, commissions included, is NO_TRADE
+    (`PREMIUM_OVER_CAP`). At $500 the total cap survives at least two full-premium losses.
 - **Cash account:** a purchase uses settled cash only. Premium spent in a session may not
   exceed the settled balance at the open.
 
@@ -235,11 +239,9 @@ called profits (rule 12).
 - Paper stages follow only by the paper-only ADR.
 
 ## Open questions for the owner (answers are recorded here before acceptance)
-- **OQ1. Account size and per-trade loss cap. PARTLY ANSWERED (owner, 2026-11-13):** "I'm ok
-  with the cost of 1 to 2 options contracts." Recorded in D2.
-  - **Still open:** the starting account size in dollars, and whether the agent buys 1 or 2
-    contracts. With the 20% total cap, a $5,000 account stops after about $1,000 of losses,
-    which could be as few as two or three full-premium losses.
+- **OQ1. Account size and per-trade loss cap. ANSWERED (owner, 2026-11-13 and 2026-11-14):**
+  $5,000; one contract; the most a trade may lose is that contract's cost. Recorded in D2.
+  - **Still open:** confirm the $500 ceiling per trade, or name another.
 - **OQ2. Broker and account type. PARTLY ANSWERED (owner, 2026-11-14):** IBKR or Webull;
   live data is paid on Webull and can be on IBKR.
   - **Still open:** which one. M28 decides by a rule fixed now: the broker must offer (i) a
@@ -254,9 +256,11 @@ called profits (rule 12).
   running unattended during the session. Confirm that is intended.
 - **OQ4. Spread trigger.** Which account size and approval level unlock stage 5?
 - **OQ5. Decision level.** 98.3% (D7) or another pre-declared level?
-- **OQ6. Forward data.** The owner's live subscription can supply it through the stage 1b
-  recorder at no extra data cost. Approve stage 1b? Paid forward pulls would then be needed
-  only for sessions between 2026-10-02 and the recorder's first day, cost to be quoted.
+- **OQ6. Forward data. ANSWERED (owner, 2026-11-14):** the stage 1b recorder is approved.
+  - It is built only after this ADR is accepted, the broker is chosen by the OQ2 rule, and a
+    data-only connection is verified. Until then no code connects to a broker.
+  - Paid forward pulls are needed only for sessions between 2026-10-02 and the recorder's
+    first day; cost to be quoted.
 - **OQ7. Tickers. ANSWERED (owner, 2026-11-13):** add IWM, NVDA, TSLA and AAPL to QQQ and
   SPY. Recorded in D1.
 
