@@ -8,10 +8,10 @@ import os
 from collections.abc import Mapping
 from datetime import date, time
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, Self
 
 import yaml
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = REPO_ROOT / "configs" / "phase1.yaml"
@@ -429,6 +429,112 @@ class StudyPullback(_Section):
     fred_series: str
 
 
+class OrbSetup(_Section):
+    """ADR-0021 D3, S1: opening-range breakout."""
+
+    range_start: time
+    range_end: time
+    signal_from: time
+    signal_until: time
+    exit_time: time
+
+    @model_validator(mode="after")
+    def _ordered(self) -> Self:
+        t = [self.range_start, self.range_end, self.signal_from, self.signal_until, self.exit_time]
+        if not (t[0] < t[1] <= t[2] < t[3] < t[4]):
+            raise ValueError("orb times must run range_start < range_end <= signal_from < "
+                             "signal_until < exit_time")  # fmt: skip
+        return self
+
+
+class HalfHourSetup(_Section):
+    """ADR-0021 D3, S2: the first half-hour predicts the last."""
+
+    signal_time: time
+    entry_time: time
+    exit_time: time
+
+    @model_validator(mode="after")
+    def _ordered(self) -> Self:
+        if not self.signal_time < self.entry_time < self.exit_time:
+            raise ValueError("half_hour times must run signal_time < entry_time < exit_time")
+        return self
+
+
+class BrokerFees(_Section):
+    """ADR-0021 D2: one broker's published option fees, USD (M28 step 2, read 2026-11-14)."""
+
+    commission_per_contract: float = Field(ge=0)
+    min_per_order: float = Field(ge=0)
+    occ_clearing_per_contract: float = Field(ge=0)
+    cat_per_contract: float = Field(ge=0)
+    sec_fee_rate_on_sales: float = Field(ge=0)
+
+    def order_cost(self, contracts: int, premium: float, *, sell: bool) -> float:
+        """Cost of one order of `contracts` at `premium` per share (multiplier 100)."""
+        if contracts <= 0:
+            raise ValueError("contracts must be positive")
+        cost = max(self.commission_per_contract * contracts, self.min_per_order)
+        cost += (self.occ_clearing_per_contract + self.cat_per_contract) * contracts
+        if sell:
+            cost += self.sec_fee_rate_on_sales * premium * 100 * contracts
+        return cost
+
+
+class StudyOptionsDay(_Section):
+    """ADR-0021 (accepted 2026-11-14): long calls and puts, day trades, six tickers."""
+
+    tickers: list[str] = Field(min_length=1)
+    single_stocks: list[str]
+    earnings_exclusion_sessions: int = Field(ge=0)
+    dev_end: dict[str, date]
+    holdout_end: date
+    min_sessions_to_expiry: int = Field(ge=1)  # D2: never 0DTE
+    max_sessions_to_expiry: int
+    account_usd: float = Field(gt=0)
+    max_premium_usd: float = Field(gt=0)
+    total_loss_cap: float = Field(gt=0, lt=1)
+    decision_fill: Literal["CONSERVATIVE", "MODERATE", "OPTIMISTIC"]
+    kill_fill: Literal["CONSERVATIVE", "MODERATE", "OPTIMISTIC"]
+    orb: OrbSetup
+    half_hour: HalfHourSetup
+    max_tests: int = Field(ge=1)
+    family_alpha: float = Field(gt=0, lt=1)
+    step_a_level: float = Field(gt=0, lt=1)
+    kill_level: float = Field(gt=0, lt=1)
+    min_trades: int
+    holdout_min_trades: int
+    max_advance: int
+    bootstrap_reps: int = Field(ge=1)
+    breakeven_move_percentile: float = Field(gt=0, lt=1)
+    n_trials_recorded: int
+    data_budget_usd: float
+    broker_fees: dict[Literal["ibkr_canada", "webull_canada"], BrokerFees]
+
+    @property
+    def advance_level(self) -> float:
+        """D7: one-sided level for ADVANCE, Bonferroni over this ADR's tests."""
+        return 1 - self.family_alpha / self.max_tests
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Self:
+        if len(set(self.tickers)) != len(self.tickers):
+            raise ValueError("tickers must be distinct")
+        if not set(self.single_stocks) <= set(self.tickers):
+            raise ValueError("single_stocks must be among tickers")
+        if set(self.dev_end) != set(self.tickers):
+            raise ValueError("dev_end needs exactly one date per ticker")
+        if any(d >= self.holdout_end for d in self.dev_end.values()):
+            raise ValueError("holdout_end must be after every dev_end")
+        if self.max_sessions_to_expiry < self.min_sessions_to_expiry:
+            raise ValueError("max_sessions_to_expiry is below min_sessions_to_expiry")
+        if self.max_premium_usd > self.account_usd:
+            raise ValueError("max_premium_usd exceeds account_usd")
+        if set(self.broker_fees) != {"ibkr_canada", "webull_canada"}:
+            raise ValueError("broker_fees needs both ibkr_canada and webull_canada")
+        return self
+
+
 class Research(_Section):
     implied_c: float
     next_session_minutes: int
@@ -526,12 +632,24 @@ class Phase1Config(_Section):
     study_etf_trend: StudyEtfTrend
     study_tom: StudyTom
     study_pullback: StudyPullback
+    study_options_day: StudyOptionsDay
     features_f3: FeaturesF3
     pit: Pit
     validation: Validation
     dq: DataQuality
     features: Features
     models: Models
+
+    @model_validator(mode="after")
+    def _options_day_inside_session_rules(self) -> Self:
+        """ADR-0021 D3: the setups keep `trade.forced_exit_time`."""
+        s = self.study_options_day
+        for name, t in (("orb", s.orb.exit_time), ("half_hour", s.half_hour.exit_time)):
+            if t > self.trade.forced_exit_time:
+                raise ValueError(
+                    f"study_options_day.{name}.exit_time {t} is after trade.forced_exit_time"
+                )
+        return self
 
 
 def load_config(path: Path | None = None) -> Phase1Config:

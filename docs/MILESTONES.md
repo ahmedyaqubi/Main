@@ -698,15 +698,21 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - versus buy-and-hold (approximate): CAGR 5.3% vs 15.2%, Sharpe 0.48 vs 0.75, maximum drawdown 10% vs 34%.
 - **Next (ADR-0019 H6):** a paper-only ADR (owner): 60+ sessions, paper orders only, position size and settlement rules.
 
-## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — NOT STARTED: plan awaiting owner approval
-Depends on: ADR-0021 ACCEPTED (2026-11-14). Not a trial.
+## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–3 done (2026-11-14); steps 4–7 need the data
+Depends on: ADR-0021 ACCEPTED (2026-11-14). Not a trial. Plan approved by the owner 2026-11-14 ("approve, start with steps 1–3 now").
+Report for steps 1–3: `reports/research/m28_steps1_3.md`.
 Acceptance:
-- [ ] QQQ 1-minute quotes and next-expiry option quotes verified present and complete for the development sessions (rule 9)
-- [ ] `final_test_access_log` shows no QQQ holdout access
-- [ ] Expiration schedules of SPY, IWM, NVDA, TSLA, AAPL verified; their data priced to the cent and approved before purchase (ADR-0021 D1, D7)
-- [ ] Cost share and break-even move per ticker and setup; required edge per setup; setups dropped by the D5 rules listed
-- [ ] S1–S2 details checked against their published sources before any signal is computed
-- [ ] Broker chosen by the ADR-0021 OQ2 rule: IBKR and Webull fee schedules read from official pages; data-only connection, programmatic paper account and historical option-quote coverage each verified or marked unavailable
+- [x] Step 1: `study_options_day` config block with every frozen ADR parameter, validated, with tests (`tests/test_options_day_config.py`)
+- [x] Step 2: both brokers' fee pages read. One contract costs $1.00 per side at IBKR Canada (order minimum) and $0.99 at Webull Canada. Neither broker serves history for expired options. **IBKR chosen provisionally:** Webull documents no data-only key, and its API is not confirmed for Canadian accounts
+  - [ ] Still to verify before the recorder is built: what IBKR's Read-Only API setting blocks; programmatic paper access; option day-trade rules for the owner's account; that the account is Canadian
+- [x] Step 3, expirations: IWM Tuesday/Thursday expirations date from April 2024 (verified). NVDA/TSLA/AAPL schedules **not verified** (sec.gov refused the download); the purchased definition files will show them
+- [ ] Step 3, earnings calendar: source identified (SEC 8-K Item 2.02) but **not verified**
+- [ ] Step 3, literature: **S1 does not match the paper it cites** (the paper trades the direction of the first 5-minute candle at 09:35, not a 30-minute range break). **Blocked on the owner:** adopt the paper's rule, or keep S1 with a corrected attribution. S2's paper could not be downloaded
+- [ ] Step 4: QQQ quotes verified present and complete; `final_test_access_log` shows no QQQ holdout access (rule 9)
+- [ ] Step 5: data for SPY, IWM, NVDA, TSLA, AAPL priced to the cent and approved before purchase
+- [ ] Step 6: cost map (tests first): cost share, break-even move, share of sessions under the $500 ceiling, required edge per setup
+- [ ] Step 7: report listing anything dropped by the ADR-0021 D5 rules
+- Found on the way: the Phase 1 `costs` block charges $0.70 per side; with IBKR's $1.00 order minimum the real figure for one contract is about $1.03. Earlier one-contract studies understated round-trip costs by about $0.65. No result is reversed (all failed). The spec's `costs` values are left unchanged (rule 7); ADR-0021 work uses `study_options_day.broker_fees`.
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
