@@ -703,8 +703,9 @@ Depends on: ADR-0021 ACCEPTED (2026-11-14). Not a trial. Plan approved by the ow
 Report for steps 1–3: `reports/research/m28_steps1_3.md`.
 Acceptance:
 - [x] Step 1: `study_options_day` config block with every frozen ADR parameter, validated, with tests (`tests/test_options_day_config.py`)
-- [x] Step 2: both brokers' fee pages read. One contract costs $1.00 per side at IBKR Canada (order minimum) and $0.99 at Webull Canada. Neither broker serves history for expired options. **IBKR chosen provisionally:** Webull documents no data-only key, and its API is not confirmed for Canadian accounts
-  - [ ] Still to verify before the recorder is built: what IBKR's Read-Only API setting blocks; programmatic paper access; option day-trade rules for the owner's account
+- [x] Step 2: both brokers' fee pages read. One contract costs $1.00 per side at IBKR Canada (order minimum) and $0.99 at Webull Canada. Neither broker serves history for expired options. **IBKR chosen:** Webull documents no data-only key, and its API is not confirmed for Canadian accounts
+  - [x] IBKR follow-up (2026-11-14): Read-Only API "will block all API orders" and is on by default; paper accounts work with the API (ports 7497 / 4002); a Canadian cash account pays options in full and gets sale proceeds back one business day later, with the USD 25,000 day-trading minimum stated for margin accounts only
+  - [ ] Left for the recorder's first check: that market data still flows with Read-Only API on (not stated on any page read); the monthly price of IBKR's US options data feed
   - [x] The account is Canadian (owner, 2026-11-14)
 - [x] Step 3, expirations: IWM Tuesday/Thursday expirations date from April 2024 (verified). NVDA/TSLA/AAPL schedules **not verified** (sec.gov refused the download); the purchased definition files will show them
 - [ ] Step 3, earnings calendar: source identified (SEC 8-K Item 2.02) but **not verified**
