@@ -698,7 +698,7 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - versus buy-and-hold (approximate): CAGR 5.3% vs 15.2%, Sharpe 0.48 vs 0.75, maximum drawdown 10% vs 34%.
 - **Next (ADR-0019 H6):** a paper-only ADR (owner): 60+ sessions, paper orders only, position size and settlement rules.
 
-## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–7 done (2026-11-14), uncommitted; open: earnings calendar, S2 paper
+## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–7 done (2026-11-14), CI green on def1b67; open: earnings calendar, S2 paper
 Depends on: ADR-0021 ACCEPTED (2026-11-14). Not a trial. Plan approved by the owner 2026-11-14 ("approve, start with steps 1–3 now").
 Report for steps 1–3: `reports/research/m28_steps1_3.md`.
 Acceptance:
@@ -729,6 +729,7 @@ Acceptance:
   - Expirations (step 3 question): QQQ and SPY list an expiry on the next session every session; IWM from 2024-04-18; NVDA, TSLA and AAPL weeklies only (21% of sessions), measured from the purchased definitions
   - **Owner, 2026-11-14: "Keep as NO_TRADE".** AAPL and NVDA have almost no underlying quotes on 2024-05-28 (vendor gap; SPY and TSLA complete): the session stays in, unchanged, and both setups are NO_TRADE there for those two tickers (no usable underlying quote). No data was altered. Other gaps: 2023-07-05 crossed option quotes at 09:35 (QQQ, SPY, IWM, AAPL) and SPY 2025-04-07 (crossed at the open), both NO_TRADE by the frozen rules
   - Still open before D6 runs: earnings calendar (D1; without it the single stocks are dropped) and S2's paper
+- Steps 4–7 committed as `def1b67` (PR ahmedyaqubi/Main#3); CI green on `def1b67`: https://github.com/ahmedyaqubi/Main/actions/runs/43595028148. M28 stays IN PROGRESS until the earnings calendar and S2's paper are settled
 - Found on the way: the Phase 1 `costs` block charges $0.70 per side; with IBKR's $1.00 order minimum the real figure for one contract is about $1.03. Earlier one-contract studies understated round-trip costs by about $0.65. No result is reversed (all failed). The spec's `costs` values are left unchanged (rule 7); ADR-0021 work uses `study_options_day.broker_fees`.
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
