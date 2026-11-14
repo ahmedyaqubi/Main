@@ -698,7 +698,7 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - versus buy-and-hold (approximate): CAGR 5.3% vs 15.2%, Sharpe 0.48 vs 0.75, maximum drawdown 10% vs 34%.
 - **Next (ADR-0019 H6):** a paper-only ADR (owner): 60+ sessions, paper orders only, position size and settlement rules.
 
-## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–3 done (2026-11-14); steps 4–7 need the data
+## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–7 done (2026-11-14), uncommitted; open: earnings calendar, S2 paper
 Depends on: ADR-0021 ACCEPTED (2026-11-14). Not a trial. Plan approved by the owner 2026-11-14 ("approve, start with steps 1–3 now").
 Report for steps 1–3: `reports/research/m28_steps1_3.md`.
 Acceptance:
@@ -711,10 +711,24 @@ Acceptance:
 - [ ] Step 3, earnings calendar: source identified (SEC 8-K Item 2.02) but **not verified**
 - [x] Step 3, literature, S1: the cited paper trades the direction of the first 5-minute candle at 09:35, not a 30-minute range break. **Owner adopted the paper's rule (ADR-0021 amendment A1, 2026-11-14)**; config and tests updated
 - [ ] Step 3, literature, S2: the paper could not be downloaded; to confirm before S2's test is registered
-- [ ] Step 4: QQQ quotes verified present and complete; `final_test_access_log` shows no QQQ holdout access (rule 9)
-- [ ] Step 5: data for SPY, IWM, NVDA, TSLA, AAPL priced to the cent and approved before purchase
-- [ ] Step 6: cost map (tests first): cost share, break-even move, share of sessions under the $500 ceiling, required edge per setup
-- [ ] Step 7: report listing anything dropped by the ADR-0021 D5 rules
+- [x] Step 4: QQQ quotes verified present and complete; `final_test_access_log` shows no QQQ holdout access (rule 9)
+  - **Owner, 2026-11-14: "Keep as NO_TRADE".** The 3 gap sessions stay in, unchanged; on them S1 has no trade by the frozen rules (`REJECTED_QUOTE` / no usable quote). No data was altered
+  - Run 2026-11-14 (`scripts/m28_verify_qqq.py` → `reports/research/m28_step4_qqq_data.md`, uncommitted code; tests `tests/test_options_day_data.py`). Holdout log: 2 entries, both M27 SPY daily (ADR-0019, ADR-0020); **no QQQ access**. Coverage: 753 of 756 development sessions pass (99.6%, line 95%)
+  - **Waiting on the owner:** 3 gap sessions. 2023-07-05: the ATM call and put quotes at 09:35–09:40 were rejected by M4 as crossed (`BID_GT_ASK`), so S1 has no entry quote that day. 2024-02-06 and 2026-03-10 (already ADR-0006 sessions): held-contract coverage 0.93–0.94 against 0.95
+  - Also found: S2 cannot enter on 8 early-close sessions (15:30 is after the forced exit); ADR-0021 does not say what happens then
+  - **Owner, 2026-11-14: option 1.** On an early-close session S2 is NO_TRADE (`EARLY_CLOSE`): its 15:30 entry is after the forced exit. This is a stated reading of the frozen D3 times, not a rule change; S2's times are not moved to the early close (that would need an ADR amendment). S1 is unaffected beyond its forced exit moving to close − 10 minutes, as ADR-0021 D3 already says. Effect: 8 of 756 QQQ development sessions
+- [x] Step 5: data for SPY, IWM, NVDA, TSLA, AAPL priced to the cent and approved before purchase
+  - Priced with free Databento calls (`scripts/m28_price_data.py`, scope `configs/m28_data.yaml` → `reports/research/m28_step5_price_quote.md`): development $5.52, holdout storage $2.15, total **$7.66** (exact $7.6608)
+  - **Owner, 2026-11-14: "Buy all $7.66".** Downloaded with `--download --max-usd 7.66`, which checks the cap before any file is fetched: 9,280 files, none unresolved, each logged in `data/raw/databento/m28/download_log.jsonl`. A restart re-fetched a few partly downloaded files, adding about $0.002 at most. Databento warned of 17 reduced-quality days (listed in the step 6 report)
+  - Holdout files are stored unopened (D8). `scripts/m28_build_data.py` ingests and cleans development files only, chosen by the date in the file name: M4 rules, per-ticker roots as in M23 (`ticker_config`, test `test_ticker_config_follows_the_m23_precedent_for_other_roots`)
+- [x] Step 6: cost map (tests first): cost share, break-even move, share of sessions under the $500 ceiling, required edge per setup
+  - `src/qqq1dte/backtesting/cost_map.py` (tests `tests/test_cost_map.py`, 11) and `scripts/m28_cost_map.py` → `reports/research/m28_step6_cost_map.md`. Calls and puts priced alike; the only underlying quantity is the absolute move. Fees from `study_options_day.broker_fees`, both brokers
+  - Break-even reported under calendar time and under trading hours only (sensitivity; `remaining_session_seconds`); the two agree on every D5 outcome
+  - **Owner, 2026-11-14: "Record as not applicable".** D5 rule 2 is not applied (ADR-0021 amendment A2): S1's units differ from the paper's 0.13 of the stop distance, and S2's paper is unverified. The required edge (about 1% of premium, pooled) is reported for information only and is understated: M11's trades were closed by target and stop exits
+- [x] Step 7: report listing anything dropped by the ADR-0021 D5 rules: `reports/research/m28_step7_d5_drops.md`. **Nothing dropped:** all six tickers pass rule 1 for S1 and S2. NVDA and TSLA are under the $500 ceiling on only 47–64% of sessions (weekly expiries only), so they are often `PREMIUM_OVER_CAP`
+  - Expirations (step 3 question): QQQ and SPY list an expiry on the next session every session; IWM from 2024-04-18; NVDA, TSLA and AAPL weeklies only (21% of sessions), measured from the purchased definitions
+  - **Owner, 2026-11-14: "Keep as NO_TRADE".** AAPL and NVDA have almost no underlying quotes on 2024-05-28 (vendor gap; SPY and TSLA complete): the session stays in, unchanged, and both setups are NO_TRADE there for those two tickers (no usable underlying quote). No data was altered. Other gaps: 2023-07-05 crossed option quotes at 09:35 (QQQ, SPY, IWM, AAPL) and SPY 2025-04-07 (crossed at the open), both NO_TRADE by the frozen rules
+  - Still open before D6 runs: earnings calendar (D1; without it the single stocks are dropped) and S2's paper
 - Found on the way: the Phase 1 `costs` block charges $0.70 per side; with IBKR's $1.00 order minimum the real figure for one contract is about $1.03. Earlier one-contract studies understated round-trip costs by about $0.65. No result is reversed (all failed). The spec's `costs` values are left unchanged (rule 7); ADR-0021 work uses `study_options_day.broker_fees`.
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)

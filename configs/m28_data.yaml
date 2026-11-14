@@ -1,0 +1,19 @@
+# M28 step 5 (ADR-0021 D1, D2, D7): data scope for SPY, IWM, NVDA, TSLA, AAPL. Price first;
+# nothing is bought without the owner's approval of the exact total.
+# Storage scope only: what is stored never decides a trade (the frozen spec §5 rule does).
+
+tickers: [SPY, IWM, NVDA, TSLA, AAPL]
+start: "2023-03-28"              # = history.option_era_start, the QQQ data's first session
+dev_end: "2025-10-02"            # study_options_day.dev_end for these tickers
+holdout_end: "2026-10-02"        # study_options_day.holdout_end (holdout priced separately)
+option_dataset: OPRA.PILLAR
+option_schemas: [cbbo-1m, definition]
+underlying_dataset: EQUS.MINI     # as QQQ (M4)
+underlying_schemas: [bbo-1m, ohlcv-1m]
+rth_window: ["09:30", "16:00"]   # ET; cbbo-1m for the whole regular session (S1 may exit any minute)
+# Strikes: every listed strike of the D2 expiry inside the day's raw low..high (Tiingo daily,
+# free), plus this many listed strikes beyond each side, so the ATM call and put exist at any
+# spot inside the day's range.
+extra_strikes_each_side: 2
+daily_source: tiingo             # raw (unadjusted) high/low: option strikes are not split-adjusted
+out_dir: data/raw/databento/m28

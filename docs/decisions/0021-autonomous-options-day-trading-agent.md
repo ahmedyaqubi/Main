@@ -311,6 +311,32 @@ spread is paid most often on losers.
 rule; three IBKR items remain to be verified before the recorder is built (the report lists
 them). Fees used: `study_options_day.broker_fees`.
 
+## Amendment A2 (owner, 2026-11-14: "Record as not applicable")
+Made during M28 step 6, before any signal or setup return was computed. It changes only how
+the second D5 drop rule is used. The D5 text above is left as accepted.
+
+**Decision:** D5's second rule (drop a setup whose required edge exceeds the largest effect
+in its source paper) is **not applied** in M28, for either setup. The required edge is still
+computed and reported, **for information only**. A setup is dropped for a ticker only by the
+first D5 rule, the break-even move against the 75th percentile of the absolute move.
+
+**Why:**
+- **S1: the units differ.** The required edge is a mean net return per trade as a share of
+  the option premium (D6 Step B). The paper's 0.13 is a gain per trade in units of the stop
+  distance on shares. Converting either into the other needs each trade's stop distance, and
+  the stop distance depends on the candle's direction, which is S1's signal. M28 computes no
+  signal.
+- **S2: no paper figure.** The source paper (Gao, Han, Li & Zhou, 2018) has not been read
+  from a primary copy (`reports/research/m28_steps1_3.md`), so it has no verified effect to
+  compare against.
+- **The reported figure is too low.** The spread of per-trade returns comes from the M11
+  development trades, as D5 directs. Those trades were closed early by target and stop exits,
+  with median holds of about 20–25 minutes. S1 holds from 09:35 to 15:50 with no such limit,
+  so its spread, and therefore the edge it would need, is larger than reported.
+
+**Effect:** the D6 screen is the only test of whether a setup has an edge. Nothing else in
+D5–D8 changes.
+
 ## Review of revision 1 (assistant's own QA, 2026-11-13)
 Errors corrected:
 - **Contradicted a frozen definition.** Rev 1 chose "the first in-the-money strike" while
