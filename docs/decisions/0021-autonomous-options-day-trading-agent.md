@@ -1,9 +1,9 @@
 # ADR-0021: New mission: an autonomous options day-trading agent on a few tickers (long calls and puts first)
 
-- Status: **PROPOSED**, revision 5 (2026-11-14). Drafted by the assistant at the owner's request
-  ("re-strategize this whole idea for options day trading; calls and puts mainly, spreads as
-  back-up; start with a small funded account"; then "only a few tickers"). **Not in force until
-  the owner accepts it and answers OQ1–OQ7.**
+- Status: **ACCEPTED** 2026-11-14 by the owner ("$500 is fine, yes unattended, keep 98.3%,
+  accept"), at revision 5 with OQ1–OQ7 answered as recorded below. Drafted by the assistant at
+  the owner's request ("re-strategize this whole idea for options day trading; calls and puts
+  mainly, spreads as back-up; start with a small funded account"; then "only a few tickers").
 - Revision 2 follows the assistant's own review of revision 1 (see "Review of revision 1").
 - Revision 3 records the owner's answers to OQ1 and OQ7 (2026-11-13): six tickers; a per-trade
   loss cap of the cost of 1 to 2 contracts.
@@ -89,8 +89,8 @@ commissions?*
   contract. For entries this replaces ADR-0015's 3%-a-day figure.
   - **Account: $5,000.** ADR-0015's 20% total cap is unchanged: trading stops for review after
     $1,000 of losses.
-  - **Dollar ceiling per trade: $500 (10% of the account), proposed by the assistant and not
-    yet confirmed (OQ1).** A contract costing more, commissions included, is NO_TRADE
+  - **Dollar ceiling per trade: $500 (10% of the account), confirmed by the owner
+    2026-11-14.** A contract costing more, commissions included, is NO_TRADE
     (`PREMIUM_OVER_CAP`). At $500 the total cap survives at least two full-premium losses.
 - **Cash account:** a purchase uses settled cash only. Premium spent in a session may not
   exceed the settled balance at the open.
@@ -171,7 +171,7 @@ Registered before any statistic is computed, in two steps inside the same run:
   forward data (OQ6). This is an estimate, and single stocks may differ. Each purchase is quoted to the cent and approved first, within
   the remaining $71.49.
 - **Decision level:** one-sided 1 − 0.05/3 ≈ **98.3%** for ADVANCE (Bonferroni over this
-  ADR's tests; OQ5). The bound at the full recorded count (42 + tests run) is reported beside
+  ADR's tests; confirmed by the owner, OQ5). The bound at the full recorded count (42 + tests run) is reported beside
   it.
 
 ### D8. Holdout
@@ -192,7 +192,7 @@ Registered before any statistic is computed, in two steps inside the same run:
 | 2 | paper executor: runs the frozen setups unattended, journals every decision, 60+ sessions | a **paper-only ADR** (ADR-0015 D4.3) |
 | 3 | monitor: compares paper results with the backtest range; halts on drift, data failure, or a loss cap | same paper-only ADR |
 | 4 | small live account, one contract | a **separate ADR that amends hard rule 1**; the owner's decision alone |
-| 5 | spreads | account size and approval level (OQ4), **and** a spread study of its own; M19T and M23 found none that survived |
+| 5 | spreads | account size and approval level, set by its own later ADR (OQ4), **and** a spread study of its own; M19T and M23 found none that survived |
 
 - **How the agent learns is fixed in D10.** A new or changed trading rule reaches the agent
   only through its promotion gate.
@@ -238,10 +238,10 @@ called profits (rule 12).
 - **M31:** holdout ADR and access, if a setup advances.
 - Paper stages follow only by the paper-only ADR.
 
-## Open questions for the owner (answers are recorded here before acceptance)
+## Owner's answers (all recorded before acceptance)
 - **OQ1. Account size and per-trade loss cap. ANSWERED (owner, 2026-11-13 and 2026-11-14):**
   $5,000; one contract; the most a trade may lose is that contract's cost. Recorded in D2.
-  - **Still open:** confirm the $500 ceiling per trade, or name another.
+  - $500 ceiling per trade confirmed 2026-11-14.
 - **OQ2. Broker and account type. PARTLY ANSWERED (owner, 2026-11-14):** IBKR or Webull;
   live data is paid on Webull and can be on IBKR.
   - **Still open:** which one. M28 decides by a rule fixed now: the broker must offer (i) a
@@ -252,10 +252,12 @@ called profits (rule 12).
     country; whether either live subscription includes historical quotes for expired option
     contracts (the assistant expects not); same-day reuse of option sale proceeds; how the
     pre-2027 day-trade rule applies.
-- **OQ3. Market-hours time.** ADR-0015 Q4 says none. Stage 2 onward then needs an agent
-  running unattended during the session. Confirm that is intended.
-- **OQ4. Spread trigger.** Which account size and approval level unlock stage 5?
-- **OQ5. Decision level.** 98.3% (D7) or another pre-declared level?
+- **OQ3. Market-hours time. ANSWERED (owner, 2026-11-14):** yes, the agent runs unattended
+  during the session from stage 2 on.
+- **OQ4. Spread trigger. DEFERRED:** the owner gave no figure. As the assistant suggested, it
+  is set by a separate ADR when stage 5 is first considered. Nothing in this ADR unlocks
+  spreads.
+- **OQ5. Decision level. ANSWERED (owner, 2026-11-14):** 98.3%.
 - **OQ6. Forward data. ANSWERED (owner, 2026-11-14):** the stage 1b recorder is approved.
   - It is built only after this ADR is accepted, the broker is chosen by the OQ2 rule, and a
     data-only connection is verified. Until then no code connects to a broker.

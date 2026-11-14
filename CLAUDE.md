@@ -3,6 +3,11 @@
 Research software that determines whether a QQQ 1DTE options strategy has a real,
 calibrated, cost-adjusted edge. It is NOT a trading bot. Phase 1 never places orders.
 
+**Current mission (ADR-0021, accepted 2026-11-14):** research towards an autonomous options
+day-trading agent on QQQ, SPY, IWM, NVDA, TSLA and AAPL. The ADR authorises research and a
+data-only recorder. Every hard rule below still applies, rule 1 included, until a later ADR
+changes it.
+
 ## Source of truth
 - `docs/MASTER_PROMPT.md` — full requirements (read the relevant section before each milestone).
 - `docs/PHASE_1_SPEC.md` — frozen definitions (targets, windows, fills, gates). The constitution.

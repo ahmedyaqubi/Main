@@ -1,11 +1,16 @@
-# Roadmap (after Phase 1 and Phase 2): approved 2026-10-10
+# Roadmap
 
-Mission and rules: ADR-0015 (PROPOSED). Owner constraints:
-- under $5k, cash account with basic options;
-- rule-based, no market-hours time;
-- 3% daily / 20% total loss caps;
-- $100 and ≤ 10 tests;
-- success = development screen + holdout + 60+ days of paper trading.
+**Current mission: ADR-0021 (ACCEPTED 2026-11-14).** An autonomous, rule-based agent that
+day-trades long calls and puts on QQQ, SPY, IWM, NVDA, TSLA and AAPL, on pre-registered setups
+only. Owner constraints:
+- $5,000 account; one contract per trade, at most $500; 20% total loss cap ($1,000);
+- IBKR or Webull, chosen in M28 by the ADR's rule; unattended from the paper stage on;
+- at most 3 tests, at a 98.3% decision level; data within the $71.49 left of ADR-0015's $100;
+- stages: research → data-only recorder and shadow book → paper → live → spreads, each later
+  stage by its own ADR. No orders or order code until then (hard rule 1).
+- **Next: M28** (data verification, broker choice, cost map; not a trial).
+
+Everything below is the earlier ADR-0015 roadmap (approved 2026-10-10), kept as the record.
 
 Background: `reports/research/phase1_synthesis.md`, `docs/LESSONS_LEARNED.md`.
 
