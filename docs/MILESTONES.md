@@ -749,7 +749,7 @@ Acceptance:
 - Steps 4–7 committed as `def1b67` (PR ahmedyaqubi/Main#3); CI green on `def1b67`: https://github.com/ahmedyaqubi/Main/actions/runs/43595028148. M28 stays IN PROGRESS until the earnings calendar and S2's paper are settled
 - Found on the way: the Phase 1 `costs` block charges $0.70 per side; with IBKR's $1.00 order minimum the real figure for one contract is about $1.03. Earlier one-contract studies understated round-trip costs by about $0.65. No result is reversed (all failed). The spec's `costs` values are left unchanged (rule 7); ADR-0021 work uses `study_options_day.broker_fees`.
 
-## M29 — D6 screen of setup S1, first 5-minute candle (ADR-0021 D6, amendment A1) — IN PROGRESS (plan approved by the owner 2026-11-15: "Approve all")
+## M29 — D6 screen of setup S1, first 5-minute candle (ADR-0021 D6, amendment A1) — RUN COMPLETE 2026-11-15: **AMBIGUOUS**, S1 stops (D6: no variants). Awaiting CI and the owner's DONE (plan approved by the owner 2026-11-15: "Approve all")
 Depends on: M28 DONE (2026-11-15). **A trial: test 1 of the 3 that ADR-0021 D7 allows.** One registered run, from committed code.
 Tickers: QQQ (to 2026-04-02), SPY, IWM, NVDA, TSLA (to 2025-10-02). AAPL is out (D1). Development sessions only.
 Owner rulings, 2026-11-15, made before any signal or statistic was computed (readings of the frozen text, not changes to it):
@@ -765,12 +765,21 @@ Owner rulings, 2026-11-15, made before any signal or statistic was computed (rea
 Acceptance:
 - [x] Tests first: `tests/test_orb_screen.py` (25): direction, flat candle, stop, target, time exit, early close, point-in-time entry quote and chain, one-position choice and tie, premium ceiling, fees, bounds, outcome rules, risk rows
 - [x] Code: `src/qqq1dte/strategies/orb.py`, `src/qqq1dte/backtesting/orb_screen.py`, `scripts/m29_screen.py` (dry run on synthetic prices works; refuses to run on uncommitted code)
-- [ ] One registered run (`run_kind` `screen_orb`) from committed code; n_trials before and after recorded
-- [ ] Report `reports/research/m29_s1_screen.md`: outcome, trade count, both intervals, NO_TRADE counts by reason, per-ticker and risk rows
-- [ ] No holdout session read (`HoldoutGuard`; files chosen by the date in their name)
-- [ ] `uv run pytest`, `uv run ruff check .`, `uv run mypy src` pass; CI green
-- [ ] 1 of 3 D7 tests recorded as used
-
+- [x] One registered run from committed code: `screen_orb-7c87b7281f30`, code `df742f0`, n_trials 42 → 43
+- [x] Report `reports/research/m29_s1_screen.md`: outcome, trade count, both intervals, NO_TRADE counts by reason, per-ticker and risk rows
+- [x] No holdout session read (`HoldoutGuard`; files chosen by the date in their name; latest session in the saved rows 2026-04-02)
+- [x] `uv run pytest` (566 passed), `uv run ruff check .`, `uv run mypy src` pass locally
+  - [ ] CI green on the PR
+- [x] 1 of 3 D7 tests used; 2 remain
+Result (development data; not a claim about profitability either way):
+- **Step A passes, narrowly.** Mean signed underlying return +0.044% over 3,130 ticker-sessions with a signal (756 sessions); one-sided 95% lower bound +0.006%; two-sided 95% interval [−0.001%, +0.091%]
+- **Step B does not.** 740 trades. Mean net P&L −3.00% of the premium paid; one-sided 98.33% lower bound −6.65% (ADVANCE needs > 0); two-sided 95% interval [−6.40%, +0.61%]; bound at the full count (43 trials) −8.25%
+- **Not a KILL.** At the mid fill the mean is −1.67%, two-sided 95% interval [−5.19%, +2.06%]; the upper bound is above 0
+- Risk rows: 21.5% winners; worst trade −81.5% (QQQ 2025-10-10); longest losing run 16; largest drawdown $8,359.75; total −$5,320.26 on one contract a trade; the $1,000 loss cap would have been reached on 2024-03-26. `PREMIUM_OVER_CAP` 589 (NVDA 247, TSLA 307); `POSITION_OPEN` 1,793. No unresolved exit, no delayed exit, no exit without a bid
+- Per ticker (descriptive only): QQQ +1.42% (371 trades), SPY −6.65% (238), NVDA −9.81% (68), TSLA −5.93% (53), IWM −18.42% (10)
+Open issue found after the run (in the report; nothing was re-run):
+- **The candle's open (ruling 9) is often a wide pre-open quote.** The underlying has no spread gate. Median spread of that quote: 0.01–0.03% for QQQ, SPY and IWM, but 0.34% for NVDA and 0.27% for TSLA, about the size of a 5-minute candle; the largest is 200% (QQQ). 115 of the 740 trades had an open spread over 0.2%. The run therefore tested S1 with a noisy open on those rows, not the paper's opening trade price
+- A re-run with another open (for example the 09:31 quote, or a spread gate) would be a new variant. D6 says the setup stops with no variants; it would need the owner's decision and would use another D7 test
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:
