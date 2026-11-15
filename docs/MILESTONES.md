@@ -698,7 +698,7 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - versus buy-and-hold (approximate): CAGR 5.3% vs 15.2%, Sharpe 0.48 vs 0.75, maximum drawdown 10% vs 34%.
 - **Next (ADR-0019 H6):** a paper-only ADR (owner): 60+ sessions, paper orders only, position size and settlement rules.
 
-## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–7 done (2026-11-14), CI green on def1b67; open: earnings calendar, S2 paper
+## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–7 done (2026-11-14), CI green on def1b67; earnings calendar built 2026-11-15 (AAPL dropped under D1; uncommitted); open: S2 paper
 Depends on: ADR-0021 ACCEPTED (2026-11-14). Not a trial. Plan approved by the owner 2026-11-14 ("approve, start with steps 1–3 now").
 Report for steps 1–3: `reports/research/m28_steps1_3.md`.
 Acceptance:
@@ -708,7 +708,20 @@ Acceptance:
   - [ ] Left for the recorder's first check: that market data still flows with Read-Only API on (not stated on any page read); the monthly price of IBKR's US options data feed
   - [x] The account is Canadian (owner, 2026-11-14)
 - [x] Step 3, expirations: IWM Tuesday/Thursday expirations date from April 2024 (verified). NVDA/TSLA/AAPL schedules **not verified** (sec.gov refused the download); the purchased definition files will show them
-- [ ] Step 3, earnings calendar: source identified (SEC 8-K Item 2.02) but **not verified**
+- [x] Step 3, earnings calendar: verified for NVDA and TSLA; **AAPL not verified and dropped under D1** (details below)
+  - 2026-11-14: **source verified for the actual dates.** SEC EDGAR's submissions pages (`data.sec.gov/submissions/CIK{0001045810,0001318605,0000320193}.json`) were read in the browser; each lists every 8-K with Item 2.02, its filing date and acceptance time. In the development window (2023-03-28 → 2025-10-02): NVDA 10 and AAPL 10 quarterly results, all accepted after the close; TSLA 10 quarterly results (after the close) plus 11 quarterly delivery reports also filed under Item 2.02 (mostly before the open)
+  - **Not verified: that each date was known in advance.** An 8-K proves when results were released, not when the date was announced. D1 excludes the earnings session and the one before it, which needs the date beforehand (rule 2). No calendar file is built yet
+  - 2026-11-14, advance notices checked (owner: "Check advance notices"), read in the browser; nothing saved to disk yet:
+    - **NVDA: verified, 10 of 10.** Dated press releases on nvidianews.nvidia.com ("NVIDIA Sets Conference Call for ... Financial Results"), each 20–28 days before the results date and each matching the 8-K date
+    - **TSLA: verified, 10 of 10.** Each quarterly delivery report (8-K Item 2.02, exhibit 99.1, EDGAR acceptance time) states the results date, 16–22 days ahead, and each matches the later results 8-K. ir.tesla.com refused repeated requests (403), so EDGAR was used. The delivery reports' own dates have no advance notice that was found
+    - **AAPL: not verified.** Apple publishes no dated notice and files no 8-K for the date. Internet Archive copies of investor.apple.com show the date sentence for 4 of 10 events (captures 2023-04-22, 2023-07-21, 2023-10-21, 2024-01-19), but the page loads its text from a separately archived feed: the capture stamped 2024-04-25 shows text written after 2024-05-02. An archive timestamp therefore does not prove when the sentence was posted
+  - **Owner, 2026-11-15: "Look for another for apple. And do what you recommend and is necessary."** Done on the assistant's recommendation:
+    - **AAPL, second source: 5 of 10 verified.** The Internet Archive holds 30 dated captures of Apple's event feed itself (`investor.apple.com/feed/Event.svc/GetEventList`); a feed capture's timestamp is its own. Captures before the event show the date for 2023-05-04, 2023-08-03, 2023-11-02, 2024-02-01 and 2025-05-01. No pre-event capture exists for 2024-05-02, 2024-08-01, 2024-10-31, 2025-01-30 or 2025-07-31
+    - **AAPL is dropped under D1 as it stands** (no point-in-time source for half its dates; rule 9). Reversible: if the five dates are verified later, the file is completed and AAPL returns. Its M28 cost-map rows stay in the reports
+    - **TSLA delivery reports are not earnings dates under D1.** D1 names the earnings date only, and no advance notice of a delivery date was found, so excluding the session before one would be look-ahead. They are listed in the file as `DELIVERIES` and never exclude. Excluding them would need an ADR amendment
+    - **Built:** `configs/reference/earnings_calendar.csv` (development window; 30 `EARNINGS` rows and 11 TSLA `DELIVERIES` rows, each with its source URL; empty `available_at_et` = not verified) and `src/qqq1dte/validation/earnings_calendar.py` (`earnings_exclusions` refuses any date not known by the open of the first session it excludes). Tests: `tests/test_earnings_calendar.py` (4). NVDA and TSLA each exclude 30 sessions
+    - Limits: sources are URLs, as in `macro_calendar.csv`; no page copies are stored. NVDA notices carry a date only, so they count as known from the next midnight. Holdout-period dates are not in the file yet; they are needed before any holdout run
+    - Not yet done: the M28 cost map still includes NVDA's and TSLA's earnings sessions; the exclusion applies from D6
 - [x] Step 3, literature, S1: the cited paper trades the direction of the first 5-minute candle at 09:35, not a 30-minute range break. **Owner adopted the paper's rule (ADR-0021 amendment A1, 2026-11-14)**; config and tests updated
 - [ ] Step 3, literature, S2: the paper could not be downloaded; to confirm before S2's test is registered
 - [x] Step 4: QQQ quotes verified present and complete; `final_test_access_log` shows no QQQ holdout access (rule 9)
