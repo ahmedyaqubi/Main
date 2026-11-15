@@ -453,6 +453,7 @@ class HalfHourSetup(_Section):
     signal_time: time
     entry_time: time
     exit_time: time
+    prev_close_offset_minutes: int = Field(ge=0)  # M30 ruling 1
 
     @model_validator(mode="after")
     def _ordered(self) -> Self:
@@ -498,6 +499,7 @@ class StudyOptionsDay(_Section):
     kill_fill: Literal["CONSERVATIVE", "MODERATE", "OPTIMISTIC"]
     orb: OrbSetup
     half_hour: HalfHourSetup
+    split_sessions: dict[str, list[date]]  # M30 ruling 5: S2 does not trade these
     max_tests: int = Field(ge=1)
     family_alpha: float = Field(gt=0, lt=1)
     step_a_level: float = Field(gt=0, lt=1)
@@ -522,6 +524,8 @@ class StudyOptionsDay(_Section):
             raise ValueError("tickers must be distinct")
         if not set(self.single_stocks) <= set(self.tickers):
             raise ValueError("single_stocks must be among tickers")
+        if not set(self.split_sessions) <= set(self.tickers):
+            raise ValueError("split_sessions must name tickers")
         if set(self.dev_end) != set(self.tickers):
             raise ValueError("dev_end needs exactly one date per ticker")
         if any(d >= self.holdout_end for d in self.dev_end.values()):

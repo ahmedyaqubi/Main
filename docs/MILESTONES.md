@@ -781,6 +781,32 @@ Open issue found after the run (in the report; nothing was re-run):
 - **The candle's open (ruling 9) is often a wide pre-open quote.** The underlying has no spread gate. Median spread of that quote: 0.01–0.03% for QQQ, SPY and IWM, but 0.34% for NVDA and 0.27% for TSLA, about the size of a 5-minute candle; the largest is 200% (QQQ). 115 of the 740 trades had an open spread over 0.2%. The run therefore tested S1 with a noisy open on those rows, not the paper's opening trade price
 - A re-run with another open (for example the 09:31 quote, or a spread gate) would be a new variant. D6 says the setup stops with no variants; it would need the owner's decision and would use another D7 test
 - **Owner, 2026-11-15: "Accept, S2 next".** The S1 result stands as run; no re-run. Carried to M30 (S2): the underlying has no spread gate, so any S2 price read from a pre-open or thin quote needs a rule fixed before its run (S2's signal uses the previous close and the 10:00 quote)
+## M30 — D6 screen of setup S2, the first half-hour predicts the last (ADR-0021 D3, D6) — IN PROGRESS (plan and rulings approved by the owner 2026-11-15: "Approve all"; the registered run has not been made)
+Depends on: M28 DONE, M29 DONE (2026-11-15; PR ahmedyaqubi/Main#7 merged at ba962a2). **A trial: test 2 of the 3 that ADR-0021 D7 allows.** One registered run, from committed code.
+Tickers: QQQ (to 2026-04-02), SPY, IWM, NVDA, TSLA (to 2025-10-02). AAPL is out (D1). Development sessions only.
+Measured before the plan (`scripts/m30_quote_survey.py` → `reports/research/m30_quote_survey.md`; timestamps counted and spreads measured, no signal, return or price level):
+- A regular-hours record stamped exactly at the close, 10:00, 15:30 and 15:50 exists on every development session of every ticker, except NVDA 2024-05-28 (the M28 vendor gap). No rejected underlying record sits at these stamps
+- **The quote stamped 16:00:00 is wide on the single stocks:** median spread 0.13% (NVDA) and 0.19% (TSLA), over 0.2% on 226 and 308 of 632 sessions; 0.007–0.011% on the ETFs. **The quote stamped 15:59:00 is tight on every ticker:** median 0.002–0.016%, over 0.2% on 0 (ETFs), 9 (NVDA) and 14 (TSLA) sessions
+- 10:00 quote: median 0.006–0.012% (ETFs), 0.05–0.06% (NVDA, TSLA); over 0.2% on QQQ 9, SPY 4, IWM 24 (largest 3.8%), NVDA 12, TSLA 15 sessions. 15:30: never over 0.2%
+Owner rulings, 2026-11-15, made before any signal or statistic was computed (readings of the frozen text, not changes to it):
+1. The previous close is the mid of the quote in force one minute before the previous session's close (15:59:00; 12:59:00 after an early close), at most 60 seconds old, two-sided, not crossed. Declared difference from the paper's closing trade price, which the project does not hold for four of the five tickers (`half_hour.prev_close_offset_minutes`)
+2. The 10:00 price is the quote in force at 10:00:00, same checks
+3. Direction: up only if the 10:00 bid is above the previous-close ask; down only if the 10:00 ask is below the previous-close bid; otherwise NO_TRADE (`FLAT_MOVE`). No parameter; a wide quote disqualifies itself. The paper goes short on a move that is not positive
+4. No previous session in the data, a previous session excluded by an ADR (QQQ 2023-12-28), or no usable quote there (NVDA 2024-05-29): NO_TRADE (`NO_PREV_CLOSE`)
+5. NVDA's 10-for-1 split session, 2024-06-10, is NO_TRADE (`CORPORATE_ACTION`); the date was read on NVIDIA's release of 2024-05-22 (`study_options_day.split_sessions`). Dividends are not adjusted (only QQQ has a verified ex-dividend file): on an ex-dividend session the measured move is lower by the dividend
+6. Step A: signed mid(15:50:00) / mid(15:30:00) − 1 on every ticker-session with a direction, before option gates. No 15:30 quote: `NO_UNDERLYING_QUOTE`. No 15:50 quote: left out of Step A and counted
+7. M29's rulings 2–8 carry over unchanged. S2 exits at the forced exit, so there is no later minute to sell at: no usable option quote at 15:50:05 is `UNRESOLVED_DATA`
+8. The bound "at the full recorded count" uses the registry's count after registration (43 + 1 = 44), not the config's 42
+Acceptance:
+- [x] Tests first: `tests/test_half_hour_screen.py` (18): direction and flat, wide quote, previous close read at 15:59 and after an early close, nothing read after 10:00, `NO_PREV_CLOSE`, `EARLY_CLOSE`, `CORPORATE_ACTION`, `EARNINGS_WINDOW`, Step A return and sign, point-in-time entry quote and chain, premium ceiling, unresolved exit, exit with no bid, config keys
+- [x] Code: `src/qqq1dte/strategies/half_hour.py`, `src/qqq1dte/backtesting/half_hour_screen.py`, `scripts/m30_screen.py` (reuses M29's plan, one-position pooling, statistics and risk rows; dry run on synthetic prices works; refuses to run on uncommitted code)
+- [ ] One registered run from committed code (`screen_half_hour`), n_trials 43 → 44
+- [ ] Report `reports/research/m30_s2_screen.md`: outcome, trade count, both intervals, NO_TRADE counts by reason, per-ticker and risk rows
+- [ ] No holdout session read (`HoldoutGuard`; files chosen by the date in their name)
+- [x] `uv run pytest` (584 passed), `uv run ruff check .`, `uv run mypy src` pass locally
+  - [ ] CI green on the PR
+- [ ] 2 of 3 D7 tests used; 1 remains
+
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:

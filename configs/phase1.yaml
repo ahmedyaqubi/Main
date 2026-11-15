@@ -302,6 +302,12 @@ study_options_day:                   # ADR-0021 (accepted 2026-11-14): long call
     signal_time: "10:00"
     entry_time: "15:30"              # declared exception to schedule.last_new_entry
     exit_time: "15:50"
+    prev_close_offset_minutes: 1     # owner, 2026-11-15 (M30): "the previous close" = the quote in
+                                     #   force this long before the previous session's close; the
+                                     #   one stamped at the close is wide on NVDA and TSLA
+  split_sessions:                    # owner, 2026-11-15 (M30): S2 is NO_TRADE (CORPORATE_ACTION)
+    NVDA: ["2024-06-10"]             #   10-for-1, first split-adjusted session; NVIDIA release of
+                                     #   2024-05-22 (nvidianews.nvidia.com), read 2026-11-15
   max_tests: 3                       # D7: of ADR-0015's remaining 7
   family_alpha: 0.05                 # D7: ADVANCE level = 1 - family_alpha / max_tests (98.3%)
   step_a_level: 0.95                 # D6 Step A, one-sided
