@@ -749,7 +749,7 @@ Acceptance:
 - Steps 4–7 committed as `def1b67` (PR ahmedyaqubi/Main#3); CI green on `def1b67`: https://github.com/ahmedyaqubi/Main/actions/runs/43595028148. M28 stays IN PROGRESS until the earnings calendar and S2's paper are settled
 - Found on the way: the Phase 1 `costs` block charges $0.70 per side; with IBKR's $1.00 order minimum the real figure for one contract is about $1.03. Earlier one-contract studies understated round-trip costs by about $0.65. No result is reversed (all failed). The spec's `costs` values are left unchanged (rule 7); ADR-0021 work uses `study_options_day.broker_fees`.
 
-## M29 — D6 screen of setup S1, first 5-minute candle (ADR-0021 D6, amendment A1) — RUN COMPLETE 2026-11-15: **AMBIGUOUS**, S1 stops (D6: no variants). Awaiting CI and the owner's DONE (plan approved by the owner 2026-11-15: "Approve all")
+## M29 — D6 screen of setup S1, first 5-minute candle (ADR-0021 D6, amendment A1) — DONE 2026-11-15: **AMBIGUOUS**, S1 stops (D6: no variants). Owner: "Accept, S2 next". CI green on 6de1387: https://github.com/ahmedyaqubi/Main/actions/runs/43699909884 (plan approved by the owner 2026-11-15: "Approve all")
 Depends on: M28 DONE (2026-11-15). **A trial: test 1 of the 3 that ADR-0021 D7 allows.** One registered run, from committed code.
 Tickers: QQQ (to 2026-04-02), SPY, IWM, NVDA, TSLA (to 2025-10-02). AAPL is out (D1). Development sessions only.
 Owner rulings, 2026-11-15, made before any signal or statistic was computed (readings of the frozen text, not changes to it):
@@ -769,7 +769,7 @@ Acceptance:
 - [x] Report `reports/research/m29_s1_screen.md`: outcome, trade count, both intervals, NO_TRADE counts by reason, per-ticker and risk rows
 - [x] No holdout session read (`HoldoutGuard`; files chosen by the date in their name; latest session in the saved rows 2026-04-02)
 - [x] `uv run pytest` (566 passed), `uv run ruff check .`, `uv run mypy src` pass locally
-  - [ ] CI green on the PR
+  - [x] CI green on the PR (ahmedyaqubi/Main#7, commit 6de1387)
 - [x] 1 of 3 D7 tests used; 2 remain
 Result (development data; not a claim about profitability either way):
 - **Step A passes, narrowly.** Mean signed underlying return +0.044% over 3,130 ticker-sessions with a signal (756 sessions); one-sided 95% lower bound +0.006%; two-sided 95% interval [−0.001%, +0.091%]
@@ -780,6 +780,7 @@ Result (development data; not a claim about profitability either way):
 Open issue found after the run (in the report; nothing was re-run):
 - **The candle's open (ruling 9) is often a wide pre-open quote.** The underlying has no spread gate. Median spread of that quote: 0.01–0.03% for QQQ, SPY and IWM, but 0.34% for NVDA and 0.27% for TSLA, about the size of a 5-minute candle; the largest is 200% (QQQ). 115 of the 740 trades had an open spread over 0.2%. The run therefore tested S1 with a noisy open on those rows, not the paper's opening trade price
 - A re-run with another open (for example the 09:31 quote, or a spread gate) would be a new variant. D6 says the setup stops with no variants; it would need the owner's decision and would use another D7 test
+- **Owner, 2026-11-15: "Accept, S2 next".** The S1 result stands as run; no re-run. Carried to M30 (S2): the underlying has no spread gate, so any S2 price read from a pre-open or thin quote needs a rule fixed before its run (S2's signal uses the previous close and the 10:00 quote)
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:
