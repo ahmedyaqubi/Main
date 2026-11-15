@@ -124,6 +124,41 @@ not be downloaded. Search summaries agree with the ADR's description and report 
 about 1.6–2% and a gross return of about 6–7% a year on SPY, before costs. To be confirmed
 from the paper before S2's test is registered.
 
+**Update 2026-11-15: verified from the publisher's page; the full text was not read.**
+Source: Journal of Financial Economics 129(2), August 2018, pp. 394–414, on ScienceDirect
+(`sciencedirect.com/science/article/abs/pii/S0304405X18301351`). The page shows the abstract,
+the full introduction and the opening lines of each section. The tables are behind the paywall,
+and SSRN answered with a bot check, which was not bypassed.
+
+| | the paper | ADR-0021 S2 |
+|---|---|---|
+| Signal | sign of the first half-hour return, "measured from the previous day's market close" | sign of the move from the previous close to 10:00: **matches** |
+| Entry | "at the beginning of the last half hour" (15:30) | 15:30: **matches** |
+| Exit | "at the market close" (16:00) | 15:50: differs, already declared in D3 |
+| Position | long if the signal is positive, **short otherwise**, in the ETF | long call or long put |
+| Instrument | SPY, 1993-02-01 → 2013-12-31 (TAQ trade prices; days with under 500 trades excluded) | options on six tickers, 2023 onward |
+| Other tickers | "ten other most actively traded" ETFs, the Nasdaq and Russell 2000 ETFs among them | QQQ, SPY and IWM are covered in kind; **NVDA and TSLA are single stocks: this project's extension** |
+
+What the paper reports for SPY (introduction):
+- Predictive R² 1.6% in sample and 1.4% out of sample, using the first half-hour return alone.
+- Timing by the sign of the first half-hour return: **6.67% a year on average, standard
+  deviation 6.19%, Sharpe ratio 1.08**. Over about 252 sessions that is about **0.026% of the
+  underlying per trade**, before costs.
+- It says the result "remains significant even after accounting for transaction costs" and is
+  often stronger on the other ETFs. **Not verified:** the cost assumption and the per-ETF
+  figures, which are in the tables.
+
+Points for the owner:
+- **The effect is about the size of the cost.** The M28 cost map puts S2's median break-even
+  move at 0.02–0.04% for QQQ and SPY and 0.05–0.07% for IWM, against the paper's average of
+  about 0.026% per trade on SPY.
+- **Amendment A2's reason for S2 has changed.** It said S2 had no verified paper figure. It
+  now has one, in units of the underlying's return. D5 rule 2 compares a return on option
+  premium, so applying it would still need a stated conversion (the option's delta and
+  premium). Whether to revisit A2 for S2 is the owner's decision.
+- The paper's sample ends in 2013, ten years before this project's data. Whether the effect
+  persisted after publication is not something the paper can show.
+
 ## Could not be done here
 - Three sites refused the download (sec.gov, papers.ssrn.com, alphaarchitect.com).
 - Steps 4–7 need the market data, the database and the vendor key, which are not in this

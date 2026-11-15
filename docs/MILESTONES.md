@@ -698,7 +698,7 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - versus buy-and-hold (approximate): CAGR 5.3% vs 15.2%, Sharpe 0.48 vs 0.75, maximum drawdown 10% vs 34%.
 - **Next (ADR-0019 H6):** a paper-only ADR (owner): 60+ sessions, paper orders only, position size and settlement rules.
 
-## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–7 done (2026-11-14), CI green on def1b67; earnings calendar built 2026-11-15 (AAPL dropped under D1; uncommitted); open: S2 paper
+## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–7 done (2026-11-14), CI green on def1b67; earnings calendar built 2026-11-15 (AAPL dropped under D1); S2 paper verified 2026-11-15, A2 kept as is (uncommitted); no open items before D6
 Depends on: ADR-0021 ACCEPTED (2026-11-14). Not a trial. Plan approved by the owner 2026-11-14 ("approve, start with steps 1–3 now").
 Report for steps 1–3: `reports/research/m28_steps1_3.md`.
 Acceptance:
@@ -723,7 +723,11 @@ Acceptance:
     - Limits: sources are URLs, as in `macro_calendar.csv`; no page copies are stored. NVDA notices carry a date only, so they count as known from the next midnight. Holdout-period dates are not in the file yet; they are needed before any holdout run
     - Not yet done: the M28 cost map still includes NVDA's and TSLA's earnings sessions; the exclusion applies from D6
 - [x] Step 3, literature, S1: the cited paper trades the direction of the first 5-minute candle at 09:35, not a 30-minute range break. **Owner adopted the paper's rule (ADR-0021 amendment A1, 2026-11-14)**; config and tests updated
-- [ ] Step 3, literature, S2: the paper could not be downloaded; to confirm before S2's test is registered
+- [x] Step 3, literature, S2: **verified from the publisher's page, 2026-11-15** (JFE 129(2), 2018; abstract, introduction and section openings on ScienceDirect; the tables are paywalled and were not read). Details in `reports/research/m28_steps1_3.md`
+  - The rule matches S2: sign of the first half-hour return measured from the previous close; enter at the start of the last half hour. Declared differences: exit 15:50 not 16:00; options, not long/short ETF shares; NVDA and TSLA are single stocks, outside the paper
+  - Reported for SPY 1993–2013: R² 1.6%; timing by the sign earns 6.67% a year (sd 6.19%, Sharpe 1.08), about 0.026% of the underlying per trade before costs. Not verified: the paper's cost assumption and its per-ETF figures
+  - **For the owner:** S2's median break-even move in the cost map (0.02–0.04% on QQQ and SPY, 0.05–0.07% on IWM) is about the size of that effect. Amendment A2 gave "no paper figure" as its reason for S2; a figure now exists, in underlying-return units. Revisiting A2 for S2 is the owner's decision
+  - **Owner, 2026-11-15: "Keep A2 as is".** D5 rule 2 stays not applied to S2; the paper's figure is recorded for information only. A2's text is unchanged. The D6 screen remains the only test of S2's edge
 - [x] Step 4: QQQ quotes verified present and complete; `final_test_access_log` shows no QQQ holdout access (rule 9)
   - **Owner, 2026-11-14: "Keep as NO_TRADE".** The 3 gap sessions stay in, unchanged; on them S1 has no trade by the frozen rules (`REJECTED_QUOTE` / no usable quote). No data was altered
   - Run 2026-11-14 (`scripts/m28_verify_qqq.py` → `reports/research/m28_step4_qqq_data.md`, uncommitted code; tests `tests/test_options_day_data.py`). Holdout log: 2 entries, both M27 SPY daily (ADR-0019, ADR-0020); **no QQQ access**. Coverage: 753 of 756 development sessions pass (99.6%, line 95%)
