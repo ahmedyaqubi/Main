@@ -233,7 +233,11 @@ def _b(b: Bounds) -> dict[str, Any]:
     return asdict(b)
 
 
-def analyse(rows: list[dict[str, Any]], cfg: Phase1Config) -> dict[str, Any]:
+def analyse(
+    rows: list[dict[str, Any]], cfg: Phase1Config, n_trials_total: int | None = None
+) -> dict[str, Any]:
+    """`n_trials_total`: the full recorded trial count this run is judged against in the
+    descriptive row (default: the config's count plus this run, as in M29)."""
     s = cfg.study_options_day
     reps, seed = s.bootstrap_reps, cfg.models.metrics.bootstrap_seed
     fees, other = s.broker_fees[DECISION_BROKER], s.broker_fees[OTHER_BROKER]  # type: ignore[index]
@@ -245,7 +249,7 @@ def analyse(rows: list[dict[str, Any]], cfg: Phase1Config) -> dict[str, Any]:
     unresolved = [r for r in taken if r["ret"] is None]
     sid = [r["session_date"] for r in done]
     ret = [r["ret"] for r in done]
-    level_all = 1 - s.family_alpha / (s.n_trials_recorded + 1)
+    level_all = 1 - s.family_alpha / (n_trials_total or s.n_trials_recorded + 1)
     b = mean_bounds(sid, ret, reps=reps, seed=seed, lower_level=s.advance_level,
                     two_sided_level=s.kill_level)  # fmt: skip
     b_all = mean_bounds(sid, ret, reps=reps, seed=seed, lower_level=level_all)
