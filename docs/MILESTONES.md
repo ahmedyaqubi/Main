@@ -749,6 +749,28 @@ Acceptance:
 - Steps 4–7 committed as `def1b67` (PR ahmedyaqubi/Main#3); CI green on `def1b67`: https://github.com/ahmedyaqubi/Main/actions/runs/43595028148. M28 stays IN PROGRESS until the earnings calendar and S2's paper are settled
 - Found on the way: the Phase 1 `costs` block charges $0.70 per side; with IBKR's $1.00 order minimum the real figure for one contract is about $1.03. Earlier one-contract studies understated round-trip costs by about $0.65. No result is reversed (all failed). The spec's `costs` values are left unchanged (rule 7); ADR-0021 work uses `study_options_day.broker_fees`.
 
+## M29 — D6 screen of setup S1, first 5-minute candle (ADR-0021 D6, amendment A1) — IN PROGRESS (plan approved by the owner 2026-11-15: "Approve all")
+Depends on: M28 DONE (2026-11-15). **A trial: test 1 of the 3 that ADR-0021 D7 allows.** One registered run, from committed code.
+Tickers: QQQ (to 2026-04-02), SPY, IWM, NVDA, TSLA (to 2025-10-02). AAPL is out (D1). Development sessions only.
+Owner rulings, 2026-11-15, made before any signal or statistic was computed (readings of the frozen text, not changes to it):
+1. Candle high and low: the highest and lowest of the 1-minute quote mids stamped 09:30 to 09:35. Moves inside a minute are not seen
+2. Step A is measured on every ticker-session with a signal, before option gates and the one-position rule
+3. Only contracts that pass every gate compete for the one position; ties go to the ticker order QQQ, SPY, IWM, NVDA, TSLA
+4. The decision uses IBKR Canada fees; Webull is a descriptive row
+5. Return = net dollars over entry fill × 100; fees are in the numerator only
+6. The KILL row reprices the same trades at the mid, with fees
+7. With no usable option quote at the exit minute, the sale is at the first later minute that has one. None by the forced exit: `UNRESOLVED_DATA`, counted and left out, with a row counting it as a total loss. A quote with no bid sells at 0
+8. The $1,000 total loss cap is reported (drawdown, and the date it would have been reached); the series is not stopped
+9. Candle open (owner: "Yes, commit and run"): the latest quote at or before 09:30:00, at most 60 seconds old. That record is the last pre-open quote; the one stamped 09:30:00 is missing on 1 (QQQ) to 27 (IWM) sessions per ticker, where a 09:29:00 record qualifies. Neither: NO_TRADE (`NO_UNDERLYING_QUOTE`). Found by counting timestamps only
+Acceptance:
+- [x] Tests first: `tests/test_orb_screen.py` (25): direction, flat candle, stop, target, time exit, early close, point-in-time entry quote and chain, one-position choice and tie, premium ceiling, fees, bounds, outcome rules, risk rows
+- [x] Code: `src/qqq1dte/strategies/orb.py`, `src/qqq1dte/backtesting/orb_screen.py`, `scripts/m29_screen.py` (dry run on synthetic prices works; refuses to run on uncommitted code)
+- [ ] One registered run (`run_kind` `screen_orb`) from committed code; n_trials before and after recorded
+- [ ] Report `reports/research/m29_s1_screen.md`: outcome, trade count, both intervals, NO_TRADE counts by reason, per-ticker and risk rows
+- [ ] No holdout session read (`HoldoutGuard`; files chosen by the date in their name)
+- [ ] `uv run pytest`, `uv run ruff check .`, `uv run mypy src` pass; CI green
+- [ ] 1 of 3 D7 tests recorded as used
+
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:
