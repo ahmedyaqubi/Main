@@ -698,7 +698,7 @@ Depends on: ADR-0018 ACCEPTED (2026-10-13). Budget: 1 of ADR-0015's 10 tests (3 
   - versus buy-and-hold (approximate): CAGR 5.3% vs 15.2%, Sharpe 0.48 vs 0.75, maximum drawdown 10% vs 34%.
 - **Next (ADR-0019 H6):** a paper-only ADR (owner): 60+ sessions, paper orders only, position size and settlement rules.
 
-## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — IN PROGRESS: steps 1–7 done (2026-11-14), CI green on def1b67; earnings calendar built 2026-11-15 (AAPL dropped under D1); S2 paper verified 2026-11-15, A2 kept as is (uncommitted); no open items before D6
+## M28 — Options day-trading agent: data, broker and cost map (ADR-0021, ACCEPTED 2026-11-14) — DONE 2026-11-15 (owner: "Mark M28 done"). Steps 1–7 done 2026-11-14; earnings calendar built and S2 paper verified 2026-11-15; merged to main at 9d81d3b (PRs #3, #4, #5, CI green on each). Result: D5 drops nothing; AAPL dropped under D1; A2 kept as is. Carried forward: the recorder's two IBKR checks; AAPL's five unverified earnings dates; holdout-period earnings dates
 Depends on: ADR-0021 ACCEPTED (2026-11-14). Not a trial. Plan approved by the owner 2026-11-14 ("approve, start with steps 1–3 now").
 Report for steps 1–3: `reports/research/m28_steps1_3.md`.
 Acceptance:
