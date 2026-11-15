@@ -781,7 +781,7 @@ Open issue found after the run (in the report; nothing was re-run):
 - **The candle's open (ruling 9) is often a wide pre-open quote.** The underlying has no spread gate. Median spread of that quote: 0.01–0.03% for QQQ, SPY and IWM, but 0.34% for NVDA and 0.27% for TSLA, about the size of a 5-minute candle; the largest is 200% (QQQ). 115 of the 740 trades had an open spread over 0.2%. The run therefore tested S1 with a noisy open on those rows, not the paper's opening trade price
 - A re-run with another open (for example the 09:31 quote, or a spread gate) would be a new variant. D6 says the setup stops with no variants; it would need the owner's decision and would use another D7 test
 - **Owner, 2026-11-15: "Accept, S2 next".** The S1 result stands as run; no re-run. Carried to M30 (S2): the underlying has no spread gate, so any S2 price read from a pre-open or thin quote needs a rule fixed before its run (S2's signal uses the previous close and the 10:00 quote)
-## M30 — D6 screen of setup S2, the first half-hour predicts the last (ADR-0021 D3, D6) — RUN MADE 2026-11-15: **KILL**, S2 stops. Waiting for the owner's acceptance and CI (plan and rulings approved by the owner 2026-11-15: "Approve all"; commit and run approved: "Yes, commit and run")
+## M30 — D6 screen of setup S2, the first half-hour predicts the last (ADR-0021 D3, D6) — DONE 2026-11-15: **KILL**, S2 stops (D6: no variants). Owner: "Accept". CI green on dc6a7e2: https://github.com/ahmedyaqubi/Main/actions/runs/43703457371 (plan and rulings approved by the owner 2026-11-15: "Approve all"; commit and run approved: "Yes, commit and run")
 Depends on: M28 DONE, M29 DONE (2026-11-15; PR ahmedyaqubi/Main#7 merged at ba962a2). **A trial: test 2 of the 3 that ADR-0021 D7 allows.** One registered run, from committed code.
 Tickers: QQQ (to 2026-04-02), SPY, IWM, NVDA, TSLA (to 2025-10-02). AAPL is out (D1). Development sessions only.
 Measured before the plan (`scripts/m30_quote_survey.py` → `reports/research/m30_quote_survey.md`; timestamps counted and spreads measured, no signal, return or price level):
@@ -804,7 +804,7 @@ Acceptance:
 - [x] Report `reports/research/m30_s2_screen.md`: outcome, trade count, both intervals, NO_TRADE counts by reason, per-ticker and risk rows
 - [x] No holdout session read (`HoldoutGuard`; files chosen by the date in their name; latest session in the saved rows 2026-04-02 for QQQ, 2025-10-02 for the others)
 - [x] `uv run pytest` (584 passed), `uv run ruff check .`, `uv run mypy src` pass locally
-  - [ ] CI green on the PR
+  - [x] CI green on the PR (ahmedyaqubi/Main#8, commit dc6a7e2)
 - [x] 2 of 3 D7 tests used; 1 remains
 Result (development data; not a claim about profitability either way):
 - **Step A does not pass.** Mean signed underlying return, 15:30 → 15:50, −0.007% over 3,110 ticker-sessions with a direction (746 sessions); one-sided 95% lower bound −0.020%; two-sided 95% interval [−0.023%, +0.008%]. The setup stops here; Step B is descriptive
