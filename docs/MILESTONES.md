@@ -838,7 +838,7 @@ Open issues:
 - Whether Tiingo's open equals the official opening auction price is not verified; criterion 3 compares against it
 - IBKR paper CSV layout not verified (A1 R5)
 
-## M33 — D6 screen of setup S3, the noise-area breakout (ADR-0021 amendment A3, ACCEPTED 2026-11-16) — RUN MADE 2026-11-16: **AMBIGUOUS**, S3 stops (D6: no variants); waiting for the owner's acceptance and CI (plan and rulings approved by the owner 2026-11-16; commit and run approved: "Yes, commit and run")
+## M33 — D6 screen of setup S3, the noise-area breakout (ADR-0021 amendment A3, ACCEPTED 2026-11-16) — DONE 2026-11-16: **AMBIGUOUS**, S3 stops (D6: no variants); ADR-0021 mission stops (no setup advanced). Owner: "Accept and merge". CI green on 46cd582: https://github.com/ahmedyaqubi/Main/actions/runs/43838119874 (plan and rulings approved by the owner 2026-11-16; commit and run approved: "Yes, commit and run")
 Depends on: M28 DONE, M29 DONE, M30 DONE; amendment A3 accepted (owner, 2026-11-16: "Accept S3"). **A trial: test 3 of the 3 that ADR-0021 D7 allows, and the last.** One registered run, from committed code; n_trials 44 → 45.
 Tickers: QQQ (to 2026-04-02), SPY, IWM, NVDA, TSLA (to 2025-10-02). AAPL is out (D1). Development sessions only.
 Measured before the plan (`scripts/m33_quote_survey.py` → `reports/research/m33_quote_survey.md`; timestamps counted and spreads measured, no signal, return or price level; early closes left out):
@@ -860,7 +860,7 @@ Owner rulings, 2026-11-16 (plan approved), made before any signal or statistic w
 - [x] Report `reports/research/m33_s3_screen.md`: outcome, trade count, both intervals, NO_TRADE counts by reason, per-ticker and risk rows, checks on the saved rows, three trades recomputed by separate code
 - [x] No holdout session read (`HoldoutGuard`; files chosen by the date in their name; latest session in the saved rows 2026-04-02 for QQQ, 2025-10-02 for the others)
 - [x] `uv run pytest` (618 passed, 61 skipped: PostgreSQL tests, run in CI), `uv run ruff check .`, `uv run mypy src` pass locally. Run with the main checkout's `.venv` and this worktree's `src` and `scripts` on PYTHONPATH because `uv` was not found on this machine; CI runs `uv`
-  - [ ] CI green on the PR
+  - [x] CI green on the PR (ahmedyaqubi/Main#13, commit 46cd582)
 - [x] 3 of 3 D7 tests used. S3 did not ADVANCE, so the ADR-0021 mission stops (Consequences)
 Recorded before the run: the assistant expects AMBIGUOUS or KILL (A3, "Advice first").
 Result (development data; not a claim about profitability either way):
