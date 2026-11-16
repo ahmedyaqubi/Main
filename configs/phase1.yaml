@@ -273,6 +273,26 @@ study_pullback:                      # ADR-0018 (M27): Connors RSI(2) on SPY, on
   raw_dir: data/raw/tom
   fred_series: DTB3
 
+paper_pullback:                      # ADR-0022 (M32): paper trading of the frozen study_pullback rule
+  adr: ADR-0022                      # A1 R2: the reference the paper loader requires
+  account_usd: 5000.0                # OQ5: notional account for limits and P&L shares
+  trade_usd: 2500.0                  # P2 option A; A1 R1: floor(trade_usd / signal close) shares
+  evening_not_before_et: "18:00"     # A1 R3: no instruction before this New York time
+  first_session: null                # set (by commit) when every P1 row is confirmed; A1 R6
+  raw_dir: data/raw/paper            # each evening's Tiingo download, kept unchanged
+  adj_tol: 0.0005                    # data checks as M25/M26: adjustment tolerance
+  jump: 0.15                         # data checks as M25/M26: close-to-close jump
+  min_sessions: 60                   # P4 duration
+  min_round_trips: 5                 # P4 duration
+  discipline_min: 0.95               # P4 criterion 2
+  fill_mean_bps_max: 5.0             # P4 criterion 3
+  fill_max_bps: 25.0                 # P4 criterion 3
+  commission_tol_usd: 0.10           # P4 criterion 4
+  paper_models_cash_settlement: null # OQ4: owner's answer; null = not yet confirmed
+  loss_day_limit: 0.03               # P4 / ADR-0015 D3
+  loss_total_limit: 0.20             # P4 / ADR-0015 D3
+  fill_sanity: 0.15                  # a typed fill further than this from the prior close is refused
+
 study_options_day:                   # ADR-0021 (accepted 2026-11-14): long calls/puts, day trades
   tickers: [QQQ, SPY, IWM, NVDA, TSLA, AAPL]   # D1: fixed by the owner; the list is closed
   single_stocks: [NVDA, TSLA, AAPL]  # D1: earnings sessions excluded

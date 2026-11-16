@@ -815,13 +815,27 @@ Result (development data; not a claim about profitability either way):
 - Checks on the saved rows (in the report): at most one trade a session; every outlay at or under $500; every sale at 15:50; three rows recomputed from the raw quote files by separate code match. 62 of the 3,110 directions rest on a quote over 0.2% wide, and are still certain because the two quotes do not overlap
 - D6: the setup stops, with no variants. ADR-0021: one test remains (S3, reserved, needs an amendment before any data is examined)
 
-## M32 — Paper trading of the RSI(2) pullback rule on SPY shares (ADR-0022, ACCEPTED 2026-11-15) — NOT STARTED
-Depends on: ADR-0022 ACCEPTED (owner, 2026-11-15: "Yes $2,500, record the answers and mark it accepted"; OQ1–OQ7 as recommended). Not a trial; no data bought. M31 stays with ADR-0021 D11.
-- [ ] Owner confirms every "not verified" P1 row (share pricing plan, ETF settlement, market-on-open in paper, paper settlement model, paper balance, USD funding) without sharing credentials; answers recorded in the report
-- [ ] Code, tests first (ADR-0022 P6): `scripts/m32_evening.py`, `scripts/m32_record_fill.py`, `scripts/m32_review.py`; static check: no broker SDK, endpoints or IBKR API ports
+## M32 — Paper trading of the RSI(2) pullback rule on SPY shares (ADR-0022, ACCEPTED 2026-11-15) — IN PROGRESS: code built; waiting on the owner's P1 confirmations before session 1
+Depends on: ADR-0022 ACCEPTED (owner, 2026-11-15: "Yes $2,500, record the answers and mark it accepted"; OQ1–OQ7 as recommended). Not a trial; no data bought; nothing registered. M31 stays with ADR-0021 D11. Plan approved by the owner 2026-11-15 ("Approve all"), with six rulings recorded as ADR-0022 amendment A1 (R1 shares = floor($2,500 / signal close); R2 paper loader for the 2016–2026 rows, logged in the paper journal, not a holdout access; R3 18:00 New York cut-off and revision check; R4 loss-limit stop blocks new BUYs, exits still follow the rule; R5 typed fills only; R6 code now, session 1 after P1).
+- [ ] Owner confirms every "not verified" P1 row (share pricing plan, ETF settlement, market-on-open in paper, paper settlement model, paper balance, USD funding) without sharing credentials; answers recorded in the report. Then `paper_pullback.first_session` and `paper_models_cash_settlement` are set by commit; the evening script refuses until `first_session` is set
+- [ ] Migration 0004 applied to the owner's database (`alembic upgrade head`), with the owner's OK
+- [x] **Code, tests first (ADR-0022 P6):**
+  - `strategies/pullback_live.py`: evening instruction from the frozen `pullback.signals`, share count (A1 R1), timing and missed-open refusal (A1 R3), revision diff. Tests `tests/test_paper_live.py` (24), incl. a day-by-day replay equal to `trade_indices` on three synthetic walks
+  - `monitoring/paper_review.py`: the five P4 criteria, an independent RSI/SMA recomputation (numpy, no import of `pullback.py`), ledger with dividends, loss limits (3% day, 20% total, exact boundaries), T+1 settled-cash ledger, fill validation. Tests `tests/test_paper_review.py` (17) on hand-built journals with known answers
+  - `journal/paper_store.py` and migration `0004_paper_journal.py`: append-only `paper_signals`, `paper_fills`, `paper_events`; the database refuses `available_at` after the run or before 16:00 New York, a fill for a NO_ACTION evening, a fill without price or a miss without reason, a second row per evening. Tests `tests/test_paper_journal_db.py` (6)
+  - `ingestion/etf_data.paper_rows` (refuses without `ADR-0022`) and `validation/etf_checks.paper_problems` (the M26/M27 checks); config `paper_pullback` with a model that holds no rule values (tests in `test_paper_live.py`)
+  - Scripts: `scripts/m32_evening.py`, `scripts/m32_record_fill.py`, `scripts/m32_review.py`, `scripts/m32_replay_check.py`
+  - **Rule-1 guard** `tests/test_paper_rule1_guard.py` (10): no broker SDK import, no Client Portal endpoint, no IBKR API port (7496/7497/4001/4002), no order call, in `src/` and `scripts/`
+- [x] **Replay on the stored SPY history** (`scripts/m32_replay_check.py` → `reports/research/m32_replay_check.md`): the live path, run day by day over 8,475 sessions 1993-01-29 → 2026-09-30, gives the same 266 completed trades as `trade_indices` (175 development + 91 holdout), 0 mismatches. Dates and counts only; no statistic
+- [x] **Dry runs:** `m32_evening.py --dry-run` on the stored file at 2026-09-30 23:00 UTC prints "NO ACTION (for the 2026-10-01 open)" (RSI(2) 13.90); at 19:00 UTC it refuses (before the cut-off, and the 09-30 open had passed). `m32_review.py --synthetic` on a synthetic journal: all five criteria PASS, status IN_PROGRESS (3 round trips in 219 sessions, which also shows how slowly round trips accumulate)
+- [x] Local checks: pytest 640 passed, 1 skipped (import-linter test, pre-existing local skip); ruff check and format clean; mypy src clean (the four m32 scripts also clean); lint-imports 1 kept. Run with the main checkout's `.venv` and this worktree's `src` on PYTHONPATH because `uv` was not found on this machine; CI runs `uv`
 - [ ] Paper period: ≥ 60 sessions and ≥ 5 round trips at $2,500 per trade; the owner enters every paper order by hand (hard rule 1)
 - [ ] Review against the five operational criteria → `reports/research/m32_paper.md`; paper P&L reported, never pass/fail
 - [ ] Afterwards: shadow-mode forward record (OQ6)
+Open issues:
+- When Tiingo's end-of-day bar is final is still not verified (A1 R3); the revision check will show it in practice
+- Whether Tiingo's open equals the official opening auction price is not verified; criterion 3 compares against it
+- IBKR paper CSV layout not verified (A1 R5)
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)

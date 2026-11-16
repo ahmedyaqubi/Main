@@ -100,3 +100,34 @@ def open_gaps(df: pl.DataFrame, threshold: float) -> list[tuple[date, float]]:
         if abs(g) > threshold:
             out.append((dates[i], g))
     return out
+
+
+def paper_problems(
+    df: pl.DataFrame,
+    sessions: Sequence[date],
+    adj_tol: float,
+    jump: float,
+    open_ratio_tol: float,
+    open_gap: float,
+) -> list[str]:
+    """ADR-0022 P3: the M26/M27 checks on a paper download. `sessions` are the exchange
+    sessions the download must cover. Any finding stops the evening (rule 11)."""
+    out = []
+    missing, extra = completeness(df["date"].to_list(), sessions)
+    if missing:
+        out.append(f"{len(missing)} missing sessions, first {missing[:3]}")
+    if extra:
+        out.append(f"{len(extra)} dates that are not sessions, first {extra[:3]}")
+    adj = adjustment_violations(df, adj_tol)
+    if adj:
+        out.append(f"{len(adj)} adjustment violations, first {adj[:3]}")
+    jumps = [j for j in jump_scan(df, jump) if not j["split"]]
+    if jumps:
+        out.append(f"{len(jumps)} close-to-close jumps over {jump:.0%}, first {jumps[:3]}")
+    ratio = open_ratio_violations(df, open_ratio_tol)
+    if ratio:
+        out.append(f"{len(ratio)} open adjustment violations, first {ratio[:3]}")
+    gaps = open_gaps(df, open_gap)
+    if gaps:
+        out.append(f"{len(gaps)} opens over {open_gap:.0%} from the previous close: {gaps[:3]}")
+    return out
