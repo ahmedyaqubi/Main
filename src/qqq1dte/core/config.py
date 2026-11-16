@@ -429,6 +429,38 @@ class StudyPullback(_Section):
     fred_series: str
 
 
+class PaperPullback(_Section):
+    """ADR-0022 (M32): paper trading of the frozen `study_pullback` rule. The rule's own values
+    are read from `study_pullback` only; nothing here can change a signal."""
+
+    adr: Literal["ADR-0022"]
+    account_usd: float = Field(gt=0)
+    trade_usd: float = Field(gt=0)
+    evening_not_before_et: time
+    first_session: date | None
+    raw_dir: str
+    adj_tol: float = Field(gt=0)
+    jump: float = Field(gt=0)
+    min_sessions: int = Field(ge=60)
+    min_round_trips: int = Field(ge=5)
+    discipline_min: float = Field(gt=0, le=1)
+    fill_mean_bps_max: float = Field(gt=0)
+    fill_max_bps: float = Field(gt=0)
+    commission_tol_usd: float = Field(gt=0)
+    paper_models_cash_settlement: bool | None
+    loss_day_limit: float = Field(gt=0, lt=1)
+    loss_total_limit: float = Field(gt=0, lt=1)
+    fill_sanity: float = Field(gt=0, lt=1)
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Self:
+        if self.trade_usd > self.account_usd:
+            raise ValueError("paper_pullback.trade_usd exceeds account_usd")
+        if self.fill_mean_bps_max > self.fill_max_bps:
+            raise ValueError("paper_pullback.fill_mean_bps_max exceeds fill_max_bps")
+        return self
+
+
 class OrbSetup(_Section):
     """ADR-0021 amendment A1, S1: the Zarattini & Aziz opening-range rule."""
 
@@ -636,6 +668,7 @@ class Phase1Config(_Section):
     study_etf_trend: StudyEtfTrend
     study_tom: StudyTom
     study_pullback: StudyPullback
+    paper_pullback: PaperPullback
     study_options_day: StudyOptionsDay
     features_f3: FeaturesF3
     pit: Pit

@@ -74,3 +74,15 @@ def with_holdout(df: pl.DataFrame, holdout_end: date, adr_ref: str) -> pl.DataFr
     if not adr_ref.strip():
         raise HoldoutLockedError("holdout rows need an accepted holdout ADR reference")
     return df.filter(pl.col("date") <= holdout_end)
+
+
+PAPER_ADR = "ADR-0022"
+
+
+def paper_rows(df: pl.DataFrame, adr_ref: str) -> pl.DataFrame:
+    """ADR-0022 amendment A1 R2: every row, the opened M27 holdout and later dates included, to
+    compute the frozen rule's next paper signal. Not a holdout access and no statistic: the
+    caller logs each read in the paper journal, never in `final_test_access_log`."""
+    if adr_ref != PAPER_ADR:
+        raise HoldoutLockedError(f"paper rows need the reference {PAPER_ADR}, got {adr_ref!r}")
+    return df

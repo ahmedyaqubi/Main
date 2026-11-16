@@ -269,3 +269,28 @@ is not entered, it stays not entered (rule 8).
 ## Revision 2 → accepted (2026-11-15)
 - Status set to ACCEPTED; OQ1–OQ7 answered as recommended; P2 records option A ($2,500).
 - No other text changed.
+
+## Amendment A1 (owner, 2026-11-15: "Approve all", on the M32 plan)
+Made before any paper session, any code, or any new data read. The rule's signals are unchanged.
+
+- **R1. Share count.** ADR-0018 D1 sized a trade as floor($5,000 / the next open). A
+  market-on-open order needs its quantity the evening before, when that open is unknown. In
+  paper trading the quantity is **floor($2,500 / the signal day's unadjusted close)**, whole
+  shares. A gap up at the open cannot overdraw the account: $5,000 is available against about
+  $2,500 spent. A SELL is always for the shares held.
+- **R2. The 2016–2026 rows.** The indicators need history, and those rows are the M27
+  holdout, opened once under ADR-0020. Reading them to compute the frozen rule's next signal
+  is not a test: no statistic is computed on them. They are read through a separate loader
+  that refuses without the reference `ADR-0022`, and every read is logged in the paper journal.
+  It is **not** logged in `final_test_access_log`, so it cannot count as a holdout access.
+- **R3. Final bar.** When Tiingo's end-of-day bar is final is not verified. The evening script
+  refuses before a cut-off (`paper_pullback.evening_not_before_et`, 18:00 New York). Each
+  evening the previously used bars are compared with the new download; any change is logged,
+  and a change that would flip a past signal is flagged to the owner.
+- **R4. Loss-limit stop.** When the 3% daily or 20% total limit (P4) is hit, no new BUY is
+  issued until the owner's review and a new ADR. An open position is still sold on the frozen
+  exit signal, because selling reduces risk.
+- **R5. Fill records.** Fills are typed in. A parser for IBKR's paper CSV export is built only
+  after the owner shares a sample with the account number removed; its layout is not verified.
+- **R6. Order of work.** The code is built and tested while the owner confirms the P1 rows.
+  Session 1 starts only after every P1 row is confirmed and recorded.
