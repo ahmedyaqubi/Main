@@ -382,10 +382,11 @@ Weaknesses that remain:
 - If nothing advances within the 3 tests, this mission stops and is not extended without a new
   ADR.
 
-## Amendment A3 (PROPOSED 2026-11-15; not accepted): S3, the noise-area breakout
-Drafted by the assistant at the owner's request ("Propose S3 for ADR-0021"). **Nothing below is
-in force until the owner accepts it.** No data was read, no timestamp counted and no signal
-computed in drafting it. The D3 table above is left as accepted.
+## Amendment A3 (owner, 2026-11-16: "Accept S3"): S3, the noise-area breakout
+Drafted by the assistant on 2026-11-15 at the owner's request ("Propose S3 for ADR-0021") and
+accepted as written. No data was read, no timestamp counted and no signal computed in
+drafting it or before acceptance. The D3 table above is left as accepted; for S3 this
+amendment fills its reserved row.
 
 **Advice first (rule 12):** the assistant expects this test to end AMBIGUOUS or KILL, for the
 reason given under "Why it may fail here". Not spending the last test is a valid choice (OQ-A).
@@ -410,7 +411,7 @@ access. What the paper says:
   size) raise the Sharpe ratio to 1.33. They are not used here (see "Differences").
 - **The paper also reports** better results on high-VIX days. Not used: no threshold is given.
 
-### S3 (frozen if accepted)
+### S3 (frozen)
 Times are America/New_York. Every input is available at the check minute (rule 2).
 | | rule |
 |---|---|
@@ -470,7 +471,7 @@ How "today's open", "the previous close" and each check price are read from 1-mi
 (M29 found the 09:30:00 quote is a wide pre-open quote on NVDA and TSLA; M30 ruled the
 previous close is the 15:59 quote); which sessions count towards the 14; split sessions.
 
-### Questions for the owner
-- **OQ-A.** Spend the last test on S3 as written (recommended only if the owner wants the
-  mission's third test used), or leave it unused and end the mission's testing at two?
-- **OQ-B.** Milestone number: **M33** (M31 stays reserved by D11; M32 is stopped).
+### Owner's answers (2026-11-16: "Accept S3")
+- **OQ-A. ANSWERED:** the last test is spent on S3 as written. The choice offered was to
+  accept S3 and use the last test on it, or to leave the test unused.
+- **OQ-B. ANSWERED:** milestone **M33** (M31 stays reserved by D11; M32 is stopped).
