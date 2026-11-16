@@ -838,6 +838,18 @@ Open issues:
 - Whether Tiingo's open equals the official opening auction price is not verified; criterion 3 compares against it
 - IBKR paper CSV layout not verified (A1 R5)
 
+## M33 — D6 screen of setup S3, the noise-area breakout (ADR-0021 amendment A3, ACCEPTED 2026-11-16) — NOT STARTED
+Depends on: M28 DONE, M29 DONE, M30 DONE; amendment A3 accepted (owner, 2026-11-16: "Accept S3"). **A trial: test 3 of the 3 that ADR-0021 D7 allows, and the last.** One registered run, from committed code; n_trials 44 → 45.
+Tickers: QQQ (to 2026-04-02), SPY, IWM, NVDA, TSLA (to 2025-10-02). AAPL is out (D1). Development sessions only.
+- [ ] Plan approved by the owner, with rulings fixed before any signal or statistic: how today's open, the previous close and each half-hour check price are read from 1-minute quotes (M29's wide 09:30:00 quote; M30's 15:59 previous close); which sessions count towards the 14; split sessions
+- [ ] Config block for S3 under `study_options_day` (every A3 parameter; none hard-coded)
+- [ ] Tests first, on synthetic prices with known answers: boundaries, first-signal rule, half-hour checks only, opposite-boundary exit, forced exit, `NO_HISTORY`, point-in-time inputs
+- [ ] Code, then one registered run from committed code; report `reports/research/m33_s3_screen.md` with the D6 outcome, both intervals, NO_TRADE counts, per-ticker and risk rows
+- [ ] No holdout session read
+- [ ] `uv run pytest`, `uv run ruff check .`, `uv run mypy src` pass; CI green
+- [ ] 3 of 3 D7 tests used. If S3 does not ADVANCE, the ADR-0021 mission stops (Consequences)
+Recorded before the run: the assistant expects AMBIGUOUS or KILL (A3, "Advice first").
+
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:
