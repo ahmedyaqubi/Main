@@ -1,6 +1,8 @@
 # ADR-0022: Paper trading of the RSI(2) pullback rule on SPY (ADR-0015 gate 3; milestone M32)
 
-- Status: **ACCEPTED** 2026-11-15 by the owner ("Accept all recommendations, M32, $2,500";
+- Status: **WITHDRAWN** 2026-11-15 by ADR-0023 (owner: "Withdraw, back to options"), before
+  any paper session. This ADR trades SPY shares; the owner's work is about options. Nothing
+  below is in force. Earlier status: ACCEPTED 2026-11-15 by the owner ("Accept all recommendations, M32, $2,500";
   then, after the assistant clarified that this ADR trades SPY shares, not options: "Yes
   $2,500, record the answers and mark it accepted"), at revision 2 with OQ1–OQ7 answered as
   recorded below. Revision 1 was the owner's draft of 2026-10-13.
