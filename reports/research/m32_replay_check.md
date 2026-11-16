@@ -1,6 +1,6 @@
 # M32: live evening path replayed against the backtest state machine (ADR-0022 P6)
 
-Generated 2026-11-16 01:23 UTC by `scripts/m32_replay_check.py`, code 7b7d2412f671. Data: `SPY.json` (sha256 1500809ed018059c), 8,475 sessions 1993-01-29 → 2026-09-30, read under ADR-0022 amendment A1 R2. Dates and counts only.
+Generated 2026-11-16 01:29 UTC by `scripts/m32_replay_check.py`, code f21cef1dae2b. Data: `SPY.json` (sha256 1500809ed018059c), 8,475 sessions 1993-01-29 → 2026-09-30, read under ADR-0022 amendment A1 R2. Dates and counts only.
 
 ## Result: **MATCH**
 
