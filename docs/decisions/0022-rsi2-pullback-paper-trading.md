@@ -1,13 +1,15 @@
-# ADR-0022: Paper trading of the RSI(2) pullback rule on SPY (ADR-0015 gate 3; milestone M32 proposed)
+# ADR-0022: Paper trading of the RSI(2) pullback rule on SPY (ADR-0015 gate 3; milestone M32)
 
-- Status: **PROPOSED**, revision 2, 2026-11-15. Revision 1 was the owner's draft of 2026-10-13.
-  **Not accepted.** Nothing in it applies until the owner accepts it.
+- Status: **ACCEPTED** 2026-11-15 by the owner ("Accept all recommendations, M32, $2,500";
+  then, after the assistant clarified that this ADR trades SPY shares, not options: "Yes
+  $2,500, record the answers and mark it accepted"), at revision 2 with OQ1–OQ7 answered as
+  recorded below. Revision 1 was the owner's draft of 2026-10-13.
 - It follows the M27 holdout **PASS (borderline)**: ADR-0019 with the ADR-0020 exception, run
   `screen_pullback_holdout-7e393c248e95` (`reports/research/m27_holdout.md`).
 - Gate: ADR-0015 D4 gate 3, "paper trading for 60+ sessions under a separate paper-only ADR".
   ADR-0019 H6 names this ADR and says it must also settle position size and the cash
   account's settlement rule.
-- **Milestone: M32 is proposed; the owner decides (OQ1).** Revision 1 called this "M28".
+- **Milestone: M32 (owner, OQ1).** Revision 1 called this "M28".
   M28–M30 have since been used by ADR-0021, and ADR-0021 D11 names M31 for that mission's
   holdout ADR and access.
 - **Budget: no test is used, no data is bought.** Tiingo daily prices and FRED are free.
@@ -105,11 +107,11 @@ changes none.** Only the dollar amount per trade is set here (P2), as ADR-0019 H
 - **Read-Only API:** the owner is asked to leave it on (its default). This project never needs
   it off, because it never connects.
 
-### P2. Position size (owner decision, OQ2; recommendation in bold)
+### P2. Position size (owner, OQ2: option A, $2,500 per trade)
 ADR-0015 D3 sets a limit of 3% of the account per day. ADR-0021 D2 replaced that figure for
 **options entries only**; for this rule it still applies. At full size ($5,000), the rule broke
 it on 6 development trades (worst day −6.5%) and 3 holdout trades (worst −4.4%).
-- **Option A: half size ($2,500 per trade).** Recommended.
+- **Option A: half size ($2,500 per trade). Chosen by the owner, 2026-11-15.**
   - The holdout worst day would have been −2.2% of the account, and the development worst
     −3.2%.
   - Costs are about $3.50 per round trip (0.14%), against 0.10% at full size.
@@ -199,35 +201,35 @@ is not entered, it stays not entered (rule 8).
 - **Static check:** no broker SDK imports (for example `ibapi`, `ib_insync`, `ib_async`), no
   broker order or account endpoints, and no reference to IBKR API ports 7496, 7497, 4001 or
   4002 anywhere in the code (a test, as the Phase 1 rule-1 guard).
-- Script names follow the milestone number the owner chooses (OQ1).
+- Script names use M32 (OQ1).
 
-## Open questions for the owner (each with a recommendation)
-- **OQ1. Milestone number.** M28–M30 are used. ADR-0021 D11 names M31 for its holdout ADR
+## Owner's answers (2026-11-15: every recommendation accepted)
+- **OQ1. Milestone number. ANSWERED (owner, 2026-11-15): as recommended.** M28–M30 are used. ADR-0021 D11 names M31 for its holdout ADR
   and access "if a setup advances". S1 and S2 did not; M31 could still be used only if S3 is
   specified by amendment, screened and advanced.
   - **Recommended: M32**, leaving M31 to ADR-0021 as written, so no accepted text has to be
     reinterpreted.
   - Alternative: M31, with ADR-0021's holdout work renumbered if it is ever needed.
-- **OQ2. Position size.** **Recommended: option A, $2,500 per trade** (P2), the only option that
+- **OQ2. Position size. ANSWERED (owner, 2026-11-15): $2,500 per trade, confirmed after the clarification that the trade is in SPY shares.** **Recommended: option A, $2,500 per trade** (P2), the only option that
   keeps both the development and holdout worst days inside ADR-0015's 3%.
-- **OQ3. IBKR share pricing plan.** The cost model is the Fixed plan (ADR-0016 D4, read
+- **OQ3. IBKR share pricing plan. ANSWERED (owner, 2026-11-15): as recommended.** The cost model is the Fixed plan (ADR-0016 D4, read
   2026-10-10). **Recommended:** the owner confirms which plan the account is on, and the
   commission page is re-read and recorded before session 1. If the account is on Tiered, the
   modelled cost and criterion 4 are restated by amendment **before** session 1, not after.
-- **OQ4. Settlement in the paper account.** It is not verified whether IBKR's paper account
+- **OQ4. Settlement in the paper account. ANSWERED (owner, 2026-11-15): as recommended.** It is not verified whether IBKR's paper account
   enforces cash-account settlement. **Recommended:** the owner checks the paper account's type
   in its settings. If it does not model cash settlement, criterion 5 is marked "not testable
   in paper" in the report, and the software also keeps its own settled-cash ledger from the
   journal and reports any trade that would have used unsettled cash. Neither may count as a
   pass by itself.
-- **OQ5. Paper account balance.** IBKR paper accounts may not start at $5,000 (not verified).
+- **OQ5. Paper account balance. ANSWERED (owner, 2026-11-15): as recommended.** IBKR paper accounts may not start at $5,000 (not verified).
   **Recommended:** the owner sets it to $5,000 if IBKR allows it; if not, the software
   computes every limit and P&L share on a notional $5,000 and the report says so.
-- **OQ6. Forward record after the paper period.** **Recommended: yes**, shadow mode from the
+- **OQ6. Forward record after the paper period. ANSWERED (owner, 2026-11-15): as recommended.** **Recommended: yes**, shadow mode from the
   last paper session, no orders, reported yearly with its sample size. It costs nothing and is
   the only new out-of-sample evidence this rule can get, since ADR-0019's Consequences note no
   clean SPY daily data is left.
-- **OQ7. Running it beside ADR-0021.** ADR-0021 has one test left (S3). **Recommended:** run
+- **OQ7. Running it beside ADR-0021. ANSWERED (owner, 2026-11-15): as recommended.** ADR-0021 has one test left (S3). **Recommended:** run
   this paper period regardless of S3; the two share no data, tests or account (this is a paper
   account; ADR-0021 trades nothing yet). The owner's evening time is the only shared cost, at
   about 5 minutes on signal evenings.
@@ -263,3 +265,7 @@ is not entered, it stays not entered (rule 8).
 - **Not changed:** the ADR-0018 rule, its costs model, the 60-session and 5-round-trip
   duration, the five operational criteria and their thresholds, and the statement that paper
   P&L is never pass/fail.
+
+## Revision 2 → accepted (2026-11-15)
+- Status set to ACCEPTED; OQ1–OQ7 answered as recommended; P2 records option A ($2,500).
+- No other text changed.
