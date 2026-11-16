@@ -815,6 +815,14 @@ Result (development data; not a claim about profitability either way):
 - Checks on the saved rows (in the report): at most one trade a session; every outlay at or under $500; every sale at 15:50; three rows recomputed from the raw quote files by separate code match. 62 of the 3,110 directions rest on a quote over 0.2% wide, and are still certain because the two quotes do not overlap
 - D6: the setup stops, with no variants. ADR-0021: one test remains (S3, reserved, needs an amendment before any data is examined)
 
+## M32 — Paper trading of the RSI(2) pullback rule on SPY shares (ADR-0022, ACCEPTED 2026-11-15) — NOT STARTED
+Depends on: ADR-0022 ACCEPTED (owner, 2026-11-15: "Yes $2,500, record the answers and mark it accepted"; OQ1–OQ7 as recommended). Not a trial; no data bought. M31 stays with ADR-0021 D11.
+- [ ] Owner confirms every "not verified" P1 row (share pricing plan, ETF settlement, market-on-open in paper, paper settlement model, paper balance, USD funding) without sharing credentials; answers recorded in the report
+- [ ] Code, tests first (ADR-0022 P6): `scripts/m32_evening.py`, `scripts/m32_record_fill.py`, `scripts/m32_review.py`; static check: no broker SDK, endpoints or IBKR API ports
+- [ ] Paper period: ≥ 60 sessions and ≥ 5 round trips at $2,500 per trade; the owner enters every paper order by hand (hard rule 1)
+- [ ] Review against the five operational criteria → `reports/research/m32_paper.md`; paper P&L reported, never pass/fail
+- [ ] Afterwards: shadow-mode forward record (OQ6)
+
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
 Acceptance:
