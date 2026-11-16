@@ -1,6 +1,12 @@
 # Roadmap
 
-**Current mission: ADR-0021 (ACCEPTED 2026-11-14).** An autonomous, rule-based agent that
+**No current mission (ADR-0024, accepted 2026-11-16).** The ADR-0021 mission is closed: S1 (M29)
+AMBIGUOUS, S2 (M30) KILL, S3 (M33) AMBIGUOUS; no holdout read; M31 does not happen. 45 trials
+recorded; ADR-0015 ledger 6 of 10 tests, $36.17 of $100. **Next:** only by a new owner ADR.
+
+The ADR-0021 entry below is kept as the record.
+
+**Mission: ADR-0021 (ACCEPTED 2026-11-14; CLOSED 2026-11-16 by ADR-0024).** An autonomous, rule-based agent that
 day-trades long calls and puts on QQQ, SPY, IWM, NVDA, TSLA and AAPL, on pre-registered setups
 only. Owner constraints:
 - $5,000 account; one contract per trade, at most $500; 20% total loss cap ($1,000);
