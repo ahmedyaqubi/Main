@@ -381,3 +381,96 @@ Weaknesses that remain:
   is the cheaper path to a first paper executor.
 - If nothing advances within the 3 tests, this mission stops and is not extended without a new
   ADR.
+
+## Amendment A3 (PROPOSED 2026-11-15; not accepted): S3, the noise-area breakout
+Drafted by the assistant at the owner's request ("Propose S3 for ADR-0021"). **Nothing below is
+in force until the owner accepts it.** No data was read, no timestamp counted and no signal
+computed in drafting it. The D3 table above is left as accepted.
+
+**Advice first (rule 12):** the assistant expects this test to end AMBIGUOUS or KILL, for the
+reason given under "Why it may fail here". Not spending the last test is a valid choice (OQ-A).
+
+### Source, read from the paper itself
+Zarattini, Aziz & Barbon (2024), "Beat the Market: An Effective Intraday Momentum Strategy for
+S&P500 ETF (SPY)". Full PDF read 2026-11-15 from the authors' site
+(`concretumgroup.com/wp-content/uploads/2026/02/Beat-the-Market.pdf`); SSRN refused automated
+access. What the paper says:
+- **Data:** SPY, 1-minute bars, May 2007 → April 2024.
+- **Noise area:** for each time of day, σ = the average over the previous 14 days of
+  |price at that time / that day's open − 1|. Upper boundary = max(today's open, previous
+  close) × (1 + σ). Lower boundary = min(today's open, previous close) × (1 − σ).
+- **Rule (base model):** checked only at HH:00 and HH:30. Long when the price is above the
+  upper boundary, short when below the lower. Closed at the close, or when the price crosses
+  the opposite boundary, where the position is reversed.
+- **Reported, base model, shares:** 5,494 trades, 1.3 a day, 53% winners, average profit
+  $0.10 a share per trade after $0.0035 commission and $0.001 slippage a share; Sharpe ratio
+  0.61. *Flag:* the trade table's columns came out misaligned in the text extraction; these
+  figures are matched to the base model by row order.
+- **Later versions in the paper** (exit at the nearer boundary or VWAP; volatility-scaled
+  size) raise the Sharpe ratio to 1.33. They are not used here (see "Differences").
+- **The paper also reports** better results on high-VIX days. Not used: no threshold is given.
+
+### S3 (frozen if accepted)
+Times are America/New_York. Every input is available at the check minute (rule 2).
+| | rule |
+|---|---|
+| Boundaries | as in the paper: 14 previous sessions, today's open, the previous close |
+| Checks | 10:00, 10:30, … 15:00 for entries (`schedule.last_new_entry`); 10:30 … 15:30 for exits |
+| Direction | first check at which the underlying is above the upper boundary → call; below the lower → put. First signal of the session only, per ticker |
+| Entry | at that check, the D2 contract at the quote in force, with the spec §6 latency |
+| Exit | the first later check at which the underlying is beyond the **opposite** boundary; otherwise `trade.forced_exit_time` (15:50) |
+| No trade | fewer than 14 usable previous sessions (`NO_HISTORY`); early-close sessions; earnings windows (D1); no signal by 15:00 |
+
+D2 (contract, fills, costs, $500 ceiling), the D3 one-position rule, D6 (Steps A and B,
+outcomes), D7 (98.3%) and D8 apply unchanged. Tickers: QQQ, SPY, IWM, NVDA, TSLA, on
+development sessions only (AAPL is out under D1).
+
+### Differences from the paper, declared
+- **Options, not shares.** One long option; the boundaries are read on the underlying.
+- **One trade per ticker-session, no reversal.** The paper reverses at the opposite boundary.
+- **Base-model exit, not the paper's best version.** A long option's loss is limited to its
+  premium, which is the protection the paper's tighter stop was added for; a tighter stop
+  also means more round trips, and each costs 1.8–4.1% of the premium (M28 step 6).
+- **Five tickers.** The paper tests SPY only.
+- **Quotes, not trade bars; exit 15:50, not 16:00; last entry 15:00.**
+- **S3 may hold longer than `trade.max_holding_minutes`** (declared, as for S1).
+
+### D4 for S3
+| who pays | why it may persist | why it may fail here |
+|---|---|---|
+| traders and dealers who must hedge or cover once a move is unusually large for the time of day | the paper ties it to under-reaction to news and to dealers' hedging when their gamma is negative | see below |
+
+**Why it may fail here:**
+- **The reported edge is small.** $0.10 a share is of the order of 0.02–0.10% of SPY's price
+  over the sample. S1 measured +0.044% on the underlying (M29 Step A) and still lost 1.67% of
+  the premium at the mid and 3.00% at ask and bid. An edge of that size has already failed to
+  pay for an option here.
+- **Time decay.** A hold of several hours costs time value whether or not the move continues.
+- **The entry is late by design:** after an unusually large move, when the option is dearer.
+- **The paper's sample overlaps the development sessions** (2023-03 → 2024-04), and its
+  result is from shares with near-zero costs.
+
+### Disclosures
+- **This is the same family as S1** (intraday trend following). It was chosen after seeing
+  that S1's Step A was narrowly positive and S2's was not. The choice is therefore not
+  independent of the development data.
+- The per-ticker rows of M29 and M30 were seen. They are not used: all five tickers stay.
+- The move from the open was an input of the Phase 1 models that failed (`docs/FEATURES.md`).
+- 44 trials are recorded; this would be the 45th, and the last of this ADR's three.
+
+### Candidates considered and not proposed
+- **Overnight-gap fade or continuation:** no source with a rule this specific; the gap was a
+  Phase 1 feature.
+- **Last half-hour conditioned on dealer gamma:** a variant of S2, which was killed; needs
+  gamma data the project does not hold.
+- **Scheduled-release days (FOMC, CPI):** too few sessions (review of revision 1).
+
+### Left to the milestone plan, before any signal (as in M29 and M30)
+How "today's open", "the previous close" and each check price are read from 1-minute quotes
+(M29 found the 09:30:00 quote is a wide pre-open quote on NVDA and TSLA; M30 ruled the
+previous close is the 15:59 quote); which sessions count towards the 14; split sessions.
+
+### Questions for the owner
+- **OQ-A.** Spend the last test on S3 as written (recommended only if the owner wants the
+  mission's third test used), or leave it unused and end the mission's testing at two?
+- **OQ-B.** Milestone number: **M33** (M31 stays reserved by D11; M32 is stopped).
