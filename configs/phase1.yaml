@@ -325,7 +325,19 @@ study_options_day:                   # ADR-0021 (accepted 2026-11-14): long call
     prev_close_offset_minutes: 1     # owner, 2026-11-15 (M30): "the previous close" = the quote in
                                      #   force this long before the previous session's close; the
                                      #   one stamped at the close is wide on NVDA and TSLA
-  split_sessions:                    # owner, 2026-11-15 (M30): S2 is NO_TRADE (CORPORATE_ACTION)
+  noise_area:                        # A3 S3: Zarattini, Aziz & Barbon (2024), noise-area breakout
+    lookback_sessions: 14            # sigma(t) = mean |price(t) / open - 1| over this many usable
+                                     #   previous sessions; fewer -> NO_HISTORY
+    first_check: "10:00"             # checks every check_interval_minutes from here
+    last_entry_check: "15:00"        # = schedule.last_new_entry
+    last_exit_check: "15:30"         # opposite-boundary exits are looked for up to here
+    check_interval_minutes: 30
+    exit_time: "15:50"               # otherwise (trade.forced_exit_time)
+    open_offset_minutes: 1           # owner, 2026-11-16 (M33 ruling 1): "today's open" = the quote
+                                     #   in force this long after the open; the one stamped 09:30:00
+                                     #   is pre-open and wide on NVDA and TSLA
+    prev_close_offset_minutes: 1     # M33 ruling 2 = M30 ruling 1 (see half_hour)
+  split_sessions:                    # owner (M30, M33): S2 and S3 are NO_TRADE (CORPORATE_ACTION)
     NVDA: ["2024-06-10"]             #   10-for-1, first split-adjusted session; NVIDIA release of
                                      #   2024-05-22 (nvidianews.nvidia.com), read 2026-11-15
   max_tests: 3                       # D7: of ADR-0015's remaining 7
