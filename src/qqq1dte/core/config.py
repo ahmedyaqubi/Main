@@ -494,6 +494,33 @@ class HalfHourSetup(_Section):
         return self
 
 
+class NoiseAreaSetup(_Section):
+    """ADR-0021 amendment A3, S3: the noise-area breakout."""
+
+    lookback_sessions: int = Field(ge=1)
+    first_check: time
+    last_entry_check: time
+    last_exit_check: time
+    check_interval_minutes: int = Field(ge=1)
+    exit_time: time
+    open_offset_minutes: int = Field(ge=0)  # M33 ruling 1
+    prev_close_offset_minutes: int = Field(ge=0)  # M33 ruling 2
+
+    @model_validator(mode="after")
+    def _ordered(self) -> Self:
+        if not self.first_check <= self.last_entry_check < self.last_exit_check < self.exit_time:
+            raise ValueError(
+                "noise_area times must run first_check <= last_entry_check < last_exit_check "
+                "< exit_time"
+            )
+        step = self.check_interval_minutes
+        first = self.first_check.hour * 60 + self.first_check.minute
+        for t in (self.last_entry_check, self.last_exit_check):
+            if (t.hour * 60 + t.minute - first) % step:
+                raise ValueError("noise_area checks must lie on the check_interval_minutes grid")
+        return self
+
+
 class BrokerFees(_Section):
     """ADR-0021 D2: one broker's published option fees, USD (M28 step 2, read 2026-11-14)."""
 
@@ -531,7 +558,8 @@ class StudyOptionsDay(_Section):
     kill_fill: Literal["CONSERVATIVE", "MODERATE", "OPTIMISTIC"]
     orb: OrbSetup
     half_hour: HalfHourSetup
-    split_sessions: dict[str, list[date]]  # M30 ruling 5: S2 does not trade these
+    noise_area: NoiseAreaSetup
+    split_sessions: dict[str, list[date]]  # M30 ruling 5, M33 ruling 4: not traded
     max_tests: int = Field(ge=1)
     family_alpha: float = Field(gt=0, lt=1)
     step_a_level: float = Field(gt=0, lt=1)
@@ -681,11 +709,20 @@ class Phase1Config(_Section):
     def _options_day_inside_session_rules(self) -> Self:
         """ADR-0021 D3: the setups keep `trade.forced_exit_time`."""
         s = self.study_options_day
-        for name, t in (("orb", s.orb.exit_time), ("half_hour", s.half_hour.exit_time)):
+        exits = (
+            ("orb", s.orb.exit_time),
+            ("half_hour", s.half_hour.exit_time),
+            ("noise_area", s.noise_area.exit_time),
+        )
+        for name, t in exits:
             if t > self.trade.forced_exit_time:
                 raise ValueError(
                     f"study_options_day.{name}.exit_time {t} is after trade.forced_exit_time"
                 )
+        if s.noise_area.last_entry_check > self.schedule.last_new_entry:  # A3: no exception
+            raise ValueError(
+                "study_options_day.noise_area.last_entry_check is after schedule.last_new_entry"
+            )
         return self
 
 
