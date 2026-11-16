@@ -838,7 +838,7 @@ Open issues:
 - Whether Tiingo's open equals the official opening auction price is not verified; criterion 3 compares against it
 - IBKR paper CSV layout not verified (A1 R5)
 
-## M33 — D6 screen of setup S3, the noise-area breakout (ADR-0021 amendment A3, ACCEPTED 2026-11-16) — NOT STARTED
+## M33 — D6 screen of setup S3, the noise-area breakout (ADR-0021 amendment A3, ACCEPTED 2026-11-16) — RUN MADE 2026-11-16: **AMBIGUOUS**, S3 stops (D6: no variants); waiting for the owner's acceptance and CI (plan and rulings approved by the owner 2026-11-16; commit and run approved: "Yes, commit and run")
 Depends on: M28 DONE, M29 DONE, M30 DONE; amendment A3 accepted (owner, 2026-11-16: "Accept S3"). **A trial: test 3 of the 3 that ADR-0021 D7 allows, and the last.** One registered run, from committed code; n_trials 44 → 45.
 Tickers: QQQ (to 2026-04-02), SPY, IWM, NVDA, TSLA (to 2025-10-02). AAPL is out (D1). Development sessions only.
 Measured before the plan (`scripts/m33_quote_survey.py` → `reports/research/m33_quote_survey.md`; timestamps counted and spreads measured, no signal, return or price level; early closes left out):
@@ -856,11 +856,22 @@ Owner rulings, 2026-11-16 (plan approved), made before any signal or statistic w
 - [x] Config block `study_options_day.noise_area` (lookback, checks, exit, the two offsets; validated against `schedule.last_new_entry` and `trade.forced_exit_time`). Tests `test_a3_parameters_and_owner_rulings_are_in_the_config`, `test_contradictory_noise_area_values_are_refused`
 - [x] Tests first: `tests/test_noise_area_screen.py` (38): sigma and both boundaries, whole-quote signal and exit, wide quote, each check's own average, latest 14 sessions only, breakout between checks not seen, no entry after 15:00, opposite-boundary exit with no reversal, exit checks to 15:30, skipped check, `NO_HISTORY`, history from today refused, `EARNINGS_WINDOW`, `CORPORATE_ACTION`, `EARLY_CLOSE`, `NO_PREV_CLOSE`, open at 09:31 and close at 15:59, nothing after a check changes it, Step A, point-in-time option quote and chain, delayed and unresolved exits, the timed one-position rule, config
 - [x] Code: `src/qqq1dte/strategies/noise_area.py`, `src/qqq1dte/backtesting/noise_area_screen.py`, `scripts/m33_screen.py` (reuses M29's plan, statistics and risk rows; dry run on synthetic prices works; refuses to run on uncommitted code)
-- [ ] One registered run from committed code; report `reports/research/m33_s3_screen.md` with the D6 outcome, both intervals, NO_TRADE counts, per-ticker and risk rows
-- [ ] No holdout session read
-- [ ] `uv run pytest`, `uv run ruff check .`, `uv run mypy src` pass; CI green
-- [ ] 3 of 3 D7 tests used. If S3 does not ADVANCE, the ADR-0021 mission stops (Consequences)
+- [x] One registered run from committed code: `screen_noise_area-861c924a1cfc`, code `cae2c89`, n_trials 44 → 45
+- [x] Report `reports/research/m33_s3_screen.md`: outcome, trade count, both intervals, NO_TRADE counts by reason, per-ticker and risk rows, checks on the saved rows, three trades recomputed by separate code
+- [x] No holdout session read (`HoldoutGuard`; files chosen by the date in their name; latest session in the saved rows 2026-04-02 for QQQ, 2025-10-02 for the others)
+- [x] `uv run pytest` (618 passed, 61 skipped: PostgreSQL tests, run in CI), `uv run ruff check .`, `uv run mypy src` pass locally. Run with the main checkout's `.venv` and this worktree's `src` and `scripts` on PYTHONPATH because `uv` was not found on this machine; CI runs `uv`
+  - [ ] CI green on the PR
+- [x] 3 of 3 D7 tests used. S3 did not ADVANCE, so the ADR-0021 mission stops (Consequences)
 Recorded before the run: the assistant expects AMBIGUOUS or KILL (A3, "Advice first").
+Result (development data; not a claim about profitability either way):
+- **Step A does not pass, narrowly.** Mean signed underlying return, entry check → exit, +0.067% over 1,839 ticker-sessions with a signal (640 sessions); one-sided 95% lower bound −0.004%; two-sided 95% interval [−0.015%, +0.159%]. The setup stops here; Step B is descriptive
+- **Step B: AMBIGUOUS, not KILL.** 599 trades. Mean net P&L −6.24% of the premium paid; one-sided 98.33% lower bound −11.18% (ADVANCE needs > 0); two-sided 95% interval [−10.80%, −1.49%]; bound at the full count (45 trials) −13.11%. At the mid fill the mean is −4.04%, two-sided 95% interval [−8.74%, +0.85%]: the upper bound is above 0, so not a KILL
+- Risk rows: 39.6% winners; worst trade −92.96% (SPY 2024-09-11); longest losing run 10; largest drawdown $8,668.38; total −$8,000.08 on one contract a trade; the $1,000 loss cap would have been reached on 2023-05-16. `PREMIUM_OVER_CAP` 313 (NVDA 135, TSLA 165); `POSITION_OPEN` 850. No unresolved exit, no delayed exit, no exit without a bid. 18 trades exited at the opposite boundary, 581 at 15:50
+- 3 sessions had two trades one after the other; the most premium spent in one session was $689.05
+- Per ticker (descriptive only): TSLA −1.71% (89 trades), NVDA −1.93% (89), QQQ −4.05% (192), IWM −9.55% (95), SPY −12.92% (134)
+- NO_TRADE: `NO_SIGNAL` 1,279; `POSITION_OPEN` 850; `PREMIUM_OVER_CAP` 313; `SELECTED_CONTRACT_ILLIQUID` 77; `NO_HISTORY` 70; `EARNINGS_WINDOW` 60; `EARLY_CLOSE` 32; `NO_PREV_CLOSE` 2; `NO_UNDERLYING_QUOTE` 1 (NVDA 2024-05-28); `CORPORATE_ACTION` 1. One check skipped for want of a quote
+- Checks on the saved rows (in the report): one position at a time, one row per ticker-session, every outlay within $500, every entry at a check by 15:00, every sale by 15:50, every signal with 14 earlier history sessions, no session after its development end. Three trades (QQQ, NVDA, SPY) recomputed from the quote files by separate code match
+- D6: the setup stops, with no variants. All three ADR-0021 tests are used and none advanced (S1 AMBIGUOUS, S2 KILL, S3 AMBIGUOUS): under ADR-0021's Consequences the mission stops and is not extended without a new owner ADR
 
 ## M20 — Live market data in PAPER mode — NOT STARTED (Phase 1 closed; blocked by M19 FAIL)
 Depends on: M19 PASS (or owner ADR)
